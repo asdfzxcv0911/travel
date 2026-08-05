@@ -2,303 +2,342 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的專屬旅遊系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的專屬旅遊 App</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'M PLUS Rounded 1c', sans-serif;
-      background-color: #fef08a;
+      background-color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    /* 模擬手機 9:16 外觀 */
+    .mobile-container {
+      width: 100%;
+      max-width: 400px;
+      height: 100vh;
+      max-height: 850px;
+      background-color: #fef08a; /* 鮮黃底色 */
       background-image: radial-gradient(#fde047 20%, transparent 20%), radial-gradient(#fde047 20%, transparent 20%);
       background-size: 20px 20px;
       background-position: 0 0, 10px 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* 在大螢幕上加上手機外框 */
+    @media (min-width: 450px) {
+      .mobile-container {
+        height: 844px;
+        border-radius: 40px;
+        border: 12px solid #1f2937;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
     }
     .poke-shadow { box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.8); }
     .btn-press:active { transform: translateY(2px) translateX(2px); box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.8); }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     
-    /* 列印與匯出 PDF 時隱藏不需要的按鈕 */
-    @media print {
-      .no-print { display: none !important; }
-      body { background: white; }
-      .poke-shadow { box-shadow: none; border: 1px solid #ccc; }
-    }
+    /* 隱藏預設捲軸，讓畫面更像 App */
+    .scroll-area::-webkit-scrollbar { display: none; }
+    .scroll-area { -ms-overflow-style: none; scrollbar-width: none; overflow-y: auto; flex: 1; padding-bottom: 30px; }
   </style>
 </head>
-<body class="text-gray-800 pb-10">
-  <div id="app" class="max-w-4xl mx-auto p-4 sm:p-8 mt-6 bg-white border-4 border-gray-900 rounded-3xl poke-shadow">
+<body>
+  <div id="app" class="mobile-container">
     
-    <!-- 系統控制列 (模板引擎) -->
-    <div class="flex flex-wrap justify-between items-center mb-6 bg-gray-100 p-3 rounded-2xl border-2 border-gray-300 no-print">
-      <div class="flex gap-2">
-        <button @click="loadTemplate" class="bg-white hover:bg-gray-50 text-gray-800 px-4 py-2 rounded-xl font-bold border-2 border-gray-400 btn-press text-sm">
-          🆕 載入乾淨模板 (開新旅程)
-        </button>
-        <button @click="saveAsTemplate" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold border-2 border-gray-800 btn-press text-sm">
-          ✨ 將目前設定存為專屬模板
-        </button>
-      </div>
-      <button @click="saveTrip" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-xl font-black border-2 border-gray-800 btn-press">
-        💾 儲存目前進度
+    <!-- ==================== 頂部導覽列 (Navbar) ==================== -->
+    <header class="bg-white px-4 py-4 flex items-center justify-between shadow-sm z-10 rounded-b-3xl border-b-4 border-gray-900 sticky top-0">
+      <!-- 若不在目錄頁，顯示返回按鈕 -->
+      <button v-if="currentView !== 'menu'" @click="currentView = 'menu'" class="text-2xl font-black p-2 -ml-2 text-gray-700 active:scale-90 transition-transform">
+        ⬅
       </button>
-    </div>
+      <div v-else class="w-8"></div> <!-- 佔位用 -->
 
-    <!-- 頂部動態標題 -->
-    <header class="mb-6 text-center">
-      <input type="text" v-model="tripData.tripName" class="text-4xl font-black mb-2 text-red-600 tracking-wider text-center bg-transparent border-b-2 border-dashed border-gray-300 outline-none focus:border-red-500 hover:bg-gray-50 transition-colors w-full" placeholder="請輸入旅程名稱 (例：2026 日本行)">
+      <h1 class="text-xl font-black tracking-wider text-gray-800 truncate px-2">
+        {{ currentView === 'menu' ? '我的旅遊目錄' : currentView }}
+      </h1>
+      
+      <!-- 目錄頁顯示儲存按鈕 -->
+      <button v-if="currentView === 'menu'" @click="saveTrip" class="text-2xl active:scale-90 transition-transform" title="儲存進度">
+        💾
+      </button>
+      <div v-else class="w-8"></div> <!-- 佔位用 -->
     </header>
 
-    <!-- 導覽列 -->
-    <div class="flex flex-wrap gap-2 mb-6 border-b-4 border-gray-100 pb-6 justify-center no-print">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab"
-        @click="currentTab = tab"
-        :class="['px-5 py-2 rounded-full font-bold border-2 border-gray-800 transition-transform transform hover:scale-105', 
-                 currentTab === tab ? 'bg-red-500 text-white' : 'bg-white hover:bg-yellow-100 text-gray-800']"
-      >
-        {{ tab }}
-      </button>
-    </div>
+    <!-- ==================== 內容捲動區 ==================== -->
+    <div class="scroll-area p-4">
 
-    <!-- ==================== 模組切換區 ==================== -->
+      <!-- ==================== 【目錄頁 (Menu)】 ==================== -->
+      <div v-if="currentView === 'menu'" class="animate-fade-in">
+        <!-- 旅程名稱 (可直接編輯) -->
+        <div class="mb-6 mt-2 text-center">
+          <input type="text" v-model="tripData.tripName" class="text-2xl font-black text-red-600 bg-transparent border-b-2 border-dashed border-gray-400 outline-none focus:border-red-500 text-center w-full pb-1" placeholder="輸入旅程名稱">
+        </div>
 
-    <!-- 【首頁】 (基本設定與同行名單) -->
-    <div v-if="currentTab === '首頁'" class="animate-fade-in space-y-6">
-      <div class="bg-blue-50 border-4 border-blue-300 p-6 rounded-2xl">
-        <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2"><span>👥</span> 同行名單設定</h2>
-        <p class="text-gray-600 mb-4 font-bold text-sm">這裡的名單會自動同步到「花費」模組，方便你們分攤帳務。</p>
-        
-        <div class="flex flex-wrap gap-3 mb-4">
-          <div v-for="(person, index) in tripData.companions" :key="index" class="bg-white border-2 border-blue-400 px-4 py-2 rounded-full font-bold flex items-center gap-2 shadow-sm">
-            {{ person }}
-            <button @click="tripData.companions.splice(index, 1)" class="text-blue-300 hover:text-red-500 font-black">✖</button>
-          </div>
-        </div>
-        
-        <div class="flex gap-2 max-w-sm">
-          <input type="text" v-model="newCompanion" placeholder="輸入姓名..." class="flex-1 border-2 border-gray-300 p-2 rounded-lg outline-none font-bold">
-          <button @click="addCompanion" class="bg-blue-500 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-600">加入</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-xl border-2 border-gray-200 text-center shadow-sm">
-          <p class="text-gray-500 font-bold">總天數</p>
-          <p class="text-3xl font-black text-blue-600">{{ tripData.itinerary.length }} 天</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-2 border-gray-200 text-center shadow-sm">
-          <p class="text-gray-500 font-bold">總花費</p>
-          <p class="text-3xl font-black text-yellow-600">${{ totalExpense }}</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-2 border-gray-200 text-center shadow-sm">
-          <p class="text-gray-500 font-bold">住宿清單</p>
-          <p class="text-3xl font-black text-purple-600">{{ tripData.accommodations.length }} 間</p>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-2 border-gray-200 text-center shadow-sm no-print">
-          <button onclick="window.print()" class="w-full h-full text-gray-500 font-bold hover:text-gray-800 transition-colors flex flex-col items-center justify-center">
-            <span class="text-2xl mb-1">🖨️</span> 列印行程表
+        <!-- 模組按鈕網格 -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <button @click="currentView = '首頁'" class="bg-white p-4 rounded-3xl border-4 border-blue-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">ℹ️</span>
+            <span class="font-black text-blue-800 text-lg">基本設定</span>
+          </button>
+          <button @click="currentView = '行程'" class="bg-white p-4 rounded-3xl border-4 border-green-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">📍</span>
+            <span class="font-black text-green-800 text-lg">行程安排</span>
+          </button>
+          <button @click="currentView = '交通'" class="bg-white p-4 rounded-3xl border-4 border-gray-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">🚊</span>
+            <span class="font-black text-gray-800 text-lg">交通票券</span>
+          </button>
+          <button @click="currentView = '住宿'" class="bg-white p-4 rounded-3xl border-4 border-purple-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">🏨</span>
+            <span class="font-black text-purple-800 text-lg">住宿飯店</span>
+          </button>
+          <button @click="currentView = '花費'" class="bg-white p-4 rounded-3xl border-4 border-yellow-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">💰</span>
+            <span class="font-black text-yellow-800 text-lg">公費記帳</span>
+          </button>
+          <button @click="currentView = '行李'" class="bg-white p-4 rounded-3xl border-4 border-orange-400 poke-shadow btn-press flex flex-col items-center justify-center gap-2 aspect-square">
+            <span class="text-5xl">🎒</span>
+            <span class="font-black text-orange-800 text-lg">行李清單</span>
           </button>
         </div>
-      </div>
-    </div>
 
-    <!-- 【交通】 -->
-    <div v-if="currentTab === '交通'" class="space-y-4">
-      <h2 class="text-2xl font-bold flex items-center gap-2"><span class="text-3xl">🚊</span> 交通方式預設庫</h2>
-      <div v-for="(trans, index) in tripData.transports" :key="index" class="border-4 border-gray-200 p-4 rounded-2xl bg-gray-50 flex gap-4 items-center">
-        <select v-model="trans.type" class="border-2 border-gray-300 p-2 rounded-lg font-bold outline-none bg-white">
-          <option value="飛機">✈️ 飛機</option>
-          <option value="火車">🚆 火車/高鐵</option>
-          <option value="租車">🚗 租車</option>
-          <option value="其他">🚌 其他</option>
-        </select>
-        <input type="text" v-model="trans.detail" placeholder="輸入詳細資訊 (如: 航班號碼或租車公司)" class="flex-1 border-2 border-gray-300 p-2 rounded-lg font-bold outline-none">
-        <button @click="tripData.transports.splice(index, 1)" class="bg-red-100 text-red-600 font-bold px-4 py-2 rounded-lg hover:bg-red-200">刪除</button>
-      </div>
-      <button @click="tripData.transports.push({type: '飛機', detail: ''})" class="w-full border-4 border-dashed border-gray-300 text-gray-500 hover:bg-gray-100 font-bold py-3 rounded-2xl">
-        ＋ 新增交通方式
-      </button>
-    </div>
-
-    <!-- 【住宿】 -->
-    <div v-if="currentTab === '住宿'" class="space-y-4">
-      <h2 class="text-2xl font-bold text-purple-600">🏨 住宿安排</h2>
-      <div v-for="(hotel, index) in tripData.accommodations" :key="index" class="border-4 border-purple-200 bg-purple-50 p-5 rounded-2xl relative">
-        <button @click="tripData.accommodations.splice(index, 1)" class="absolute top-4 right-4 text-purple-400 hover:text-purple-600 font-bold text-xl">✖</button>
-        <label class="block font-bold mb-1 text-purple-800">飯店名稱</label>
-        <input type="text" v-model="hotel.name" placeholder="輸入飯店或民宿名稱..." class="w-full border-2 border-purple-300 p-2 rounded-lg mb-3 outline-none font-bold">
-        <div class="flex gap-4 mb-3">
-          <div class="w-1/2">
-            <label class="block text-sm font-bold mb-1 text-purple-800">Check-in (入住)</label>
-            <input type="date" v-model="hotel.checkIn" class="w-full border-2 border-purple-300 p-2 rounded-lg outline-none font-bold">
-          </div>
-          <div class="w-1/2">
-            <label class="block text-sm font-bold mb-1 text-purple-800">Check-out (退房)</label>
-            <input type="date" v-model="hotel.checkOut" class="w-full border-2 border-purple-300 p-2 rounded-lg outline-none font-bold">
+        <!-- 模板系統 -->
+        <div class="bg-white border-4 border-gray-800 rounded-3xl p-4 poke-shadow">
+          <h3 class="font-black text-gray-800 mb-3 text-center">⚙️ 模板引擎</h3>
+          <div class="flex flex-col gap-2">
+            <button @click="saveAsTemplate" class="bg-indigo-100 text-indigo-700 font-bold py-2 rounded-xl border-2 border-indigo-300">✨ 存為我的專屬模板</button>
+            <button @click="loadTemplate" class="bg-gray-100 text-gray-700 font-bold py-2 rounded-xl border-2 border-gray-300">🆕 載入空白模板 (開新旅程)</button>
           </div>
         </div>
-        <label class="block font-bold mb-1 text-purple-800 text-sm">地址 / 備註 / 訂房代號</label>
-        <input type="text" v-model="hotel.note" placeholder="例如: 訂房代號 1234567..." class="w-full border-2 border-purple-300 p-2 rounded-lg outline-none text-sm text-gray-600">
-      </div>
-      <button @click="tripData.accommodations.push({name: '', checkIn: '', checkOut: '', note: ''})" class="bg-purple-500 text-white font-bold px-4 py-3 rounded-xl hover:bg-purple-600 w-full border-2 border-gray-800 poke-shadow btn-press">
-        ＋ 新增一間住宿
-      </button>
-    </div>
-
-    <!-- 【行程】核心引擎 -->
-    <div v-if="currentTab === '行程'">
-      <div class="flex justify-between items-center mb-6 no-print">
-        <h2 class="text-2xl font-bold text-green-600">📍 行程與時間軸</h2>
-        <button @click="addDay" class="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full font-black border-4 border-gray-800 poke-shadow btn-press">
-          ＋ 新增天數
-        </button>
       </div>
 
-      <div v-for="(day, dayIndex) in tripData.itinerary" :key="dayIndex" class="mb-10 border-4 border-green-300 rounded-3xl p-6 bg-white relative print:border-2 print:mb-6">
-        <div class="absolute -top-5 left-6 bg-green-500 text-white px-5 py-1 rounded-full font-black border-4 border-gray-800 text-lg print:border-2">
-          第 {{ dayIndex + 1 }} 天
-        </div>
-        <button @click="tripData.itinerary.splice(dayIndex, 1)" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 font-bold no-print">刪除此天</button>
-        
-        <div class="mt-6">
-          <div v-for="(item, itemIndex) in day.items" :key="itemIndex">
-            
-            <!-- 景點/活動區塊 (升級加入網址/備註) -->
-            <div class="bg-green-50 p-3 rounded-xl border-2 border-green-200 transition-all hover:shadow-md mb-2">
-              <div class="flex items-center gap-3 mb-2">
-                <input type="time" v-model="item.time" class="border-2 border-green-300 rounded-lg p-2 font-bold text-gray-700 bg-white outline-none">
-                <input type="text" v-model="item.activity" placeholder="行程標題 (如：抵達樂園)" class="flex-1 border-2 border-green-300 rounded-lg p-2 bg-white outline-none font-bold text-lg">
-                <button @click="day.items.splice(itemIndex, 1)" class="text-red-400 hover:text-red-600 font-bold px-2 text-xl no-print">✖</button>
-              </div>
-              <div class="flex items-center gap-2 pl-[110px]">
-                <span class="text-gray-400 text-sm">🔗</span>
-                <input type="text" v-model="item.url" placeholder="貼上 Google Maps 網址或行程備註..." class="flex-1 bg-transparent border-b border-green-200 outline-none text-sm text-gray-600 focus:border-green-400 pb-1">
-              </div>
+      <!-- ==================== 【首頁 (基本設定)】 ==================== -->
+      <div v-if="currentView === '首頁'" class="space-y-4">
+        <div class="bg-white border-4 border-blue-400 p-5 rounded-3xl poke-shadow">
+          <h2 class="font-black text-blue-800 mb-4 flex items-center gap-2 text-xl"><span>👥</span> 同行名單 (記帳用)</h2>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <div v-for="(person, index) in tripData.companions" :key="index" class="bg-blue-50 border-2 border-blue-200 px-3 py-1.5 rounded-full font-bold flex items-center gap-2 text-sm">
+              {{ person }}
+              <button @click="tripData.companions.splice(index, 1)" class="text-blue-300 hover:text-red-500 font-black">✖</button>
             </div>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" v-model="newCompanion" placeholder="輸入姓名..." class="flex-1 border-2 border-gray-300 p-2 rounded-xl outline-none font-bold text-sm">
+            <button @click="addCompanion" class="bg-blue-500 text-white font-bold px-4 py-2 rounded-xl">加入</button>
+          </div>
+        </div>
+      </div>
 
-            <!-- 交通串接區塊 -->
-            <div v-if="itemIndex < day.items.length - 1" class="flex flex-col items-center my-1 text-gray-500">
-              <div class="w-1.5 h-6 bg-green-200 rounded-full"></div>
-              <div class="flex gap-2 text-sm items-center bg-white px-4 py-1.5 rounded-full border-2 border-green-200 shadow-sm z-10">
-                 <span class="font-bold">🚌 移動:</span>
-                 <select v-model="day.transit[itemIndex].method" class="bg-transparent font-bold outline-none text-blue-600">
-                   <option value="走路">走路</option>
-                   <option value="自駕">自駕</option>
-                   <option value="地鐵/公車">地鐵/公車</option>
-                   <option value="計程車">計程車</option>
-                   <option value="高鐵/新幹線">高鐵/新幹線</option>
-                   <option value="飛機">飛機</option>
-                 </select>
-                 <input type="text" v-model="day.transit[itemIndex].duration" placeholder="預估時間(如: 30分)" class="w-28 bg-transparent border-b-2 border-gray-300 text-center outline-none font-bold">
-              </div>
-              <div class="w-1.5 h-6 bg-green-200 rounded-full"></div>
+      <!-- ==================== 【交通票券 (升級版)】 ==================== -->
+      <div v-if="currentView === '交通'" class="space-y-5">
+        <div v-for="(trans, index) in tripData.transports" :key="index" class="bg-white border-4 border-gray-800 rounded-3xl p-4 poke-shadow relative">
+          <button @click="tripData.transports.splice(index, 1)" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 font-black text-xl">✖</button>
+          
+          <div class="flex gap-2 mb-3 pr-6">
+            <select v-model="trans.type" class="border-2 border-gray-300 p-2 rounded-xl font-black outline-none bg-gray-50 text-gray-800 w-1/3">
+              <option value="飛機">✈️ 飛機</option>
+              <option value="火車">🚆 火車</option>
+              <option value="租車">🚗 租車</option>
+              <option value="其他">🚌 其他</option>
+            </select>
+            <input type="text" v-model="trans.number" placeholder="班次/航班號 (如: BR123)" class="flex-1 border-2 border-gray-300 p-2 rounded-xl font-bold outline-none text-sm">
+          </div>
+          
+          <!-- 起迄點與時間 -->
+          <div class="bg-gray-50 p-3 rounded-2xl border-2 border-gray-200 mb-3">
+            <div class="flex justify-between items-center mb-2">
+              <input type="text" v-model="trans.from" placeholder="出發地" class="w-2/5 border-b-2 border-gray-300 bg-transparent outline-none font-bold text-center text-sm">
+              <span class="text-gray-400 font-black">➔</span>
+              <input type="text" v-model="trans.to" placeholder="目的地" class="w-2/5 border-b-2 border-gray-300 bg-transparent outline-none font-bold text-center text-sm">
+            </div>
+            <div class="flex justify-between items-center">
+              <input type="datetime-local" v-model="trans.depTime" class="w-[45%] text-xs font-bold bg-transparent outline-none text-gray-600">
+              <input type="datetime-local" v-model="trans.arrTime" class="w-[45%] text-xs font-bold bg-transparent outline-none text-gray-600">
             </div>
           </div>
           
-          <button @click="addItem(dayIndex)" class="w-full mt-2 border-4 border-dashed border-green-200 text-green-600 hover:bg-green-50 font-bold py-3 rounded-2xl transition-colors no-print">
-            ＋ 在此天新增行程節點
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 【行李】 -->
-    <div v-if="currentTab === '行李'" class="space-y-4">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-2xl font-bold text-orange-600">🎒 行李檢查表</h2>
-        <button @click="addLuggage" class="bg-orange-100 text-orange-600 px-4 py-2 rounded-lg font-bold hover:bg-orange-200 border-2 border-orange-300">＋ 新增物品</button>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <label v-for="(item, index) in tripData.luggage" :key="index" 
-               :class="['flex items-center justify-between text-lg font-bold p-3 rounded-xl border-4 cursor-pointer transition-colors', 
-                        item.checked ? 'bg-gray-100 border-gray-200 text-gray-400 line-through' : 'bg-orange-50 border-orange-300 text-gray-800']">
-          <div class="flex items-center gap-3 w-full">
-            <input type="checkbox" v-model="item.checked" class="w-6 h-6 accent-orange-500"> 
-            <input type="text" v-model="item.name" class="bg-transparent outline-none w-full" @click.prevent>
+          <!-- 訂位代號 -->
+          <div>
+            <input type="text" v-model="trans.bookingRef" placeholder="訂位代號 (PNR) / 備註" class="w-full border-2 border-blue-200 bg-blue-50 p-2 rounded-xl font-bold outline-none text-sm text-blue-800 placeholder-blue-300">
           </div>
-          <button @click.prevent="tripData.luggage.splice(index, 1)" class="text-gray-300 hover:text-red-500 ml-2">✖</button>
-        </label>
-      </div>
-    </div>
-
-    <!-- 【天氣】 -->
-    <div v-if="currentTab === '天氣'" class="text-center space-y-4">
-      <h2 class="text-2xl font-bold text-blue-500">☀️ 天氣與備忘錄</h2>
-      <div class="border-4 border-blue-200 p-6 rounded-3xl bg-blue-50 shadow-inner">
-        <div class="text-7xl mb-4 animate-bounce">⛅</div>
-        <textarea v-model="tripData.weatherNote" class="w-full border-4 border-white rounded-2xl p-4 text-lg outline-none focus:border-blue-300 font-bold" rows="6" placeholder="記錄當地的氣候狀況，或是任何行前的重要提醒..."></textarea>
-      </div>
-    </div>
-
-    <!-- 【花費】 -->
-    <div v-if="currentTab === '花費'" class="space-y-6">
-      <h2 class="text-2xl font-bold text-yellow-600">💰 公費與記帳系統</h2>
-      
-      <div class="bg-gray-800 text-white p-6 rounded-3xl border-4 border-gray-900 poke-shadow mb-8">
-        <h3 class="font-black text-xl mb-4 text-yellow-400 flex justify-between">
-          <span>📊 結算總覽</span>
-          <span>總支出：${{ totalExpense }}</span>
-        </h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div v-for="(balance, person) in settlement" :key="person" class="bg-gray-700 p-4 rounded-2xl border-2 border-gray-600">
-            <p class="text-gray-300 font-bold mb-1">{{ person }}</p>
-            <p v-if="balance > 0" class="text-2xl font-black text-green-400">應收回 ${{ balance.toFixed(0) }}</p>
-            <p v-else-if="balance < 0" class="text-2xl font-black text-red-400">需支付 ${{ Math.abs(balance).toFixed(0) }}</p>
-            <p v-else class="text-2xl font-black text-gray-400">已結清</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-yellow-100 border-4 border-yellow-400 p-5 rounded-2xl">
-        <h3 class="font-black text-lg mb-3 flex items-center gap-2"><span>➕</span> 新增一筆花費</h3>
-        <div class="flex flex-wrap sm:flex-nowrap gap-3 mb-4">
-          <input type="text" v-model="newExpense.item" placeholder="項目 (如: 晚餐、門票)" class="flex-1 border-2 border-gray-300 p-3 rounded-xl outline-none font-bold">
-          <input type="number" v-model="newExpense.amount" placeholder="總金額" class="w-full sm:w-1/3 border-2 border-gray-300 p-3 rounded-xl outline-none font-bold">
         </div>
         
-        <div class="flex flex-col sm:flex-row gap-4 mb-4 bg-white p-4 rounded-xl border-2 border-yellow-200">
-          <div class="flex-1">
-            <span class="font-bold text-sm text-gray-500 block mb-2">誰先代墊 (付款人)？</span>
-            <select v-model="newExpense.paidBy" class="w-full border-2 border-gray-300 p-2 rounded-lg outline-none font-bold bg-gray-50">
-              <option v-for="person in tripData.companions" :key="person" :value="person">{{ person }}</option>
-            </select>
-          </div>
-          <div class="flex-1">
-            <span class="font-bold text-sm text-gray-500 block mb-2">誰要分攤這筆錢？</span>
-            <div class="flex flex-wrap gap-3">
-              <label v-for="person in tripData.companions" :key="person" class="flex items-center gap-2 cursor-pointer font-bold bg-gray-100 px-3 py-1 rounded-lg hover:bg-gray-200">
-                <input type="checkbox" :value="person" v-model="newExpense.splitBetween" class="w-5 h-5 accent-yellow-500"> {{ person }}
-              </label>
-            </div>
-          </div>
-        </div>
-        <button @click="addExpense" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black text-lg px-4 py-3 rounded-xl w-full border-4 border-gray-900 poke-shadow btn-press">
-          加入記帳
+        <button @click="tripData.transports.push({type: '飛機', number: '', from: '', to: '', depTime: '', arrTime: '', bookingRef: ''})" class="bg-white border-4 border-dashed border-gray-400 text-gray-500 font-black py-4 rounded-3xl w-full hover:bg-gray-50">
+          ＋ 新增交通票券
         </button>
       </div>
 
-      <div v-if="tripData.expenses.length > 0" class="mt-6">
-        <h3 class="font-bold text-gray-500 mb-3">明細清單</h3>
-        <div class="space-y-3">
-          <div v-for="(exp, index) in tripData.expenses" :key="index" class="bg-white border-2 border-gray-200 p-4 rounded-xl flex justify-between items-center shadow-sm">
-            <div>
-              <p class="font-black text-lg">{{ exp.item }}</p>
-              <p class="text-sm text-gray-500 font-bold">{{ exp.paidBy }} 先付 • 分攤: {{ exp.splitBetween.join(', ') }}</p>
+      <!-- ==================== 【住宿飯店 (升級版)】 ==================== -->
+      <div v-if="currentView === '住宿'" class="space-y-5">
+        <div v-for="(hotel, index) in tripData.accommodations" :key="index" class="bg-white border-4 border-purple-800 rounded-3xl p-4 poke-shadow relative">
+          <button @click="tripData.accommodations.splice(index, 1)" class="absolute top-3 right-4 text-purple-300 hover:text-red-500 font-black text-xl">✖</button>
+          
+          <input type="text" v-model="hotel.name" placeholder="飯店名稱" class="w-11/12 border-b-2 border-purple-300 bg-transparent text-xl font-black outline-none mb-3 text-purple-900 pb-1">
+          
+          <!-- 日期與時間 -->
+          <div class="flex gap-2 mb-3">
+            <div class="flex-1 bg-purple-50 p-2 rounded-xl border-2 border-purple-200">
+              <label class="block text-xs font-black text-purple-600 mb-1">Check-in 入住</label>
+              <input type="date" v-model="hotel.checkIn" class="w-full text-sm font-bold bg-transparent outline-none mb-1">
+              <input type="time" v-model="hotel.checkInTime" class="w-full text-xs font-bold bg-transparent outline-none text-gray-500" placeholder="15:00">
             </div>
-            <div class="flex items-center gap-4">
-              <p class="font-black text-xl text-red-500">${{ exp.amount }}</p>
-              <button @click="tripData.expenses.splice(index, 1)" class="text-gray-300 hover:text-red-500 font-black text-xl">✖</button>
+            <div class="flex-1 bg-purple-50 p-2 rounded-xl border-2 border-purple-200">
+              <label class="block text-xs font-black text-purple-600 mb-1">Check-out 退房</label>
+              <input type="date" v-model="hotel.checkOut" class="w-full text-sm font-bold bg-transparent outline-none mb-1">
+              <input type="time" v-model="hotel.checkOutTime" class="w-full text-xs font-bold bg-transparent outline-none text-gray-500" placeholder="11:00">
+            </div>
+          </div>
+
+          <!-- 詳細資訊 -->
+          <div class="space-y-2">
+            <input type="text" v-model="hotel.bookingRef" placeholder="訂房代號" class="w-full border-2 border-gray-200 p-2 rounded-xl font-bold outline-none text-sm text-gray-700">
+            <textarea v-model="hotel.address" placeholder="完整地址 (可複製給司機看)" rows="2" class="w-full border-2 border-gray-200 p-2 rounded-xl font-bold outline-none text-sm text-gray-700"></textarea>
+            <label class="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border-2 border-gray-200 font-bold text-sm">
+              <input type="checkbox" v-model="hotel.hasBreakfast" class="w-4 h-4 accent-purple-500"> 
+              🥐 包含早餐
+            </label>
+          </div>
+        </div>
+
+        <button @click="tripData.accommodations.push({name: '', checkIn: '', checkOut: '', checkInTime: '', checkOutTime: '', address: '', bookingRef: '', hasBreakfast: false})" class="bg-white border-4 border-dashed border-purple-300 text-purple-500 font-black py-4 rounded-3xl w-full hover:bg-purple-50">
+          ＋ 新增住宿
+        </button>
+      </div>
+
+      <!-- ==================== 【行程與時間軸】 ==================== -->
+      <div v-if="currentView === '行程'" class="space-y-6">
+        <div class="flex justify-end mb-2">
+          <button @click="addDay" class="bg-green-500 text-white px-4 py-2 rounded-xl font-black border-2 border-gray-900 poke-shadow active:scale-95 text-sm">
+            ＋ 新增天數
+          </button>
+        </div>
+
+        <div v-for="(day, dayIndex) in tripData.itinerary" :key="dayIndex" class="bg-white border-4 border-green-400 rounded-3xl p-4 relative poke-shadow">
+          <div class="absolute -top-4 left-4 bg-gray-900 text-white px-4 py-1 rounded-full font-black text-sm border-2 border-white">
+            第 {{ dayIndex + 1 }} 天
+          </div>
+          <button @click="tripData.itinerary.splice(dayIndex, 1)" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 font-black text-sm">刪除</button>
+          
+          <div class="mt-4 space-y-2">
+            <div v-for="(item, itemIndex) in day.items" :key="itemIndex">
+              
+              <!-- 景點區塊 -->
+              <div class="bg-green-50 p-2 rounded-xl border-2 border-green-200">
+                <div class="flex items-center gap-2 mb-1">
+                  <input type="time" v-model="item.time" class="bg-white border-2 border-green-300 rounded-lg p-1 font-bold text-sm text-gray-700 outline-none w-[75px]">
+                  <input type="text" v-model="item.activity" placeholder="行程標題" class="flex-1 bg-white border-2 border-green-300 rounded-lg p-1.5 font-black text-sm outline-none">
+                  <button @click="day.items.splice(itemIndex, 1)" class="text-red-400 hover:text-red-600 font-black px-1">✖</button>
+                </div>
+                <div class="flex items-center gap-1 pl-[80px]">
+                  <span class="text-xs">🔗</span>
+                  <input type="text" v-model="item.url" placeholder="地圖網址或備註..." class="flex-1 bg-transparent border-b border-green-200 outline-none text-xs text-gray-600 pb-1">
+                </div>
+              </div>
+
+              <!-- 交通串接 -->
+              <div v-if="itemIndex < day.items.length - 1" class="flex flex-col items-center my-1">
+                <div class="w-1 h-3 bg-green-200"></div>
+                <div class="flex gap-1 text-xs items-center bg-white px-2 py-1 rounded-lg border-2 border-green-200 shadow-sm z-10">
+                   <span>🚌</span>
+                   <select v-model="day.transit[itemIndex].method" class="bg-transparent font-bold outline-none text-blue-600">
+                     <option value="走路">走路</option>
+                     <option value="自駕">自駕</option>
+                     <option value="地鐵">地鐵</option>
+                     <option value="計程車">計程車</option>
+                   </select>
+                   <input type="text" v-model="day.transit[itemIndex].duration" placeholder="時間(30分)" class="w-16 bg-transparent border-b border-gray-300 text-center outline-none font-bold">
+                </div>
+                <div class="w-1 h-3 bg-green-200"></div>
+              </div>
+            </div>
+            
+            <button @click="addItem(dayIndex)" class="w-full mt-2 border-2 border-dashed border-green-300 text-green-600 font-bold py-2 rounded-xl text-sm">
+              ＋ 加入行程
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 【行李清單】 ==================== -->
+      <div v-if="currentView === '行李'" class="space-y-4">
+        <button @click="addLuggage" class="bg-orange-100 text-orange-700 w-full py-3 rounded-2xl font-black border-4 border-orange-300 poke-shadow btn-press mb-2">
+          ＋ 新增物品
+        </button>
+        <div class="space-y-2">
+          <label v-for="(item, index) in tripData.luggage" :key="index" 
+                 :class="['flex items-center justify-between p-3 rounded-2xl border-4 cursor-pointer transition-colors', 
+                          item.checked ? 'bg-gray-200 border-gray-300 text-gray-400 line-through' : 'bg-white border-orange-300 text-gray-800 poke-shadow']">
+            <div class="flex items-center gap-3 w-full">
+              <input type="checkbox" v-model="item.checked" class="w-5 h-5 accent-orange-500"> 
+              <input type="text" v-model="item.name" class="bg-transparent outline-none w-full font-bold text-sm" @click.prevent>
+            </div>
+            <button @click.prevent="tripData.luggage.splice(index, 1)" class="text-gray-300 hover:text-red-500 ml-2 font-black">✖</button>
+          </label>
+        </div>
+      </div>
+
+      <!-- ==================== 【花費記帳】 ==================== -->
+      <div v-if="currentView === '花費'" class="space-y-5">
+        <!-- 結算版 -->
+        <div class="bg-gray-800 text-white p-5 rounded-3xl border-4 border-gray-900 poke-shadow">
+          <h3 class="font-black text-lg mb-3 text-yellow-400">📊 結算總覽 (總支出: ${{ totalExpense }})</h3>
+          <div class="space-y-2">
+            <div v-for="(balance, person) in settlement" :key="person" class="bg-gray-700 p-3 rounded-xl flex justify-between items-center">
+              <span class="font-bold">{{ person }}</span>
+              <span v-if="balance > 0" class="font-black text-green-400 text-sm">應收 +${{ balance.toFixed(0) }}</span>
+              <span v-else-if="balance < 0" class="font-black text-red-400 text-sm">應付 -${{ Math.abs(balance).toFixed(0) }}</span>
+              <span v-else class="font-black text-gray-400 text-sm">結清</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 記帳表單 -->
+        <div class="bg-yellow-100 border-4 border-yellow-400 p-4 rounded-3xl poke-shadow">
+          <div class="flex gap-2 mb-3">
+            <input type="text" v-model="newExpense.item" placeholder="花費項目" class="flex-1 border-2 border-gray-300 p-2 rounded-xl outline-none font-bold text-sm">
+            <input type="number" v-model="newExpense.amount" placeholder="金額" class="w-24 border-2 border-gray-300 p-2 rounded-xl outline-none font-bold text-sm">
+          </div>
+          <div class="mb-3">
+            <span class="font-bold text-xs text-gray-500 block mb-1">代墊人 (誰付的)</span>
+            <select v-model="newExpense.paidBy" class="w-full border-2 border-gray-300 p-2 rounded-xl outline-none font-bold text-sm bg-white">
+              <option v-for="person in tripData.companions" :key="person" :value="person">{{ person }}</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <span class="font-bold text-xs text-gray-500 block mb-1">分攤人員</span>
+            <div class="flex flex-wrap gap-2">
+              <label v-for="person in tripData.companions" :key="person" class="flex items-center gap-1 cursor-pointer font-bold bg-white px-2 py-1 rounded-lg border-2 border-gray-200 text-sm">
+                <input type="checkbox" :value="person" v-model="newExpense.splitBetween" class="w-4 h-4 accent-yellow-500"> {{ person }}
+              </label>
+            </div>
+          </div>
+          <button @click="addExpense" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-black py-2 rounded-xl w-full border-2 border-gray-900">加入記帳</button>
+        </div>
+
+        <!-- 明細 -->
+        <div class="space-y-2">
+          <div v-for="(exp, index) in tripData.expenses" :key="index" class="bg-white border-2 border-gray-200 p-3 rounded-2xl flex justify-between items-center shadow-sm">
+            <div>
+              <p class="font-black text-sm">{{ exp.item }}</p>
+              <p class="text-xs text-gray-500 font-bold">{{ exp.paidBy }} 先付</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <p class="font-black text-red-500">${{ exp.amount }}</p>
+              <button @click="tripData.expenses.splice(index, 1)" class="text-gray-300 hover:text-red-500 font-black">✖</button>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
 
   <script>
@@ -306,30 +345,55 @@
 
     createApp({
       setup() {
-        const tabs = ['首頁', '交通', '住宿', '行程', '行李', '天氣', '花費'];
-        const currentTab = ref('首頁');
+        const currentView = ref('menu'); // 'menu', '首頁', '交通', '住宿', '行程', '行李', '花費'
         const newCompanion = ref('');
 
-        // 預設資料 (如果是第一次使用系統)
         const defaultData = {
           tripName: '新的旅程計畫',
-          companions: ['我', '盈瑜', '兒子'], // 幫你預設好常用的同行家人
-          transports: [{ type: '飛機', detail: '' }],
-          accommodations: [],
+          companions: ['我', '盈瑜'],
+          transports: [{ type: '飛機', number: '', from: '', to: '', depTime: '', arrTime: '', bookingRef: '' }],
+          accommodations: [{ name: '', checkIn: '', checkOut: '', checkInTime: '', checkOutTime: '', address: '', bookingRef: '', hasBreakfast: false }],
           itinerary: [{ items: [{ time: '09:00', activity: '', url: '' }], transit: [] }],
           luggage: [
             { name: '護照 / 身分證', checked: false },
-            { name: '當地網卡 / eSIM', checked: false },
-            { name: '外幣現金', checked: false },
             { name: '行動電源 / 充電線', checked: false }
           ],
-          weatherNote: '',
           expenses: []
         };
 
         const tripData = ref(JSON.parse(JSON.stringify(defaultData)));
 
-        // ======== 同行名單操作 ========
+        // ======== 模板與存檔 ========
+        const saveTrip = () => {
+          localStorage.setItem('mobileTravelApp_Current', JSON.stringify(tripData.value));
+          alert('✅ 進度已儲存！');
+        };
+
+        const saveAsTemplate = () => {
+          if(confirm('將目前設定存為新旅程的專屬模板？')) {
+            const cleanTemplate = {
+              tripName: '新的旅程計畫',
+              companions: [...tripData.value.companions],
+              transports: [{ type: '飛機', number: '', from: '', to: '', depTime: '', arrTime: '', bookingRef: '' }],
+              accommodations: [],
+              itinerary: [{ items: [{ time: '09:00', activity: '', url: '' }], transit: [] }],
+              luggage: tripData.value.luggage.map(l => ({ name: l.name, checked: false })),
+              expenses: []
+            };
+            localStorage.setItem('mobileTravelApp_Template', JSON.stringify(cleanTemplate));
+            alert('✨ 模板已儲存！');
+          }
+        };
+
+        const loadTemplate = () => {
+          if(confirm('⚠️ 這將清空目前資料並載入模板，確定嗎？')) {
+            const saved = localStorage.getItem('mobileTravelApp_Template');
+            tripData.value = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+            currentView.value = 'menu';
+          }
+        };
+
+        // ======== 同行名單 ========
         const addCompanion = () => {
           if (newCompanion.value.trim() && !tripData.value.companions.includes(newCompanion.value.trim())) {
             tripData.value.companions.push(newCompanion.value.trim());
@@ -337,75 +401,26 @@
           }
         };
 
-        // ======== 模板引擎核心邏輯 ========
-        
-        // 儲存目前進度
-        const saveTrip = () => {
-          localStorage.setItem('myTravelPlan_Current', JSON.stringify(tripData.value));
-          alert('✅ 目前的旅程進度已儲存！');
-        };
-
-        // 將目前設定存為「乾淨模板」
-        const saveAsTemplate = () => {
-          if(confirm('要將目前的【同行名單】、【交通選項】與【行李清單】設為你未來的專屬模板嗎？')) {
-            // 建立乾淨版本的資料結構
-            const cleanTemplate = {
-              tripName: '新的旅程計畫',
-              companions: [...tripData.value.companions],
-              transports: tripData.value.transports.map(t => ({ type: t.type, detail: '' })),
-              accommodations: [],
-              itinerary: [{ items: [{ time: '09:00', activity: '', url: '' }], transit: [] }],
-              // 拷貝行李項目，但將所有已打勾狀態取消
-              luggage: tripData.value.luggage.map(l => ({ name: l.name, checked: false })),
-              weatherNote: '',
-              expenses: []
-            };
-            localStorage.setItem('myTravelPlan_Template', JSON.stringify(cleanTemplate));
-            alert('✨ 專屬模板已儲存！下次按「載入乾淨模板」就可以直接使用。');
-          }
-        };
-
-        // 載入乾淨模板開新旅程
-        const loadTemplate = () => {
-          if(confirm('⚠️ 警告：這將會清空目前的行程與記帳資料，並載入空白模板。\n\n確定要開新旅程嗎？')) {
-            const savedTemplate = localStorage.getItem('myTravelPlan_Template');
-            if (savedTemplate) {
-              tripData.value = JSON.parse(savedTemplate);
-            } else {
-              tripData.value = JSON.parse(JSON.stringify(defaultData));
-            }
-            alert('🆕 已為你準備好乾淨的行程表！');
-          }
-        };
-
         // ======== 行程操作 ========
-        const addDay = () => {
-          tripData.value.itinerary.push({
-            items: [{ time: '09:00', activity: '', url: '' }],
-            transit: []
-          });
-        };
-
+        const addDay = () => tripData.value.itinerary.push({ items: [{ time: '09:00', activity: '', url: '' }], transit: [] });
         const addItem = (dayIndex) => {
           tripData.value.itinerary[dayIndex].items.push({ time: '', activity: '', url: '' });
-          tripData.value.itinerary[dayIndex].transit.push({ method: '地鐵/公車', duration: '' });
+          tripData.value.itinerary[dayIndex].transit.push({ method: '走路', duration: '' });
         };
 
         // ======== 行李操作 ========
-        const addLuggage = () => tripData.value.luggage.push({ name: '', checked: false });
+        const addLuggage = () => tripData.value.luggage.push({ name: '新物品', checked: false });
 
-        // ======== 花費與記帳系統 ========
-        const newExpense = ref({ item: '', amount: null, paidBy: '我', splitBetween: [] });
+        // ======== 花費與記帳 ========
+        const newExpense = ref({ item: '', amount: null, paidBy: '', splitBetween: [] });
 
-        // 監聽同行名單變化，自動更新記帳的分攤人員
         watch(() => tripData.value.companions, (newVal) => {
           newExpense.value.paidBy = newVal.length > 0 ? newVal[0] : '';
           newExpense.value.splitBetween = [...newVal];
         }, { immediate: true });
 
         const addExpense = () => {
-          if (!newExpense.value.item || !newExpense.value.amount) return alert('請輸入項目與金額！');
-          if (newExpense.value.splitBetween.length === 0) return alert('請選擇分攤人員！');
+          if (!newExpense.value.item || !newExpense.value.amount || newExpense.value.splitBetween.length === 0) return alert('請填寫完整資訊！');
           tripData.value.expenses.push({ ...newExpense.value });
           newExpense.value.item = '';
           newExpense.value.amount = null;
@@ -426,17 +441,16 @@
           return balances;
         });
 
-        // 頁面載入時讀取上次進度
         onMounted(() => {
-          const savedData = localStorage.getItem('myTravelPlan_Current');
+          const savedData = localStorage.getItem('mobileTravelApp_Current');
           if (savedData) {
-            try { tripData.value = JSON.parse(savedData); } catch (e) { console.error(e); }
+            try { tripData.value = JSON.parse(savedData); } catch (e) {}
           }
         });
 
         return {
-          tabs, currentTab, tripData, newCompanion, addCompanion,
-          saveTrip, saveAsTemplate, loadTemplate,
+          currentView, tripData, newCompanion, defaultData,
+          saveTrip, saveAsTemplate, loadTemplate, addCompanion,
           addDay, addItem, addLuggage,
           newExpense, addExpense, totalExpense, settlement
         }
