@@ -1,1 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的專屬旅遊手冊</title>
+  <!-- 引入 Tailwind CSS (快速排版) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Vue 3 (處理動態互動) -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+  <div id="app" class="max-w-4xl mx-auto p-4 sm:p-6 mt-4 bg-white shadow-lg rounded-xl">
+    
+    <!-- 頂部導覽列：七大分頁 -->
+    <h1 class="text-3xl font-bold mb-6 text-blue-600">✈️ 2026 濟州島旅遊計畫</h1>
+    <div class="flex flex-wrap gap-2 mb-6 border-b pb-4">
+      <button 
+        v-for="tab in tabs" 
+        :key="tab"
+        @click="currentTab = tab"
+        :class="['px-4 py-2 rounded-lg font-semibold transition-colors', 
+                 currentTab === tab ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700']"
+      >
+        {{ tab }}
+      </button>
+    </div>
 
+    <!-- 內容區塊切換 -->
+    
+    <!-- 首頁、交通、住宿等其他頁面 (暫時顯示文字) -->
+    <div v-if="currentTab !== '行程'" class="p-4 bg-gray-50 rounded-lg min-h-[300px]">
+      <h2 class="text-2xl font-bold mb-4">這裡是【{{ currentTab }}】區塊</h2>
+      <p class="text-gray-600">可以慢慢把 {{ currentTab }} 相關的表單跟內容加到這邊...</p>
+      
+      <!-- 交通區塊的預設範例 -->
+      <div v-if="currentTab === '交通'" class="mt-4">
+        <ul class="list-disc pl-5">
+          <li>飛機 (去程/回程航班)</li>
+          <li>租車 (例如：The Safe Rent A Car)</li>
+          <li>地鐵 / 巴士</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 【行程】核心功能區塊 -->
+    <div v-if="currentTab === '行程'" class="min-h-[300px]">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">行程安排</h2>
+        <button @click="addDay" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold">
+          ＋ 新增天數
+        </button>
+      </div>
+
+      <!-- 渲染每一天的行程 -->
+      <div v-for="(day, dayIndex) in itinerary" :key="dayIndex" class="mb-6 border-2 border-blue-100 rounded-lg p-4">
+        <h3 class="text-xl font-bold mb-4 text-blue-700">第 {{ dayIndex + 1 }} 天</h3>
+        
+        <!-- 該天的景點與交通節點 -->
+        <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="mb-3">
+          
+          <!-- 景點/活動 -->
+          <div class="flex items-center gap-3 bg-gray-50 p-3 rounded-md shadow-sm border border-gray-200">
+            <input type="time" v-model="item.time" class="border rounded p-1">
+            <input type="text" v-model="item.activity" placeholder="輸入行程，例如：抵達機場、主題樂園..." class="flex-1 border rounded p-1">
+          </div>
+
+          <!-- 行程之間的交通方式 (不是最後一個行程才顯示) -->
+          <div v-if="itemIndex < day.items.length - 1" class="flex flex-col items-center my-2 text-gray-500">
+            <div class="w-px h-4 bg-gray-400"></div>
+            <div class="flex gap-2 text-sm items-center">
+               <span>🚗 交通:</span>
+               <select class="border rounded p-1 bg-white">
+                 <option>走路</option>
+                 <option>計程車</option>
+                 <option>自駕</option>
+                 <option>地鐵</option>
+               </select>
+               <input type="text" placeholder="預估時間(如: 30分)" class="border rounded p-1 w-28 text-center">
+            </div>
+            <div class="w-px h-4 bg-gray-400"></div>
+          </div>
+          
+        </div>
+
+        <button @click="addItem(dayIndex)" class="mt-2 text-blue-500 hover:text-blue-700 font-semibold text-sm">
+          ＋ 新增行程節點
+        </button>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+      setup() {
+        const tabs = ['首頁', '交通', '住宿', '行程', '行李', '天氣', '花費'];
+        const currentTab = ref('行程'); // 預設打開行程頁
+
+        // 行程資料結構
+        const itinerary = ref([
+          {
+            items: [
+              { time: '09:00', activity: '機場出發' },
+              { time: '12:00', activity: '飯店 Check-in' }
+            ]
+          }
+        ]);
+
+        // 新增一天
+        const addDay = () => {
+          itinerary.value.push({
+            items: [{ time: '10:00', activity: '新行程' }]
+          });
+        };
+
+        // 新增該天的行程節點
+        const addItem = (dayIndex) => {
+          itinerary.value[dayIndex].items.push({ time: '', activity: '' });
+        };
+
+        return {
+          tabs,
+          currentTab,
+          itinerary,
+          addDay,
+          addItem
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
