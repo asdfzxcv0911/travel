@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>我的智慧旅遊計畫</title>
+  <title>我的智慧旅遊計畫 - 雲端版</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   
+  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -15,102 +15,157 @@
 
   <style>
     :root { --theme-color: #e91e63; }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f3f4f6;
-      color: #374151;
-    }
-    
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f3f4f6; color: #374151; }
     .theme-text { color: var(--theme-color) !important; }
     .theme-bg { background-color: var(--theme-color) !important; }
     .theme-bg-hover:hover { filter: brightness(0.9); }
     .theme-border { border-color: var(--theme-color) !important; }
-    
     .custom-input { width: 100%; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.75rem 1rem; transition: all 0.2s; }
     .custom-input:focus { border-color: var(--theme-color); outline: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
     .focus-theme:focus { border-color: var(--theme-color) !important; outline: none; }
-    
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .dragging { opacity: 0.5; border: 2px dashed var(--theme-color); }
     .compact-input { padding: 0.25rem; }
-
-    /* 終極對齊：拔除所有瀏覽器預設的數字上下箭頭 */
     input[type="number"] { -moz-appearance: textfield; }
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
+    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
 <body>
   <div id="app" class="min-h-screen pb-20" :style="{ '--theme-color': isSetup ? setupData.themeColor : tripData.themeColor }">
     
-    <!-- 頂端權限切換列 (測試用) -->
-    <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
-      <div class="flex items-center gap-2">
-        <span>🔐 目前身分：</span>
-        <span v-if="isEditor" class="font-bold text-green-400">總編輯 (完整權限)</span>
-        <span v-else class="font-bold text-yellow-400">訪客 (唯讀模式)</span>
-      </div>
-      <button @click="isEditor = !isEditor" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition-colors">
-        切換身分測試
-      </button>
+    <!-- ==================== 【全域載入中】 ==================== -->
+    <div v-if="appState === 'LOADING'" class="fixed inset-0 bg-white z-[300] flex flex-col justify-center items-center">
+      <div class="text-6xl mb-4 animate-bounce">✈️</div>
+      <h2 class="text-xl font-bold text-gray-700 animate-pulse">系統連線中...</h2>
     </div>
 
-    <!-- ==================== 【備忘錄彈出視窗 Modal】 ==================== -->
-    <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[200] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
-      <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
-        <div class="theme-bg px-5 py-3 flex justify-between items-center">
-          <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
-          <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
-        </div>
-        <div class="p-6">
-          <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
-        </div>
-        <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-          <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
-        </div>
+    <!-- ==================== 【登入畫面】 ==================== -->
+    <div v-if="appState === 'LOGIN'" class="fixed inset-0 bg-[#f3f4f6] z-[200] flex justify-center items-center p-4">
+      <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+        <div class="text-5xl mb-6">🌍</div>
+        <h1 class="text-2xl font-black text-gray-800 mb-2">專屬旅遊管理系統</h1>
+        <p class="text-gray-500 mb-8 text-sm">請登入您的 Google 帳號以管理或建立行程</p>
+        <button @click="loginWithGoogle" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-3 transition-colors">
+          <svg class="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+          使用 Google 登入
+        </button>
       </div>
     </div>
 
-    <!-- ==================== 【建立行程設定】 ==================== -->
-    <div v-show="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[100]">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
-        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
-          <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
-            <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
-            <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
-          </div>
-        </div>
-        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
-            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
-            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
-            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
-          </div>
-        </div>
-        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-          <button @click="isSetup = false" v-if="tripData.itinerary.length > 0" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm">取消</button>
-          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
+    <!-- ==================== 【行程大廳 (Dashboard)】 ==================== -->
+    <div v-if="appState === 'DASHBOARD'" class="min-h-screen">
+      <!-- 大廳頂部 -->
+      <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold flex items-center gap-2"><span>🏕️</span> 我的行程庫</h1>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-300 hidden md:inline">嗨, {{ currentUser?.displayName }}</span>
+          <button @click="logout" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-700 transition-colors">登出</button>
         </div>
       </div>
-    </div>
-
-
-    <!-- ==================== 【主控制台】 ==================== -->
-    <div v-show="!isSetup || !isEditor">
       
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex justify-between items-end mb-8">
+          <div>
+            <h2 class="text-3xl font-black text-gray-800 mb-2">所有旅程</h2>
+            <p class="text-gray-500 font-medium">您目前共有 {{ myTrips.length }} 個行程計畫</p>
+          </div>
+          <button @click="createNewTrip" class="theme-bg theme-bg-hover text-white font-bold px-5 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+            <span>➕</span> 新增空白行程
+          </button>
+        </div>
+
+        <!-- 行程卡片網格 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="trip in myTrips" :key="trip.id" @click="openTrip(trip.id)" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition-shadow group relative">
+            <div class="h-24 w-full" :style="{ backgroundColor: trip.themeColor || '#e91e63' }">
+              <div class="w-full h-full bg-black/10 flex items-center justify-center">
+                <span class="text-4xl shadow-sm opacity-90">✈️</span>
+              </div>
+            </div>
+            <button @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
+            <div class="p-5">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-1 truncate">{{ trip.tripName }}</h3>
+              <p class="text-sm text-gray-500">{{ formatDateRange(trip.startDate, trip.endDate) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="myTrips.length === 0" class="text-center py-20 border-2 border-dashed border-gray-300 rounded-3xl mt-6">
+          <p class="text-gray-500 text-lg font-bold mb-4">目前還沒有任何行程喔！</p>
+          <button @click="createNewTrip" class="text-blue-500 font-bold hover:underline">立即建立第一趟旅程</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== 【個別行程編輯/預覽區 (TRIP)】 ==================== -->
+    <div v-if="appState === 'TRIP'">
+      
+      <!-- 頂部權限列 -->
+      <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
+        <div class="flex items-center gap-2">
+          <button v-if="isEditor" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2">⬅ 大廳</button>
+          <span>🔐 權限狀態：</span>
+          <span v-if="isEditor" class="font-bold text-green-400">擁有者 (可編輯)</span>
+          <span v-else class="font-bold text-yellow-400">訪客 (唯讀模式)</span>
+        </div>
+        <div v-if="!isEditor && !currentUser" class="flex gap-2">
+           <button @click="loginWithGoogle" class="text-blue-400 hover:text-blue-300 font-bold">登入以建立自己的行程</button>
+        </div>
+      </div>
+
+      <!-- 備忘錄 Modal -->
+      <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[200] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+          <div class="theme-bg px-5 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
+            <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
+          </div>
+          <div class="p-6">
+            <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
+          </div>
+          <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+            <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 設定 Modal -->
+      <div v-show="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[100]">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
+          <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+              <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
+              <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
+            </div>
+          </div>
+          <div class="p-4 md:p-6 overflow-y-auto space-y-5">
+            <div>
+              <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
+              <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
+            </div>
+            <div>
+              <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
+              <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
+            </div>
+            <div>
+              <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
+              <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
+            </div>
+          </div>
+          <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+            <button @click="isSetup = false" v-if="tripData.itinerary.length > 0" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm">取消</button>
+            <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 標題與導覽列 -->
       <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6 relative z-30">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
           <div class="flex justify-between items-start">
@@ -123,8 +178,8 @@
             </div>
             
             <div v-if="isEditor" class="flex flex-col gap-2">
-              <button @click="saveTrip" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
-                💾 暫存
+              <button @click="saveTripToCloud" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
+                💾 儲存並分享
               </button>
               <button @click="openSetup" class="border border-gray-300 text-gray-600 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-gray-50 font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
                 ⚙️ 設定
@@ -132,7 +187,6 @@
             </div>
           </div>
         </div>
-        
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
             <button v-for="tab in visibleTabs" :key="tab" @click="currentView = tab"
@@ -145,11 +199,9 @@
       </div>
 
       <div class="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 animate-fade-in">
-
-        <!-- ==================== 【行程模組】 ==================== -->
+        
+        <!-- 【行程模組】 -->
         <div v-if="currentView === '行程'" class="space-y-4">
-          
-          <!-- 天數切換列 -->
           <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-2 md:mb-4 border-b border-gray-200 pb-2 md:pb-3 px-2 md:px-0">
             <button @click="activeDayTab = 'overview'" 
                     :class="['px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap shadow-sm', 
@@ -164,11 +216,9 @@
             </button>
           </div>
 
-          <!-- ================= 行程預覽 (總行程 或 訪客的單日) ================= -->
+          <!-- 總行程 (所有人都可看) -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
-              
-              <!-- 利用 v-show 完美實現訪客的單日切換 -->
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
                 <div class="flex items-center gap-3 mb-3 md:mb-4">
                   <div class="h-px bg-gray-300 flex-1"></div>
@@ -188,37 +238,23 @@
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
                       <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
                       <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
-                      
-                      <!-- 唯讀版停留時間 (置中對齊) -->
                       <div v-if="item.stay" class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] md:text-xs">
-                        <span class="text-gray-500 font-bold mr-1">停留</span>
-                        <span class="font-black text-gray-800">{{ item.stay }}</span>
-                        <span class="text-gray-500 font-bold ml-1">分</span>
+                        <span class="text-gray-500 font-bold mr-1">停留</span><span class="font-black text-gray-800">{{ item.stay }}</span><span class="text-gray-500 font-bold ml-1">分</span>
                       </div>
                     </div>
                     
-                    <!-- 唯讀版擴充按鈕 -->
                     <div class="ml-[65px] md:ml-[85px] mt-1.5 flex flex-wrap gap-2">
-                      <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-blue-100 transition-colors shadow-sm font-bold">
-                        🔗 相關連結
-                      </a>
-                      <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-green-100 transition-colors shadow-sm font-bold">
-                        📍 開啟地圖
-                      </a>
-                      <button v-if="item.memo" @click="activeMemo = item.memo" class="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-yellow-100 transition-colors shadow-sm font-bold">
-                        📝 讀取備忘錄
-                      </button>
+                      <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-blue-100 transition-colors shadow-sm font-bold">🔗 相關連結</a>
+                      <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-green-100 transition-colors shadow-sm font-bold">📍 開啟地圖</a>
+                      <button v-if="item.memo" @click="activeMemo = item.memo" class="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-yellow-100 transition-colors shadow-sm font-bold">📝 讀取備忘錄</button>
                     </div>
                     <img v-if="item.image" :src="item.image" class="ml-[65px] md:ml-[85px] mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-100">
                     
-                    <!-- 唯讀版交通串接 -->
                     <div v-if="itemIndex < day.items.length - 1" class="my-2 ml-4 flex items-center gap-2">
                       <div class="bg-blue-50 border border-blue-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center shadow-sm relative z-10 text-[10px] md:text-xs text-blue-700">
-                        <span class="font-bold mr-1">🚌 移動</span>
-                        <span class="font-black">{{ day.transit[itemIndex].method === '自訂' ? day.transit[itemIndex].customMethod : day.transit[itemIndex].method }}</span>
+                        <span class="font-bold mr-1">🚌 移動</span><span class="font-black">{{ day.transit[itemIndex].method === '自訂' ? day.transit[itemIndex].customMethod : day.transit[itemIndex].method }}</span>
                         <span v-if="day.transit[itemIndex].duration" class="text-blue-300 mx-1 md:mx-2">|</span>
-                        <span v-if="day.transit[itemIndex].duration" class="font-black">{{ day.transit[itemIndex].duration }}</span>
-                        <span v-if="day.transit[itemIndex].duration" class="font-bold ml-1">分</span>
+                        <span v-if="day.transit[itemIndex].duration" class="font-black">{{ day.transit[itemIndex].duration }}</span><span v-if="day.transit[itemIndex].duration" class="font-bold ml-1">分</span>
                       </div>
                     </div>
                   </div>
@@ -227,13 +263,10 @@
             </div>
           </div>
 
-          <!-- ================= 單日編輯模式 (僅編輯者可見) ================= -->
+          <!-- 單日編輯模式 (僅編輯者) -->
           <div v-else-if="isEditor" class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
             <div class="flex justify-between items-center mb-4 md:mb-6 border-b border-gray-100 pb-2 md:pb-3">
-              <div>
-                <h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3>
-                <p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p>
-              </div>
+              <div><h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3><p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p></div>
             </div>
             
             <div class="relative pl-3 md:pl-6 space-y-2">
@@ -241,43 +274,27 @@
 
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
                    class="relative z-10 transition-all duration-300"
-                   draggable="true" 
-                   @dragstart="dragStart(activeDayTab, itemIndex, $event)" 
-                   @dragover.prevent 
-                   @drop="dragDrop(activeDayTab, itemIndex)"
-                   @dragenter="dragEnter($event)"
-                   @dragleave="dragLeave($event)">
-                
+                   draggable="true" @dragstart="dragStart(activeDayTab, itemIndex, $event)" @dragover.prevent @drop="dragDrop(activeDayTab, itemIndex)" @dragenter="dragEnter($event)" @dragleave="dragLeave($event)">
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow relative z-20">
-                  
-                  <!-- 主行程列 (極致對齊版) -->
                   <div class="flex items-center gap-1 md:gap-2 w-full">
                     <div class="cursor-move text-gray-400 hover:text-gray-700 px-0.5 md:px-2 select-none text-xs md:text-base flex-shrink-0">☰</div>
-                    
                     <div class="relative flex-shrink-0">
                       <input type="time" v-model="item.startTime" :disabled="itemIndex !== 0" @change="recalculateDay(activeDayTab)" 
                              :class="['border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[65px] md:w-[120px] focus-theme outline-none text-center', itemIndex !== 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-800']">
                     </div>
-
                     <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     
-                    <!-- 停留時間 (有底色、去箭頭、完美置中) -->
                     <div class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-1 md:px-2 md:py-1.5 flex-shrink-0">
-                      <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold mr-1">停留</span>
-                      <span class="md:hidden text-[10px] text-gray-400 mr-0.5">⏱</span>
+                      <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold mr-1">停留</span><span class="md:hidden text-[10px] text-gray-400 mr-0.5">⏱</span>
                       <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 text-[11px] md:text-sm text-center outline-none bg-transparent font-black text-gray-800 p-0 m-0 focus:text-[#e91e63]">
                       <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold ml-1">分</span>
                     </div>
 
-                    <!-- 齒輪設定按鈕 -->
                     <div class="relative flex-shrink-0">
                       <button @click="item.showMenu = !item.showMenu" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
-                      
-                      <!-- 透明遮罩：點擊選單外部自動關閉 -->
                       <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
-                      
                       <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40 py-1 text-sm flex flex-col">
                         <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg relative z-50">
                           <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus-theme">
@@ -297,132 +314,119 @@
 
                   <!-- 擴充膠囊區塊 -->
                   <div class="mt-1 pl-[25px] md:pl-[35px] flex flex-wrap gap-1.5">
-                    
                     <template v-if="item.link !== undefined && item.link !== false">
                       <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
                         <a :href="item.link" target="_blank" class="text-blue-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
-                        <div class="border-l border-blue-200 pl-1 ml-1 flex gap-1">
-                          <button @click="item.editLink = true" class="text-blue-400 hover:text-blue-600">✏️</button>
-                          <button @click="item.link = false" class="text-blue-400 hover:text-red-500">✕</button>
-                        </div>
+                        <div class="border-l border-blue-200 pl-1 ml-1 flex gap-1"><button @click="item.editLink = true" class="text-blue-400 hover:text-blue-600">✏️</button><button @click="item.link = false" class="text-blue-400 hover:text-red-500">✕</button></div>
                       </div>
                       <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
-                        <span class="text-xs">🔗</span>
-                        <input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
-                        <button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                        <span class="text-xs">🔗</span><input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
                     </template>
-
                     <template v-if="item.map !== undefined && item.map !== false">
                       <div v-if="!item.editMap && item.map" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
                         <a :href="item.map" target="_blank" class="text-green-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">📍 開啟地圖</a>
-                        <div class="border-l border-green-200 pl-1 ml-1 flex gap-1">
-                          <button @click="item.editMap = true" class="text-green-400 hover:text-green-600">✏️</button>
-                          <button @click="item.map = false" class="text-green-400 hover:text-red-500">✕</button>
-                        </div>
+                        <div class="border-l border-green-200 pl-1 ml-1 flex gap-1"><button @click="item.editMap = true" class="text-green-400 hover:text-green-600">✏️</button><button @click="item.map = false" class="text-green-400 hover:text-red-500">✕</button></div>
                       </div>
                       <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
-                        <span class="text-xs">📍</span>
-                        <input type="text" v-model="item.map" placeholder="貼上 Google Maps..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
-                        <button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                        <span class="text-xs">📍</span><input type="text" v-model="item.map" placeholder="貼上 Google Maps..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
                     </template>
-
                     <template v-if="item.memo !== undefined && item.memo !== false">
                       <div v-if="!item.editMemo && item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
                         <span class="text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
-                        <div class="border-l border-yellow-200 pl-1 ml-1 flex gap-1">
-                          <button @click="item.editMemo = true" class="text-yellow-400 hover:text-yellow-600">✏️</button>
-                          <button @click="item.memo = false" class="text-yellow-400 hover:text-red-500">✕</button>
-                        </div>
+                        <div class="border-l border-yellow-200 pl-1 ml-1 flex gap-1"><button @click="item.editMemo = true" class="text-yellow-400 hover:text-yellow-600">✏️</button><button @click="item.memo = false" class="text-yellow-400 hover:text-red-500">✕</button></div>
                       </div>
                       <div v-else class="w-full flex items-start gap-1 mt-1">
                         <textarea v-model="item.memo" placeholder="輸入備忘錄..." rows="2" class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none resize-y"></textarea>
-                        <div class="flex flex-col gap-1">
-                          <button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
-                          <button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">✕</button>
-                        </div>
+                        <div class="flex flex-col gap-1"><button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">✕</button></div>
                       </div>
                     </template>
-
                     <div v-if="item.image !== undefined && item.image !== false" class="w-full mt-1 flex items-start gap-2">
                       <div v-if="!item.editImage && item.image" class="flex-1 relative group inline-block">
                         <img :src="item.image" class="rounded-lg max-h-40 object-cover border border-gray-200 shadow-sm">
-                        <div class="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded shadow">
-                          <button @click="item.editImage = true" class="text-gray-600 hover:text-gray-900 text-[10px] px-1">更換</button>
-                          <button @click="item.image = false" class="text-red-400 hover:text-red-600 text-[10px] px-1 border-l border-gray-300 ml-1">刪除</button>
-                        </div>
+                        <div class="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded shadow"><button @click="item.editImage = true" class="text-gray-600 hover:text-gray-900 text-[10px] px-1">更換</button><button @click="item.image = false" class="text-red-400 hover:text-red-600 text-[10px] px-1 border-l border-gray-300 ml-1">刪除</button></div>
                       </div>
                       <div v-else class="flex-1 flex flex-col gap-1 bg-gray-50 border border-gray-200 p-2 rounded">
                         <div class="flex gap-1">
-                          <input type="text" v-model="item.image" placeholder="貼上外部圖片網址 (推薦)" class="flex-1 text-[11px] md:text-xs border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
-                          <button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                          <input type="text" v-model="item.image" placeholder="外部圖片網址(推薦)" class="flex-1 text-[11px] md:text-xs border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                         </div>
                         <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
-                          <span class="text-[10px] text-gray-500">或從本機上傳 (自動壓縮)：</span>
-                          <input type="file" accept="image/*" @change="handleImageUpload($event, item)" class="text-[10px] text-gray-600 w-32 cursor-pointer">
+                          <span class="text-[10px] text-gray-500">或本機上傳：</span><input type="file" accept="image/*" @change="handleImageUpload($event, item)" class="text-[10px] text-gray-600 w-32 cursor-pointer">
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- 交通移動 (有底色、無箭頭、完美對齊) -->
+                <!-- 交通移動 -->
                 <div v-if="itemIndex < tripData.itinerary[activeDayTab].items.length - 1" class="my-1.5 md:my-2 ml-1 md:ml-4 flex items-center gap-1 md:gap-2 relative z-10">
                   <div class="bg-blue-50 border border-blue-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center shadow-sm focus-within:border-blue-400">
-                    <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs mr-1">🚌 移動</span>
-                    <span class="text-blue-600 font-bold md:hidden text-[10px] mr-1">🚌</span>
+                    <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs mr-1">🚌 移動</span><span class="text-blue-600 font-bold md:hidden text-[10px] mr-1">🚌</span>
                     <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold text-blue-700 outline-none cursor-pointer text-[10px] md:text-xs text-center pr-1">
-                      <option>走路</option><option>自駕</option><option>地鐵/捷運</option><option>公車/客運</option>
-                      <option>計程車</option><option>高鐵/新幹線</option><option>台鐵/火車</option>
-                      <option>飛機</option><option>渡輪</option><option>自訂</option>
+                      <option>走路</option><option>自駕</option><option>地鐵/捷運</option><option>公車/客運</option><option>計程車</option><option>高鐵/新幹線</option><option>台鐵/火車</option><option>飛機</option><option>渡輪</option><option>自訂</option>
                     </select>
-                    
-                    <input v-if="tripData.itinerary[activeDayTab].transit[itemIndex].method === '自訂'" 
-                           type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="自訂" class="w-12 md:w-24 bg-transparent border-b border-blue-300 text-center outline-none text-blue-800 text-[10px] md:text-xs">
-                    
+                    <input v-if="tripData.itinerary[activeDayTab].transit[itemIndex].method === '自訂'" type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="自訂" class="w-12 md:w-24 bg-transparent border-b border-blue-300 text-center outline-none text-blue-800 text-[10px] md:text-xs">
                     <span class="text-blue-300 mx-1 md:mx-2">|</span>
-                    
-                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 bg-transparent text-center outline-none font-black text-blue-700 text-[10px] md:text-xs p-0 m-0">
+                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 bg-transparent text-center outline-none font-black text-blue-700 text-[10px] md:text-xs p-0 m-0 focus:text-blue-500">
                     <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs ml-1">分</span>
                   </div>
                 </div>
               </div>
             </div>
-            
-            <button @click="addItem(activeDayTab)" class="mt-4 w-full text-xs md:text-sm theme-text font-bold border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg py-2.5 hover:bg-gray-100 transition-colors focus-theme">
-              ＋ 加入行程
-            </button>
+            <button @click="addItem(activeDayTab)" class="mt-4 w-full text-xs md:text-sm theme-text font-bold border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg py-2.5 hover:bg-gray-100 transition-colors focus-theme">＋ 加入行程</button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <script>
-    const { createApp, ref, computed, watch, onMounted } = Vue;
+  <!-- ==================== Firebase 雲端引擎與 Vue 初始化 ==================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { createApp, ref, computed, watch, onMounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+
+    // 填入你的專屬 Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBpndk5gkgeNnuZxz9Dnbm1tEMkQQ_tVdU",
+      authDomain: "smarttravelapp-7d865.firebaseapp.com",
+      projectId: "smarttravelapp-7d865",
+      storageBucket: "smarttravelapp-7d865.firebasestorage.app",
+      messagingSenderId: "194767143293",
+      appId: "1:194767143293:web:17aba76c3465a6fd7e4c14",
+      measurementId: "G-9ZQ4HP75Y0"
+    };
+
+    const fbApp = initializeApp(firebaseConfig);
+    const auth = getAuth(fbApp);
+    const db = getFirestore(fbApp);
 
     createApp({
       setup() {
-        const isEditor = ref(true); 
+        const appState = ref('LOADING'); // LOGIN, DASHBOARD, TRIP
+        const currentUser = ref(null);
+        const myTrips = ref([]);
+        const currentTripId = ref(null);
+        
+        const isEditor = ref(false); 
         const isSetup = ref(false); 
         const tabs = ['行程', '公費與名單', '交通', '住宿', '行李'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
         const activeMemo = ref(null); 
 
-        const visibleTabs = computed(() => { return isEditor.value ? tabs : ['行程', '交通', '住宿']; });
+        const visibleTabs = computed(() => isEditor.value ? tabs : ['行程', '交通', '住宿']);
 
-        const setupData = ref({
-          name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63'
-        });
-
+        const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63' });
+        
+        // 保留客製化預設資訊
         const tripData = ref({
-          tripName: '未命名行程', destination: '未知', startDate: '', endDate: '', themeColor: '#e91e63',
+          ownerId: '', tripName: '未命名行程', destination: '', startDate: '', endDate: '', themeColor: '#e91e63',
           companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: []
         });
 
@@ -431,146 +435,171 @@
         watch(() => tripData.value.themeColor, (c) => { if(!isSetup.value) updateThemeColor(c); });
         watch(isSetup, (setupState) => { updateThemeColor(setupState ? setupData.value.themeColor : tripData.value.themeColor); });
 
-        const generateId = () => Math.random().toString(36).substr(2, 9);
-        const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
-
+        // Firebase Auth 狀態監聽
         onMounted(() => {
-          const savedData = localStorage.getItem('smartTravelApp');
-          if (savedData) {
-            try { 
-              tripData.value = JSON.parse(savedData); 
-              updateThemeColor(tripData.value.themeColor);
-            } catch(e) {}
-          } else {
-            isSetup.value = true;
-          }
-          
-          flatpickr("#dateRangePicker", {
-            mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", minDate: "today",
-            defaultDate: [setupData.value.startDate, setupData.value.endDate],
-            onChange: function(selectedDates) {
-              if(selectedDates.length === 2) {
-                setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA');
-                setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA');
+          const urlParams = new URLSearchParams(window.location.search);
+          const tripIdFromUrl = urlParams.get('id');
+
+          onAuthStateChanged(auth, async (user) => {
+            currentUser.value = user;
+            if (tripIdFromUrl) {
+              await loadTripFromCloud(tripIdFromUrl);
+            } else {
+              if (user) {
+                await fetchMyTrips();
+                appState.value = 'DASHBOARD';
+              } else {
+                appState.value = 'LOGIN';
               }
             }
           });
         });
 
-        const saveTrip = () => {
-          localStorage.setItem('smartTravelApp', JSON.stringify(tripData.value));
-          alert('✅ 旅程進度已成功暫存！');
+        const loginWithGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
+        const logout = () => { signOut(auth); appState.value = 'LOGIN'; };
+
+        const fetchMyTrips = async () => {
+          if (!currentUser.value) return;
+          const q = query(collection(db, "trips"), where("ownerId", "==", currentUser.value.uid));
+          const querySnapshot = await getDocs(q);
+          myTrips.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        };
+
+        const createNewTrip = () => {
+          currentTripId.value = null; // 重置
+          tripData.value = { ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: [] };
+          isEditor.value = true;
+          appState.value = 'TRIP';
+          isSetup.value = true;
+          nextTick(initFlatpickr);
+        };
+
+        const openTrip = async (id) => {
+          window.history.pushState({}, '', `?id=${id}`);
+          await loadTripFromCloud(id);
+        };
+
+        const backToDashboard = () => {
+          window.history.pushState({}, '', window.location.pathname);
+          fetchMyTrips();
+          appState.value = 'DASHBOARD';
+        };
+
+        const loadTripFromCloud = async (id) => {
+          appState.value = 'LOADING';
+          currentTripId.value = id;
+          const docRef = doc(db, "trips", id);
+          const docSnap = await getDoc(docRef);
+          
+          if (docSnap.exists()) {
+            tripData.value = docSnap.data();
+            updateThemeColor(tripData.value.themeColor);
+            isEditor.value = !!(currentUser.value && currentUser.value.uid === tripData.value.ownerId);
+            appState.value = 'TRIP';
+            isSetup.value = false;
+          } else {
+            alert("找不到該行程！");
+            appState.value = currentUser.value ? 'DASHBOARD' : 'LOGIN';
+          }
+        };
+
+        const saveTripToCloud = async () => {
+          if (!currentUser.value) return alert("請先登入！");
+          tripData.value.ownerId = currentUser.value.uid;
+          
+          if (!currentTripId.value) {
+            currentTripId.value = Math.random().toString(36).substr(2, 10);
+            window.history.replaceState({}, '', `?id=${currentTripId.value}`);
+          }
+          
+          await setDoc(doc(db, "trips", currentTripId.value), tripData.value);
+          
+          // 複製網址到剪貼簿
+          const shareUrl = window.location.href;
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            alert("✅ 儲存成功！\n專屬分享網址已複製到剪貼簿，直接貼給朋友即可。");
+          });
+        };
+
+        const deleteTripFromCloud = async (id) => {
+          if(confirm("確定要刪除這趟旅程嗎？刪除後無法恢復喔！")) {
+            await deleteDoc(doc(db, "trips", id));
+            await fetchMyTrips();
+          }
+        };
+
+        const generateId = () => Math.random().toString(36).substr(2, 9);
+        const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+
+        const initFlatpickr = () => {
+          if(document.querySelector("#dateRangePicker")) {
+            flatpickr("#dateRangePicker", {
+              mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", minDate: "today",
+              defaultDate: setupData.value.startDate ? [setupData.value.startDate, setupData.value.endDate] : [],
+              onChange: function(selectedDates) {
+                if(selectedDates.length === 2) {
+                  setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA');
+                  setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA');
+                }
+              }
+            });
+          }
         };
 
         const openSetup = () => {
-          setupData.value.name = tripData.value.tripName;
-          setupData.value.destination = tripData.value.destination;
-          setupData.value.themeColor = tripData.value.themeColor;
-          setupData.value.startDate = tripData.value.startDate;
-          setupData.value.endDate = tripData.value.endDate;
-          
-          setTimeout(() => {
-            if(document.querySelector("#dateRangePicker")._flatpickr) {
-                document.querySelector("#dateRangePicker")._flatpickr.setDate([setupData.value.startDate, setupData.value.endDate]);
-            }
-          }, 100);
+          setupData.value = { name: tripData.value.tripName, destination: tripData.value.destination, startDate: tripData.value.startDate, endDate: tripData.value.endDate, themeColor: tripData.value.themeColor };
           isSetup.value = true;
+          nextTick(initFlatpickr);
         };
 
         const generateTrip = () => {
-          if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) { return alert('請填寫完整資訊並選擇日期！'); }
-          
-          tripData.value.tripName = setupData.value.name;
-          tripData.value.destination = setupData.value.destination;
-          tripData.value.startDate = setupData.value.startDate;
-          tripData.value.endDate = setupData.value.endDate;
-          tripData.value.themeColor = setupData.value.themeColor;
+          if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) return alert('請填寫完整資訊並選擇日期！');
+          tripData.value.tripName = setupData.value.name; tripData.value.destination = setupData.value.destination; tripData.value.startDate = setupData.value.startDate; tripData.value.endDate = setupData.value.endDate; tripData.value.themeColor = setupData.value.themeColor;
 
-          const start = new Date(setupData.value.startDate);
-          const end = new Date(setupData.value.endDate);
+          const start = new Date(setupData.value.startDate); const end = new Date(setupData.value.endDate);
           const newDiffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
           
           if (tripData.value.itinerary.length > newDiffDays) {
             tripData.value.itinerary = tripData.value.itinerary.slice(0, newDiffDays);
-            if (activeDayTab.value !== 'overview' && activeDayTab.value >= newDiffDays) { activeDayTab.value = 'overview'; }
+            if (activeDayTab.value !== 'overview' && activeDayTab.value >= newDiffDays) activeDayTab.value = 'overview';
           }
-
           for(let i = 0; i < newDiffDays; i++) {
-            const cur = new Date(start);
-            cur.setDate(cur.getDate() + i);
+            const cur = new Date(start); cur.setDate(cur.getDate() + i);
             const dateStr = `${cur.getFullYear()}/${String(cur.getMonth()+1).padStart(2,'0')}/${String(cur.getDate()).padStart(2,'0')} (星期${daysOfWeek[cur.getDay()]})`;
-            
-            if (i < tripData.value.itinerary.length) {
-              tripData.value.itinerary[i].dateStr = dateStr;
-            } else {
-              tripData.value.itinerary.push({
-                dateStr: dateStr,
-                items: [{ id: generateId(), startTime: '09:00', activity: '', stay: 60, showMenu: false }],
-                transit: []
-              });
-            }
+            if (i < tripData.value.itinerary.length) tripData.value.itinerary[i].dateStr = dateStr;
+            else tripData.value.itinerary.push({ dateStr, items: [{ id: generateId(), startTime: '09:00', activity: '', stay: 60, showMenu: false }], transit: [] });
           }
           isSetup.value = false;
         };
 
         const formatDateRange = (start, end) => start && end ? `${start.replace(/-/g, '/')} ~ ${end.replace(/-/g, '/')}` : '';
-
         const recalculateDay = (dayIdx) => {
-          const day = tripData.value.itinerary[dayIdx];
-          if (day.items.length === 0) return;
+          const day = tripData.value.itinerary[dayIdx]; if (day.items.length === 0) return;
           let [hours, mins] = (day.items[0].startTime || '09:00').split(':').map(Number);
           let currentTime = hours * 60 + mins;
           for(let i = 0; i < day.items.length; i++) {
-            let h = Math.floor(currentTime / 60) % 24;
-            let m = currentTime % 60;
+            let h = Math.floor(currentTime / 60) % 24; let m = currentTime % 60;
             day.items[i].startTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
             currentTime += Number(day.items[i].stay || 0);
-            if (i < day.items.length - 1 && day.transit[i]) {
-              currentTime += Number(day.transit[i].duration || 0);
-            }
+            if (i < day.items.length - 1 && day.transit[i]) currentTime += Number(day.transit[i].duration || 0);
           }
         };
 
-        const addItem = (dayIdx) => {
-          tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: 60, showMenu: false });
-          tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
-          recalculateDay(dayIdx);
-        };
-
-        const deleteItem = (dayIdx, itemIdx) => {
-          tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1);
-          if (tripData.value.itinerary[dayIdx].transit.length > 0) {
-            tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1);
-          }
-          recalculateDay(dayIdx);
-        };
-
-        const openField = (item, field) => {
-          if(item[field] === undefined || item[field] === false) { item[field] = ''; }
-          item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true;
-          item.showMenu = false;
-        };
-
+        const addItem = (dayIdx) => { tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: 60, showMenu: false }); tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); recalculateDay(dayIdx); };
+        const deleteItem = (dayIdx, itemIdx) => { tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1); if (tripData.value.itinerary[dayIdx].transit.length > 0) tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1); recalculateDay(dayIdx); };
+        const openField = (item, field) => { if(item[field] === undefined || item[field] === false) { item[field] = ''; } item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true; item.showMenu = false; };
+        
         const handleImageUpload = (e, item) => {
-           const file = e.target.files[0];
-           if(!file) return;
+           const file = e.target.files[0]; if(!file) return;
            const reader = new FileReader();
            reader.onload = (event) => {
                const img = new Image();
                img.onload = () => {
-                   const canvas = document.createElement('canvas');
-                   const MAX_WIDTH = 600;
-                   const scaleSize = MAX_WIDTH / img.width;
-                   canvas.width = MAX_WIDTH;
-                   canvas.height = img.height * scaleSize;
-                   const ctx = canvas.getContext('2d');
-                   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                   item.image = canvas.toDataURL('image/jpeg', 0.6); 
-                   item.editImage = false;
-               }
-               img.src = event.target.result;
-           }
-           reader.readAsDataURL(file);
+                   const canvas = document.createElement('canvas'); const MAX_WIDTH = 600; const scaleSize = MAX_WIDTH / img.width;
+                   canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                   item.image = canvas.toDataURL('image/jpeg', 0.6); item.editImage = false;
+               }; img.src = event.target.result;
+           }; reader.readAsDataURL(file);
         };
 
         let dragInfo = { day: null, item: null };
@@ -580,31 +609,25 @@
         const dragDrop = (dayIdx, targetIdx) => {
           if (dragInfo.day !== dayIdx || dragInfo.item === targetIdx) return;
           const movedItem = tripData.value.itinerary[dayIdx].items.splice(dragInfo.item, 1)[0];
-          tripData.value.itinerary[dayIdx].items.splice(targetIdx, 0, movedItem);
-          recalculateDay(dayIdx);
+          tripData.value.itinerary[dayIdx].items.splice(targetIdx, 0, movedItem); recalculateDay(dayIdx);
           document.querySelectorAll('.dragging, .border-dashed').forEach(el => el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]'));
         };
 
         const moveToDay = (fromDayIdx, itemIdx, event) => {
-          const toDayIdx = parseInt(event.target.value);
-          if(isNaN(toDayIdx)) return;
-          const movedItem = tripData.value.itinerary[fromDayIdx].items.splice(itemIdx, 1)[0];
-          movedItem.showMenu = false; 
+          const toDayIdx = parseInt(event.target.value); if(isNaN(toDayIdx)) return;
+          const movedItem = tripData.value.itinerary[fromDayIdx].items.splice(itemIdx, 1)[0]; movedItem.showMenu = false; 
           if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.pop();
           recalculateDay(fromDayIdx);
           tripData.value.itinerary[toDayIdx].items.push(movedItem);
           if (tripData.value.itinerary[toDayIdx].items.length > 1) tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
-          recalculateDay(toDayIdx);
-          event.target.value = ""; 
-          alert(`✅ 已將行程挪至 Day ${toDayIdx + 1}`);
+          recalculateDay(toDayIdx); event.target.value = ""; alert(`✅ 已將行程挪至 Day ${toDayIdx + 1}`);
         };
 
         return {
-          isEditor, isSetup, setupData, generateTrip, openSetup, saveTrip,
-          tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange,
-          activeMemo,
-          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay,
-          openField, handleImageUpload
+          appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, saveTripToCloud, deleteTripFromCloud,
+          isEditor, isSetup, setupData, generateTrip, openSetup,
+          tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo,
+          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay, openField, handleImageUpload
         }
       }
     }).mount('#app')
