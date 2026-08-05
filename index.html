@@ -63,7 +63,6 @@
               <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
               <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
             </div>
-            <!-- 新增的 X 按鈕 -->
             <button @click="closeSetup" class="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors">✕</button>
           </div>
         </div>
@@ -240,8 +239,11 @@
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
                       <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
                       <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                      
+                      <!-- 總行程：格式化停留時間 -->
                       <div v-if="item.stay" class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] md:text-xs">
-                        <span class="text-gray-500 font-bold mr-1">停留</span><span class="font-black text-gray-800">{{ item.stay }}</span><span class="text-gray-500 font-bold ml-1">分</span>
+                        <span class="text-gray-500 font-bold mr-1">停留</span>
+                        <span class="font-black text-gray-800">{{ formatStayTime(item.stay) }}</span>
                       </div>
                     </div>
                     
@@ -274,9 +276,16 @@
             <div class="relative pl-3 md:pl-6 space-y-2">
               <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
 
+              <!-- 新增 @dragend="dragEnd" 確保拖曳放開後清除殘留虛線 -->
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
                    class="relative z-10 transition-all duration-300"
-                   draggable="true" @dragstart="dragStart(activeDayTab, itemIndex, $event)" @dragover.prevent @drop="dragDrop(activeDayTab, itemIndex)" @dragenter="dragEnter($event)" @dragleave="dragLeave($event)">
+                   draggable="true" 
+                   @dragstart="dragStart(activeDayTab, itemIndex, $event)" 
+                   @dragover.prevent 
+                   @drop="dragDrop(activeDayTab, itemIndex)" 
+                   @dragenter="dragEnter($event)" 
+                   @dragleave="dragLeave($event)"
+                   @dragend="dragEnd">
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow relative z-20">
@@ -288,10 +297,13 @@
                     </div>
                     <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     
-                    <div class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-1 md:px-2 md:py-1.5 flex-shrink-0">
+                    <!-- 停留時間改為 5 分鐘級距的下拉選單 -->
+                    <div class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-1 md:px-2 md:py-1.5 flex-shrink-0 cursor-pointer focus-within:border-[#e91e63]">
                       <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold mr-1">停留</span><span class="md:hidden text-[10px] text-gray-400 mr-0.5">⏱</span>
-                      <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 text-[11px] md:text-sm text-center outline-none bg-transparent font-black text-gray-800 p-0 m-0 focus:text-[#e91e63]">
-                      <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold ml-1">分</span>
+                      <select v-model="item.stay" @change="recalculateDay(activeDayTab)" class="text-[11px] md:text-sm text-center outline-none bg-transparent font-black text-gray-800 p-0 m-0 cursor-pointer">
+                        <option value="" disabled>請選擇</option>
+                        <option v-for="opt in stayOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                      </select>
                     </div>
 
                     <div class="relative flex-shrink-0">
@@ -393,7 +405,6 @@
     import { getFirestore, doc, setDoc, getDoc, collection, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { createApp, ref, computed, watch, onMounted, nextTick } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
-    // 填入你的專屬 Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyBpndk5gkgeNnuZxz9Dnbm1tEMkQQ_tVdU",
       authDomain: "smarttravelapp-7d865.firebaseapp.com",
@@ -430,6 +441,25 @@
           ownerId: '', tripName: '未命名行程', destination: '', startDate: '', endDate: '', themeColor: '#e91e63',
           companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: []
         });
+
+        // 預生成每 5 分鐘級距的選項，最高 12 小時 (720 分鐘)
+        const stayOptions = [];
+        for(let i = 5; i <= 720; i += 5) {
+          let h = Math.floor(i / 60);
+          let m = i % 60;
+          let label = h > 0 ? (m > 0 ? `${h}小時 ${m}分` : `${h}小時`) : `${m}分`;
+          stayOptions.push({ value: i, label });
+        }
+
+        // 用於總覽模式的格式化函數
+        const formatStayTime = (val) => {
+          if (!val) return '';
+          let i = parseInt(val);
+          if (isNaN(i)) return val;
+          let h = Math.floor(i / 60);
+          let m = i % 60;
+          return h > 0 ? (m > 0 ? `${h}小時 ${m}分` : `${h}小時`) : `${m}分`;
+        };
 
         const updateThemeColor = (color) => { document.documentElement.style.setProperty('--theme-color', color); };
         watch(() => setupData.value.themeColor, (c) => { if(isSetup.value) updateThemeColor(c); });
@@ -468,7 +498,6 @@
         const createNewTrip = () => {
           currentTripId.value = null; 
           tripData.value = { ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: [] };
-          // 強制清空設定檔，避免「殘留記憶」
           setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63' };
           isEditor.value = true;
           appState.value = 'TRIP';
@@ -553,12 +582,10 @@
           nextTick(initFlatpickr);
         };
 
-        // 新增的取消與關閉邏輯
         const closeSetup = () => {
           if (tripData.value.itinerary && tripData.value.itinerary.length > 0) {
-            isSetup.value = false; // 已有行程，單純關閉設定視窗
+            isSetup.value = false; 
           } else {
-            // 完全空白的新行程被取消，退回大廳
             isSetup.value = false;
             appState.value = 'DASHBOARD';
           }
@@ -579,7 +606,8 @@
             const cur = new Date(start); cur.setDate(cur.getDate() + i);
             const dateStr = `${cur.getFullYear()}/${String(cur.getMonth()+1).padStart(2,'0')}/${String(cur.getDate()).padStart(2,'0')} (星期${daysOfWeek[cur.getDay()]})`;
             if (i < tripData.value.itinerary.length) tripData.value.itinerary[i].dateStr = dateStr;
-            else tripData.value.itinerary.push({ dateStr, items: [{ id: generateId(), startTime: '09:00', activity: '', stay: 60, showMenu: false }], transit: [] });
+            // 停留時間預設為空字串 ''
+            else tripData.value.itinerary.push({ dateStr, items: [{ id: generateId(), startTime: '09:00', activity: '', stay: '', showMenu: false }], transit: [] });
           }
           isSetup.value = false;
         };
@@ -592,12 +620,13 @@
           for(let i = 0; i < day.items.length; i++) {
             let h = Math.floor(currentTime / 60) % 24; let m = currentTime % 60;
             day.items[i].startTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            currentTime += Number(day.items[i].stay || 0);
+            currentTime += Number(day.items[i].stay || 0); // 若 stay 為空字串會自動當成 0
             if (i < day.items.length - 1 && day.transit[i]) currentTime += Number(day.transit[i].duration || 0);
           }
         };
 
-        const addItem = (dayIdx) => { tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: 60, showMenu: false }); tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); recalculateDay(dayIdx); };
+        // 停留時間預設為空字串 ''
+        const addItem = (dayIdx) => { tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: '', showMenu: false }); tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); recalculateDay(dayIdx); };
         const deleteItem = (dayIdx, itemIdx) => { tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1); if (tripData.value.itinerary[dayIdx].transit.length > 0) tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1); recalculateDay(dayIdx); };
         const openField = (item, field) => { if(item[field] === undefined || item[field] === false) { item[field] = ''; } item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true; item.showMenu = false; };
         
@@ -618,11 +647,17 @@
         const dragStart = (dayIdx, itemIdx, e) => { dragInfo = { day: dayIdx, item: itemIdx }; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('dragging'), 0); };
         const dragEnter = (e) => e.target.closest('.z-10')?.classList.add('border-dashed', 'border-2', 'border-[#e91e63]');
         const dragLeave = (e) => e.target.closest('.z-10')?.classList.remove('border-dashed', 'border-2', 'border-[#e91e63]');
+        
+        // 新增的強制清除拖曳樣式函數
+        const dragEnd = () => {
+          document.querySelectorAll('.dragging, .border-dashed').forEach(el => el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]'));
+        };
+
         const dragDrop = (dayIdx, targetIdx) => {
-          if (dragInfo.day !== dayIdx || dragInfo.item === targetIdx) return;
+          if (dragInfo.day !== dayIdx || dragInfo.item === targetIdx) return dragEnd();
           const movedItem = tripData.value.itinerary[dayIdx].items.splice(dragInfo.item, 1)[0];
           tripData.value.itinerary[dayIdx].items.splice(targetIdx, 0, movedItem); recalculateDay(dayIdx);
-          document.querySelectorAll('.dragging, .border-dashed').forEach(el => el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]'));
+          dragEnd(); // 拖曳成功放開後清除殘留虛線
         };
 
         const moveToDay = (fromDayIdx, itemIdx, event) => {
@@ -637,9 +672,10 @@
 
         return {
           appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, saveTripToCloud, deleteTripFromCloud,
-          isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup, // 這裡記得輸出 closeSetup
+          isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo,
-          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay, openField, handleImageUpload
+          stayOptions, formatStayTime, // 將時間相關常數與函數提供給模板使用
+          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, moveToDay, openField, handleImageUpload
         }
       }
     }).mount('#app')
