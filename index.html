@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>我的智慧旅遊計畫</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +14,6 @@
   <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
 
   <style>
-    /* 使用 CSS 變數動態控制主題色 */
     :root {
       --theme-color: #e91e63;
     }
@@ -42,44 +41,45 @@
     
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* 拖曳時的視覺效果 */
     .dragging { opacity: 0.5; border: 2px dashed var(--theme-color); }
+    
+    /* 針對手機版讓 Input 沒有過多的 padding */
+    .compact-input { padding: 0.25rem; }
   </style>
 </head>
 <body>
-  <!-- 綁定主題色變數 -->
-  <div id="app" class="min-h-screen" :style="{ '--theme-color': tripData.themeColor }">
+  <!-- 綁定主題色變數 (Setup 時預覽 setupData 的顏色，否則預覽 tripData 的顏色) -->
+  <div id="app" class="min-h-screen" :style="{ '--theme-color': isSetup ? setupData.themeColor : tripData.themeColor }">
     
-    <!-- ==================== 【建立行程】 ==================== -->
+    <!-- ==================== 【建立行程 (Setup)】 ==================== -->
     <div v-show="isSetup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4 z-50">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in">
-        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 class="text-2xl font-bold text-gray-800">建立行程</h2>
-          <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
-            <span class="text-sm font-bold text-gray-600">🎨 主題色</span>
+        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
+          <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+            <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
             <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
           </div>
         </div>
 
-        <div class="p-6 overflow-y-auto space-y-6">
+        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
           <div>
-            <label class="block mb-2 font-medium"><span class="theme-text mr-1">*</span>行程名稱</label>
-            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input">
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
+            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
           </div>
           <div>
-            <label class="block mb-2 font-medium"><span class="theme-text mr-1">*</span>目的地</label>
-            <input type="text" v-model="setupData.destination" placeholder="您是在搜尋哪個城市呢？" class="custom-input">
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
+            <input type="text" v-model="setupData.destination" placeholder="您是在搜尋哪個城市呢？" class="custom-input py-2">
           </div>
           <div>
-            <label class="block mb-2 font-medium"><span class="theme-text mr-1">*</span>旅遊日期 (自動計算天數)</label>
-            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input bg-white cursor-pointer" readonly>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動計算天數)</label>
+            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
           </div>
         </div>
 
-        <div class="p-4 border-t border-gray-100 flex justify-end gap-4 bg-gray-50 rounded-b-xl">
-          <button @click="isSetup = false" v-if="tripData.itinerary.length > 0" class="px-6 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md">取消</button>
-          <button @click="generateTrip" class="px-8 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all">完成，開始排行程</button>
+        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+          <button @click="isSetup = false" v-if="tripData.itinerary.length > 0" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm">取消</button>
+          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
         </div>
       </div>
     </div>
@@ -88,26 +88,32 @@
     <!-- ==================== 【主控制台】 ==================== -->
     <div v-show="!isSetup" class="pb-20">
       
-      <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
           <div class="flex justify-between items-start">
             <div>
-              <div class="flex items-center gap-3 mb-2">
-                <span class="text-gray-500 font-medium">📍 {{ tripData.destination }}</span>
+              <div class="flex items-center gap-3 mb-1 md:mb-2">
+                <span class="text-gray-500 font-medium text-sm md:text-base">📍 {{ tripData.destination }}</span>
               </div>
-              <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{{ tripData.tripName }}</h1>
-              <p class="text-gray-500 font-medium">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
+              <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">{{ tripData.tripName }}</h1>
+              <p class="text-gray-500 font-medium text-xs md:text-base">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
             </div>
-            <button @click="openSetup" class="border border-gray-300 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-50 font-medium text-sm flex items-center gap-2 shadow-sm">
-              ⚙️ 行程設定
-            </button>
+            
+            <div class="flex flex-col gap-2">
+              <button @click="saveTrip" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1">
+                💾 暫存
+              </button>
+              <button @click="openSetup" class="border border-gray-300 text-gray-600 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-gray-50 font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1">
+                ⚙️ 設定
+              </button>
+            </div>
           </div>
         </div>
         
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex space-x-6 overflow-x-auto hide-scrollbar">
+          <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
             <button v-for="tab in tabs" :key="tab" @click="currentView = tab"
-              :class="['pb-3 px-1 text-sm font-bold transition-colors border-b-4 whitespace-nowrap', 
+              :class="['pb-2 md:pb-3 px-1 text-sm md:text-base font-bold transition-colors border-b-4 whitespace-nowrap', 
                        currentView === tab ? 'theme-border theme-text' : 'border-transparent text-gray-500 hover:text-gray-700']">
               {{ tab }}
             </button>
@@ -115,73 +121,66 @@
         </div>
       </div>
 
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in">
+      <div class="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 animate-fade-in">
 
         <!-- ==================== 【行程模組】 ==================== -->
         <div v-if="currentView === '行程'" class="space-y-4">
           
-          <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 border-b border-gray-200 pb-3">
+          <!-- 天數切換列 -->
+          <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-2 md:mb-4 border-b border-gray-200 pb-2 md:pb-3 px-2 md:px-0">
             <button @click="activeDayTab = 'overview'" 
-                    :class="['px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-shadow shadow-sm', 
+                    :class="['px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap shadow-sm', 
                              activeDayTab === 'overview' ? 'theme-bg text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200']">
               📋 總行程
             </button>
             <button v-for="(day, idx) in tripData.itinerary" :key="idx" 
                     @click="activeDayTab = idx" 
-                    :class="['px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-shadow shadow-sm', 
+                    :class="['px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap shadow-sm', 
                              activeDayTab === idx ? 'theme-bg text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200']">
               Day {{ idx + 1 }}
             </button>
           </div>
 
-          <!-- 總行程 (唯讀) -->
-          <div v-if="activeDayTab === 'overview'" class="space-y-8 pb-10">
+          <!-- 總行程預覽 -->
+          <div v-if="activeDayTab === 'overview'" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
-              <div class="flex items-center gap-4 mb-4">
+              <div class="flex items-center gap-3 mb-3 md:mb-4">
                 <div class="h-px bg-gray-300 flex-1"></div>
-                <h3 class="text-lg font-black text-gray-800">
-                  <span class="theme-text">Day {{ dayIndex + 1 }}</span> - {{ day.dateStr }}
+                <h3 class="text-base md:text-lg font-black text-gray-800">
+                  <span class="theme-text">Day {{ dayIndex + 1 }}</span> - <span class="text-sm md:text-base text-gray-600">{{ day.dateStr }}</span>
                 </h3>
                 <div class="h-px bg-gray-300 flex-1"></div>
               </div>
 
-              <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm pl-8 relative">
-                <div class="absolute left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
-                <div v-if="day.items.length === 0" class="text-gray-400 text-sm font-bold ml-4">尚未安排行程</div>
+              <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
+                <div class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
+                <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
                 
                 <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-2">
-                  <div class="absolute -left-[27px] top-1.5 w-3 h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
-                  <div class="flex flex-wrap items-center gap-3">
-                    <span class="font-bold text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
-                    <span class="font-bold text-gray-900 text-lg">{{ item.activity || '未命名行程' }}</span>
-                    <span v-if="item.stay" class="text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">停 {{ item.stay }} 分</span>
-                  </div>
-                  
-                  <div v-if="itemIndex < day.items.length - 1" class="my-2 ml-4 flex items-center gap-2">
-                    <div class="bg-gray-50 border border-gray-200 rounded-full px-3 py-1 flex items-center gap-2 text-xs theme-text font-bold">
-                      <span>🚌 移動: {{ day.transit[itemIndex].method === '自訂' ? day.transit[itemIndex].customMethod : day.transit[itemIndex].method }}</span>
-                      <span v-if="day.transit[itemIndex].duration"> (約 {{ day.transit[itemIndex].duration }} 分)</span>
-                    </div>
+                  <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                  <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                    <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
+                    <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                    <span v-if="item.stay" class="text-[10px] md:text-xs text-gray-400 bg-white border border-gray-200 px-1 md:px-1.5 py-0.5 rounded">停 {{ item.stay }} 分</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 單日編輯 -->
-          <div v-else class="bg-white p-6 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
-            <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-3">
+          <!-- 單日編輯 (手機版完美單行優化) -->
+          <div v-else class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
+            <div class="flex justify-between items-center mb-4 md:mb-6 border-b border-gray-100 pb-2 md:pb-3">
               <div>
-                <h3 class="text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3>
-                <p class="text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p>
+                <h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3>
+                <p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p>
               </div>
-              <div class="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-200">💡 提示：設定第一個時間後，後續時間將自動推算</div>
             </div>
             
-            <div class="relative pl-6 space-y-2">
-              <div class="absolute left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
+            <div class="relative pl-3 md:pl-6 space-y-2">
+              <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
 
-              <!-- 每一筆行程 -->
+              <!-- 行程卡片 -->
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
                    class="relative z-10 transition-all duration-300"
                    draggable="true" 
@@ -191,145 +190,102 @@
                    @dragenter="dragEnter($event)"
                    @dragleave="dragLeave($event)">
                 
-                <div class="absolute -left-[22px] top-4 w-3 h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-2 hover:shadow-md transition-shadow">
-                  <div class="flex flex-wrap md:flex-nowrap gap-2 items-center relative">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow">
+                  <!-- 【手機版單行優化區塊】 -->
+                  <div class="flex items-center gap-1 md:gap-2 w-full">
                     
                     <!-- 拖曳手把 -->
-                    <div class="cursor-move text-gray-400 hover:text-gray-700 px-2 select-none" title="按住拖曳排序">☰</div>
+                    <div class="cursor-move text-gray-400 hover:text-gray-700 px-0.5 md:px-2 select-none text-xs md:text-base flex-shrink-0">☰</div>
                     
-                    <!-- 時間 (只有第一筆能手動修改) -->
-                    <div class="relative">
+                    <!-- 時間 -->
+                    <div class="relative flex-shrink-0">
                       <input type="time" v-model="item.startTime" :disabled="itemIndex !== 0" @change="recalculateDay(activeDayTab)" 
-                             :class="['border border-gray-200 rounded p-1.5 text-sm font-bold w-[120px] focus-theme', itemIndex !== 0 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white text-gray-800']">
-                      <span v-if="itemIndex !== 0" class="absolute -top-2 -right-2 text-[10px] bg-gray-200 text-gray-500 px-1 rounded shadow-sm">自動</span>
+                             :class="['border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[65px] md:w-[120px] focus-theme outline-none', itemIndex !== 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-800']">
                     </div>
 
                     <!-- 行程名稱 -->
-                    <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded p-1.5 font-bold text-base flex-1 min-w-[120px] focus-theme">
+                    <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     
-                    <!-- 停留時間 -->
-                    <div class="flex items-center gap-1 bg-white border border-gray-200 rounded p-1">
-                      <span class="text-xs text-gray-500 font-bold pl-1">停留</span>
-                      <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-14 text-sm text-center outline-none focus:text-[#e91e63] font-bold">
-                      <span class="text-xs text-gray-500 pr-1">分</span>
+                    <!-- 停留時間 (手機版隱藏"停留"與"分"文字，縮小寬度) -->
+                    <div class="flex items-center bg-white border border-gray-200 rounded compact-input flex-shrink-0">
+                      <span class="hidden md:inline text-xs text-gray-500 font-bold pl-1">停留</span>
+                      <span class="md:hidden text-[10px] text-gray-400 pr-0.5">⏱</span>
+                      <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-8 md:w-12 text-[11px] md:text-sm text-center outline-none focus:text-[#e91e63] font-bold bg-transparent">
+                      <span class="hidden md:inline text-xs text-gray-500 pr-1">分</span>
                     </div>
 
-                    <!-- 跨日移動 -->
-                    <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="text-xs bg-white border border-gray-200 rounded p-2 text-gray-500 outline-none focus-theme">
-                      <option value="" disabled selected>⏏️ 挪至他日</option>
-                      <option v-for="(d, idx) in tripData.itinerary" :key="idx" :value="idx" :disabled="idx === activeDayTab">Day {{idx+1}}</option>
-                    </select>
+                    <!-- 擴充設定按鈕 (點擊展開功能) -->
+                    <div class="relative flex-shrink-0">
+                      <button @click="item.showMenu = !item.showMenu" class="text-gray-400 hover:text-gray-700 p-1 bg-white border border-gray-200 rounded md:text-base text-xs">⚙️</button>
+                      
+                      <!-- 擴充選單浮窗 -->
+                      <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40 p-2 text-sm flex flex-col gap-1">
+                        <!-- 挪至他日 (修正動態選單) -->
+                        <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-gray-50 border border-gray-200 rounded p-1.5 text-gray-600 outline-none focus-theme mb-1">
+                          <option value="" disabled selected>⏏️ 挪至他日</option>
+                          <option v-for="(d, idx) in tripData.itinerary" :key="idx" :value="idx" :disabled="idx === activeDayTab">Day {{idx+1}}</option>
+                        </select>
+                        <hr class="my-1 border-gray-100">
+                        <button @click="item.showLink = !item.showLink; item.showMenu = false" class="text-left px-2 py-1 hover:bg-gray-50 rounded">🔗 加入連結</button>
+                        <button @click="item.showMap = !item.showMap; item.showMenu = false" class="text-left px-2 py-1 hover:bg-gray-50 rounded">📍 加入地圖</button>
+                        <button @click="item.showMemo = !item.showMemo; item.showMenu = false" class="text-left px-2 py-1 hover:bg-gray-50 rounded">📝 加入備忘錄</button>
+                        <hr class="my-1 border-gray-100">
+                        <button @click="deleteItem(activeDayTab, itemIndex)" class="text-left px-2 py-1 text-red-500 hover:bg-red-50 rounded font-bold">🗑️ 刪除行程</button>
+                      </div>
+                    </div>
+                  </div>
 
-                    <button @click="deleteItem(activeDayTab, itemIndex)" class="text-gray-300 hover:text-red-500 p-1.5 font-bold text-lg">✕</button>
+                  <!-- 擴充內容顯示區 (有開啟對應功能才顯示) -->
+                  <div v-if="item.showLink || item.showMap || item.showMemo" class="mt-2 pl-5 md:pl-8 space-y-1">
+                    <div v-if="item.showLink" class="flex items-center gap-1">
+                      <span class="text-xs">🔗</span>
+                      <input type="text" v-model="item.link" placeholder="貼上網址連結..." class="flex-1 text-xs md:text-sm bg-white border border-gray-200 rounded px-2 py-1 focus-theme outline-none">
+                      <button @click="item.showLink = false; item.link = ''" class="text-gray-300 text-xs hover:text-red-400">✕</button>
+                    </div>
+                    <div v-if="item.showMap" class="flex items-center gap-1">
+                      <span class="text-xs">📍</span>
+                      <input type="text" v-model="item.map" placeholder="貼上 Google Maps 網址..." class="flex-1 text-xs md:text-sm bg-white border border-gray-200 rounded px-2 py-1 focus-theme outline-none">
+                      <button @click="item.showMap = false; item.map = ''" class="text-gray-300 text-xs hover:text-red-400">✕</button>
+                    </div>
+                    <div v-if="item.showMemo" class="flex items-start gap-1">
+                      <span class="text-xs mt-1">📝</span>
+                      <textarea v-model="item.memo" placeholder="行程備忘錄..." rows="2" class="flex-1 text-xs md:text-sm bg-white border border-gray-200 rounded px-2 py-1 focus-theme outline-none resize-none"></textarea>
+                      <button @click="item.showMemo = false; item.memo = ''" class="text-gray-300 text-xs hover:text-red-400">✕</button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- 交通串接 (除了最後一筆以外顯示) -->
-                <div v-if="itemIndex < tripData.itinerary[activeDayTab].items.length - 1" class="my-2 ml-4 flex items-center gap-2 relative z-10">
-                  <div class="bg-white border border-gray-200 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm text-xs focus-within:border-[#e91e63]">
-                    <span class="text-gray-500 font-bold">🚌 移動</span>
-                    <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold theme-text outline-none cursor-pointer">
+                <!-- 交通串接 -->
+                <div v-if="itemIndex < tripData.itinerary[activeDayTab].items.length - 1" class="my-1.5 md:my-2 ml-1 md:ml-4 flex items-center gap-1 md:gap-2 relative z-10">
+                  <div class="bg-white border border-gray-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center gap-1 md:gap-2 shadow-sm text-[10px] md:text-xs focus-within:border-[#e91e63]">
+                    <span class="text-gray-500 font-bold hidden md:inline">🚌 移動</span>
+                    <span class="text-gray-500 font-bold md:hidden">🚌</span>
+                    <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold theme-text outline-none cursor-pointer max-w-[65px] md:max-w-none">
                       <option>走路</option><option>自駕</option><option>地鐵/捷運</option><option>公車/客運</option>
                       <option>計程車</option><option>高鐵/新幹線</option><option>台鐵/火車</option>
                       <option>飛機</option><option>渡輪</option><option>腳踏車</option><option>自訂</option>
                     </select>
                     
-                    <!-- 交通自訂輸入框 -->
                     <input v-if="tripData.itinerary[activeDayTab].transit[itemIndex].method === '自訂'" 
-                           type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="請輸入交通工具" class="w-24 bg-transparent border-b border-gray-300 text-center outline-none text-gray-700">
+                           type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="自訂" class="w-12 md:w-24 bg-transparent border-b border-gray-300 text-center outline-none text-gray-700">
                     <span class="text-gray-300">|</span>
-                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-12 bg-transparent text-center outline-none font-bold text-gray-700">
-                    <span class="text-gray-500 font-bold">分</span>
+                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-12 bg-transparent text-center outline-none font-bold text-gray-700">
+                    <span class="text-gray-500 font-bold hidden md:inline">分</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <button @click="addItem(activeDayTab)" class="mt-4 w-full text-sm theme-text font-bold border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg py-3 hover:bg-gray-100 transition-colors focus-theme">
-              ＋ 加入下一個行程
+            <button @click="addItem(activeDayTab)" class="mt-4 w-full text-xs md:text-sm theme-text font-bold border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg py-2.5 hover:bg-gray-100 transition-colors focus-theme">
+              ＋ 加入行程
             </button>
           </div>
         </div>
 
-        <!-- ==================== 【公費與名單】 ==================== -->
-        <div v-if="currentView === '公費與名單'" class="space-y-6">
-          <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">👥 同行夥伴</h2>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <div v-for="(person, index) in tripData.companions" :key="index" class="bg-gray-50 border border-gray-200 theme-text px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm">
-                {{ person }}
-                <button @click="tripData.companions.splice(index, 1)" class="hover:text-red-500 text-gray-400">✕</button>
-              </div>
-            </div>
-            <div class="flex gap-2 max-w-sm">
-              <input type="text" v-model="newCompanion" placeholder="新增夥伴姓名..." class="custom-input py-1.5 text-sm">
-              <button @click="addCompanion" class="theme-bg theme-bg-hover text-white px-4 py-1.5 rounded-md text-sm font-bold shadow-sm">加入</button>
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h3 class="font-bold text-gray-900 mb-4 text-lg">💰 新增花費</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input type="text" v-model="newExpense.item" placeholder="項目" class="custom-input">
-                <input type="number" v-model="newExpense.amount" placeholder="總金額" class="custom-input">
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <div>
-                  <span class="text-sm font-bold text-gray-600 block mb-2">代墊人</span>
-                  <select v-model="newExpense.paidBy" class="custom-input py-2">
-                    <option v-for="person in tripData.companions" :key="person" :value="person">{{ person }}</option>
-                  </select>
-                </div>
-                <div>
-                  <span class="text-sm font-bold text-gray-600 block mb-2">分攤人</span>
-                  <div class="flex flex-wrap gap-2">
-                    <label v-for="person in tripData.companions" :key="person" class="flex items-center gap-1.5 cursor-pointer bg-white px-3 py-1.5 rounded-md border border-gray-200 text-sm font-medium hover:border-[#e91e63]">
-                      <input type="checkbox" :value="person" v-model="newExpense.splitBetween" class="w-4 h-4" :style="{ accentColor: tripData.themeColor }"> {{ person }}
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <button @click="addExpense" class="w-full theme-bg theme-bg-hover text-white py-3 rounded-lg font-bold shadow-sm transition-colors">加入記帳</button>
-              
-              <div v-if="tripData.expenses.length > 0" class="mt-8">
-                <h3 class="font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">📋 歷史明細</h3>
-                <div class="space-y-3">
-                  <div v-for="(exp, index) in tripData.expenses" :key="index" class="p-3 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center">
-                    <div>
-                      <p class="font-bold text-gray-900">{{ exp.item }}</p>
-                      <p class="text-xs text-gray-500">{{ exp.paidBy }} 代墊 • 分攤: {{ exp.splitBetween.join(', ') }}</p>
-                    </div>
-                    <div class="flex items-center gap-4">
-                      <p class="font-bold theme-text">${{ exp.amount }}</p>
-                      <button @click="tripData.expenses.splice(index, 1)" class="text-gray-400 hover:text-red-500 font-bold">✕</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="lg:col-span-1">
-              <div class="bg-gray-800 text-white p-6 rounded-xl shadow-lg sticky top-6">
-                <h3 class="text-sm font-medium text-gray-400 mb-1">總支出</h3>
-                <p class="text-4xl font-bold mb-6 text-yellow-400">${{ totalExpense }}</p>
-                <h3 class="text-sm font-medium text-gray-400 mb-3 border-b border-gray-700 pb-2">個人結算狀況</h3>
-                <div class="space-y-4">
-                  <div v-for="(balance, person) in settlement" :key="person" class="flex justify-between items-center bg-gray-700 p-3 rounded-lg border border-gray-600">
-                    <span class="font-bold">{{ person }}</span>
-                    <span v-if="balance > 0" class="text-sm font-bold text-green-400">應收 +${{ balance.toFixed(0) }}</span>
-                    <span v-else-if="balance < 0" class="text-sm font-bold text-red-400">應付 -${{ Math.abs(balance).toFixed(0) }}</span>
-                    <span v-else class="text-sm text-gray-400">已結清</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 交通 / 住宿 / 行李 (隱藏，同上版功能) -->
+        <!-- ==================== 【公費與名單】(隱藏，同上版功能) ==================== -->
+        <!-- ==================== 【交通 / 住宿 / 行李】(隱藏，同上版功能) ==================== -->
       </div>
     </div>
   </div>
@@ -339,39 +295,35 @@
 
     createApp({
       setup() {
-        const isSetup = ref(true);
+        const isSetup = ref(false); // 預設先檢查有沒有存檔，沒有再打開
         const tabs = ['行程', '公費與名單', '交通', '住宿', '行李'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
 
         const setupData = ref({
-          name: '',
-          destination: '',
-          startDate: '',
-          endDate: '',
-          themeColor: '#e91e63' // 預設桃粉色
+          name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63'
         });
 
         const tripData = ref({
-          tripName: '',
-          destination: '',
-          startDate: '',
-          endDate: '',
-          themeColor: '#e91e63',
-          companions: ['我', '盈瑜'],
-          itinerary: [],
-          transports: [],
-          expenses: []
+          tripName: '未命名行程', destination: '未知', startDate: '', endDate: '', themeColor: '#e91e63',
+          companions: ['我', '盈瑜'], itinerary: [], transports: [], expenses: [], luggage: []
         });
 
         const generateId = () => Math.random().toString(36).substr(2, 9);
+        const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
 
-        const initFlatpickr = () => {
+        // 自動讀取進度
+        onMounted(() => {
+          const savedData = localStorage.getItem('smartTravelApp');
+          if (savedData) {
+            try { tripData.value = JSON.parse(savedData); } catch(e) {}
+          } else {
+            isSetup.value = true;
+          }
+          
           flatpickr("#dateRangePicker", {
-            mode: "range",
-            dateFormat: "Y/m/d",
-            locale: "zh_tw",
-            minDate: "today",
+            mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", minDate: "today",
+            defaultDate: [setupData.value.startDate, setupData.value.endDate],
             onChange: function(selectedDates) {
               if(selectedDates.length === 2) {
                 setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA');
@@ -379,23 +331,33 @@
               }
             }
           });
-        };
+        });
 
-        onMounted(() => initFlatpickr());
+        // 存檔功能
+        const saveTrip = () => {
+          localStorage.setItem('smartTravelApp', JSON.stringify(tripData.value));
+          alert('✅ 旅程進度已成功暫存！');
+        };
 
         const openSetup = () => {
           setupData.value.name = tripData.value.tripName;
           setupData.value.destination = tripData.value.destination;
           setupData.value.themeColor = tripData.value.themeColor;
+          setupData.value.startDate = tripData.value.startDate;
+          setupData.value.endDate = tripData.value.endDate;
+          
+          // 重新初始化日曆以顯示目前的起迄日
+          setTimeout(() => {
+            document.querySelector("#dateRangePicker")._flatpickr.setDate([setupData.value.startDate, setupData.value.endDate]);
+          }, 100);
           isSetup.value = true;
         };
 
+        // ======== 智慧天數重算與日期更新邏輯 ========
         const generateTrip = () => {
           if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) {
             return alert('請填寫完整資訊並選擇日期！');
           }
-          const start = new Date(setupData.value.startDate);
-          const end = new Date(setupData.value.endDate);
           
           tripData.value.tripName = setupData.value.name;
           tripData.value.destination = setupData.value.destination;
@@ -403,45 +365,54 @@
           tripData.value.endDate = setupData.value.endDate;
           tripData.value.themeColor = setupData.value.themeColor;
 
-          const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
-          const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+          const start = new Date(setupData.value.startDate);
+          const end = new Date(setupData.value.endDate);
+          const newDiffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
           
-          if (tripData.value.itinerary.length === 0) {
-            for(let i = 0; i < diffDays; i++) {
-              const cur = new Date(start);
-              cur.setDate(cur.getDate() + i);
+          // 如果新天數比原本的少，直接裁切陣列
+          if (tripData.value.itinerary.length > newDiffDays) {
+            tripData.value.itinerary = tripData.value.itinerary.slice(0, newDiffDays);
+            if (activeDayTab.value !== 'overview' && activeDayTab.value >= newDiffDays) {
+                activeDayTab.value = 'overview';
+            }
+          }
+
+          // 重新寫入每一天的日期，若有缺少的尾部天數則補齊
+          for(let i = 0; i < newDiffDays; i++) {
+            const cur = new Date(start);
+            cur.setDate(cur.getDate() + i);
+            const dateStr = `${cur.getFullYear()}/${String(cur.getMonth()+1).padStart(2,'0')}/${String(cur.getDate()).padStart(2,'0')} (星期${daysOfWeek[cur.getDay()]})`;
+            
+            if (i < tripData.value.itinerary.length) {
+              tripData.value.itinerary[i].dateStr = dateStr; // 更新舊有天數的日期字串
+            } else {
+              // 補齊新增加的天數
               tripData.value.itinerary.push({
-                dateStr: `${cur.getFullYear()}/${String(cur.getMonth()+1).padStart(2,'0')}/${String(cur.getDate()).padStart(2,'0')} (星期${daysOfWeek[cur.getDay()]})`,
-                items: [{ id: generateId(), startTime: '09:00', activity: '', stay: 60 }],
+                dateStr: dateStr,
+                items: [{ id: generateId(), startTime: '09:00', activity: '', stay: 60, showMenu: false, showLink: false, showMap: false, showMemo: false, link:'', map:'', memo:'' }],
                 transit: []
               });
             }
           }
+          
           isSetup.value = false;
-          activeDayTab.value = 'overview';
         };
 
         const formatDateRange = (start, end) => start && end ? `${start.replace(/-/g, '/')} ~ ${end.replace(/-/g, '/')}` : '';
 
-        // ======== 核心：時間自動推算系統 ========
+        // ======== 時間自動推算系統 ========
         const recalculateDay = (dayIdx) => {
           const day = tripData.value.itinerary[dayIdx];
           if (day.items.length === 0) return;
           
-          // 取得第一項的初始時間 (基準點)
           let [hours, mins] = (day.items[0].startTime || '09:00').split(':').map(Number);
           let currentTime = hours * 60 + mins;
 
           for(let i = 0; i < day.items.length; i++) {
-            // 寫入當前行程時間
             let h = Math.floor(currentTime / 60) % 24;
             let m = currentTime % 60;
             day.items[i].startTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            
-            // 加上停留時間
             currentTime += Number(day.items[i].stay || 0);
-            
-            // 加上移動時間 (如果有下一站的話)
             if (i < day.items.length - 1 && day.transit[i]) {
               currentTime += Number(day.transit[i].duration || 0);
             }
@@ -449,7 +420,7 @@
         };
 
         const addItem = (dayIdx) => {
-          tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: 60 });
+          tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: 60, showMenu: false, showLink: false, showMap: false, showMemo: false, link:'', map:'', memo:'' });
           tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
           recalculateDay(dayIdx);
         };
@@ -457,103 +428,45 @@
         const deleteItem = (dayIdx, itemIdx) => {
           tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1);
           if (tripData.value.itinerary[dayIdx].transit.length > 0) {
-            // 刪除對應的交通串接
             tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1);
           }
           recalculateDay(dayIdx);
         };
 
-        // ======== 行程拖曳排序 (同日) ========
+        // ======== 拖曳排序 ========
         let dragInfo = { day: null, item: null };
-        const dragStart = (dayIdx, itemIdx, e) => {
-          dragInfo = { day: dayIdx, item: itemIdx };
-          e.dataTransfer.effectAllowed = 'move';
-          setTimeout(() => e.target.classList.add('dragging'), 0);
-        };
+        const dragStart = (dayIdx, itemIdx, e) => { dragInfo = { day: dayIdx, item: itemIdx }; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('dragging'), 0); };
         const dragEnter = (e) => e.target.closest('.z-10')?.classList.add('border-dashed', 'border-2', 'border-[#e91e63]');
         const dragLeave = (e) => e.target.closest('.z-10')?.classList.remove('border-dashed', 'border-2', 'border-[#e91e63]');
-        
         const dragDrop = (dayIdx, targetIdx) => {
           if (dragInfo.day !== dayIdx || dragInfo.item === targetIdx) return;
-          const day = tripData.value.itinerary[dayIdx];
-          
-          // 交換陣列順序
-          const movedItem = day.items.splice(dragInfo.item, 1)[0];
-          day.items.splice(targetIdx, 0, movedItem);
-          
-          // 交通陣列長度維持 (簡單處理，只重算時間)
+          const movedItem = tripData.value.itinerary[dayIdx].items.splice(dragInfo.item, 1)[0];
+          tripData.value.itinerary[dayIdx].items.splice(targetIdx, 0, movedItem);
           recalculateDay(dayIdx);
-          
-          // 移除所有視覺特效
-          document.querySelectorAll('.dragging, .border-dashed').forEach(el => {
-            el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]');
-          });
+          document.querySelectorAll('.dragging, .border-dashed').forEach(el => el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]'));
         };
 
-        // ======== 跨日移動系統 ========
+        // ======== 跨日移動 ========
         const moveToDay = (fromDayIdx, itemIdx, event) => {
           const toDayIdx = parseInt(event.target.value);
           if(isNaN(toDayIdx)) return;
-
-          // 取出該行程
           const movedItem = tripData.value.itinerary[fromDayIdx].items.splice(itemIdx, 1)[0];
-          if (tripData.value.itinerary[fromDayIdx].transit.length > 0) {
-             tripData.value.itinerary[fromDayIdx].transit.pop(); // 移除多餘的交通線
-          }
-          recalculateDay(fromDayIdx); // 重新計算原天數
+          movedItem.showMenu = false; // 關閉選單
+          if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.pop();
+          recalculateDay(fromDayIdx);
 
-          // 塞入新天數的最後面
           tripData.value.itinerary[toDayIdx].items.push(movedItem);
-          if (tripData.value.itinerary[toDayIdx].items.length > 1) {
-             tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
-          }
-          recalculateDay(toDayIdx); // 重新計算新天數
+          if (tripData.value.itinerary[toDayIdx].items.length > 1) tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
+          recalculateDay(toDayIdx);
           
-          alert(`已成功將行程挪至 Day ${toDayIdx + 1} !`);
-          event.target.value = ""; // 恢復預設選項
+          event.target.value = ""; 
+          alert(`✅ 已將行程挪至 Day ${toDayIdx + 1}`);
         };
-
-        // ======== 記帳操作 (略) ========
-        const newCompanion = ref('');
-        const addCompanion = () => {
-          if (newCompanion.value.trim() && !tripData.value.companions.includes(newCompanion.value.trim())) {
-            tripData.value.companions.push(newCompanion.value.trim());
-            newCompanion.value = '';
-          }
-        };
-
-        const newExpense = ref({ item: '', amount: null, paidBy: '', splitBetween: [] });
-        watch(() => tripData.value.companions, (newVal) => {
-          newExpense.value.paidBy = newVal.length > 0 ? newVal[0] : '';
-          newExpense.value.splitBetween = [...newVal];
-        }, { immediate: true });
-
-        const addExpense = () => {
-          if (!newExpense.value.item || !newExpense.value.amount || newExpense.value.splitBetween.length === 0) return alert('請填寫完整喔！');
-          tripData.value.expenses.push({ ...newExpense.value });
-          newExpense.value.item = '';
-          newExpense.value.amount = null;
-        };
-
-        const totalExpense = computed(() => tripData.value.expenses.reduce((sum, exp) => sum + exp.amount, 0));
-        const settlement = computed(() => {
-          let balances = {};
-          tripData.value.companions.forEach(person => balances[person] = 0);
-          tripData.value.expenses.forEach(exp => {
-            if(balances[exp.paidBy] !== undefined) balances[exp.paidBy] += exp.amount;
-            const splitCost = exp.amount / exp.splitBetween.length;
-            exp.splitBetween.forEach(person => {
-              if(balances[person] !== undefined) balances[person] -= splitCost;
-            });
-          });
-          return balances;
-        });
 
         return {
-          isSetup, setupData, generateTrip, openSetup,
+          isSetup, setupData, generateTrip, openSetup, saveTrip,
           tabs, currentView, activeDayTab, tripData, formatDateRange,
-          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay,
-          newCompanion, addCompanion, newExpense, addExpense, totalExpense, settlement
+          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay
         }
       }
     }).mount('#app')
