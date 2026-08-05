@@ -14,7 +14,6 @@
   <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
 
   <style>
-    /* 核心變數宣告 */
     :root { --theme-color: #e91e63; }
     
     body {
@@ -36,32 +35,40 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .dragging { opacity: 0.5; border: 2px dashed var(--theme-color); }
     .compact-input { padding: 0.25rem; }
+
+    /* 終極對齊：拔除所有瀏覽器預設的數字上下箭頭 */
+    input[type="number"] { -moz-appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
-  <div id="app" class="min-h-screen pb-20">
+  <div id="app" class="min-h-screen pb-20" :style="{ '--theme-color': isSetup ? setupData.themeColor : tripData.themeColor }">
     
-    <!-- 頂端權限切換列 (模擬未來 Google 登入系統) -->
-    <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-50 relative">
+    <!-- 頂端權限切換列 (測試用) -->
+    <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
       <div class="flex items-center gap-2">
         <span>🔐 目前身分：</span>
-        <span v-if="isEditor" class="font-bold text-green-400">總編輯 (擁有所有權限)</span>
+        <span v-if="isEditor" class="font-bold text-green-400">總編輯 (完整權限)</span>
         <span v-else class="font-bold text-yellow-400">訪客 (唯讀模式)</span>
       </div>
-      <button @click="isEditor = !isEditor" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded">
+      <button @click="isEditor = !isEditor" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition-colors">
         切換身分測試
       </button>
     </div>
 
     <!-- ==================== 【備忘錄彈出視窗 Modal】 ==================== -->
-    <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[100] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm">
+    <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[200] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
       <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
         <div class="theme-bg px-5 py-3 flex justify-between items-center">
           <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
           <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
         </div>
         <div class="p-6">
-          <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ activeMemo }}</p>
+          <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
         </div>
         <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
           <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
@@ -69,9 +76,9 @@
       </div>
     </div>
 
-    <!-- ==================== 【建立行程設定】 (僅編輯者可見) ==================== -->
-    <div v-show="isSetup && isEditor" class="fixed inset-0 bg-gray-900/50 flex justify-center items-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in">
+    <!-- ==================== 【建立行程設定】 ==================== -->
+    <div v-show="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[100]">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
         <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
           <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
           <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
@@ -104,7 +111,7 @@
     <!-- ==================== 【主控制台】 ==================== -->
     <div v-show="!isSetup || !isEditor">
       
-      <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6">
+      <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6 relative z-30">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
           <div class="flex justify-between items-start">
             <div>
@@ -116,10 +123,10 @@
             </div>
             
             <div v-if="isEditor" class="flex flex-col gap-2">
-              <button @click="saveTrip" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1">
+              <button @click="saveTrip" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
                 💾 暫存
               </button>
-              <button @click="openSetup" class="border border-gray-300 text-gray-600 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-gray-50 font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1">
+              <button @click="openSetup" class="border border-gray-300 text-gray-600 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-gray-50 font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
                 ⚙️ 設定
               </button>
             </div>
@@ -157,43 +164,64 @@
             </button>
           </div>
 
-          <!-- ================= 總行程預覽 (所有人皆可見) ================= -->
-          <div v-if="activeDayTab === 'overview'" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
+          <!-- ================= 行程預覽 (總行程 或 訪客的單日) ================= -->
+          <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
-              <div class="flex items-center gap-3 mb-3 md:mb-4">
-                <div class="h-px bg-gray-300 flex-1"></div>
-                <h3 class="text-base md:text-lg font-black text-gray-800">
-                  <span class="theme-text">Day {{ dayIndex + 1 }}</span> - <span class="text-sm md:text-base text-gray-600">{{ day.dateStr }}</span>
-                </h3>
-                <div class="h-px bg-gray-300 flex-1"></div>
-              </div>
+              
+              <!-- 利用 v-show 完美實現訪客的單日切換 -->
+              <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
+                <div class="flex items-center gap-3 mb-3 md:mb-4">
+                  <div class="h-px bg-gray-300 flex-1"></div>
+                  <h3 class="text-base md:text-lg font-black text-gray-800">
+                    <span class="theme-text">Day {{ dayIndex + 1 }}</span> - <span class="text-sm md:text-base text-gray-600">{{ day.dateStr }}</span>
+                  </h3>
+                  <div class="h-px bg-gray-300 flex-1"></div>
+                </div>
 
-              <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
-                <div class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
-                <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
-                
-                <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
-                  <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
+                  <div class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
+                  <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
                   
-                  <div class="flex flex-wrap items-center gap-2 md:gap-3">
-                    <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
-                    <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
-                    <span v-if="item.stay" class="text-[10px] md:text-xs text-gray-400 bg-white border border-gray-200 px-1 md:px-1.5 py-0.5 rounded">停 {{ item.stay }} 分</span>
+                  <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
+                    <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                    
+                    <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                      <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
+                      <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                      
+                      <!-- 唯讀版停留時間 (置中對齊) -->
+                      <div v-if="item.stay" class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] md:text-xs">
+                        <span class="text-gray-500 font-bold mr-1">停留</span>
+                        <span class="font-black text-gray-800">{{ item.stay }}</span>
+                        <span class="text-gray-500 font-bold ml-1">分</span>
+                      </div>
+                    </div>
+                    
+                    <!-- 唯讀版擴充按鈕 -->
+                    <div class="ml-[65px] md:ml-[85px] mt-1.5 flex flex-wrap gap-2">
+                      <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-blue-100 transition-colors shadow-sm font-bold">
+                        🔗 相關連結
+                      </a>
+                      <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-green-100 transition-colors shadow-sm font-bold">
+                        📍 開啟地圖
+                      </a>
+                      <button v-if="item.memo" @click="activeMemo = item.memo" class="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-yellow-100 transition-colors shadow-sm font-bold">
+                        📝 讀取備忘錄
+                      </button>
+                    </div>
+                    <img v-if="item.image" :src="item.image" class="ml-[65px] md:ml-[85px] mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-100">
+                    
+                    <!-- 唯讀版交通串接 -->
+                    <div v-if="itemIndex < day.items.length - 1" class="my-2 ml-4 flex items-center gap-2">
+                      <div class="bg-blue-50 border border-blue-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center shadow-sm relative z-10 text-[10px] md:text-xs text-blue-700">
+                        <span class="font-bold mr-1">🚌 移動</span>
+                        <span class="font-black">{{ day.transit[itemIndex].method === '自訂' ? day.transit[itemIndex].customMethod : day.transit[itemIndex].method }}</span>
+                        <span v-if="day.transit[itemIndex].duration" class="text-blue-300 mx-1 md:mx-2">|</span>
+                        <span v-if="day.transit[itemIndex].duration" class="font-black">{{ day.transit[itemIndex].duration }}</span>
+                        <span v-if="day.transit[itemIndex].duration" class="font-bold ml-1">分</span>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <!-- 小圖示膠囊按鈕 (僅唯讀模式使用) -->
-                  <div class="ml-[65px] md:ml-[85px] mt-1.5 flex flex-wrap gap-2">
-                    <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-blue-100 transition-colors shadow-sm font-bold">
-                      🔗 相關連結
-                    </a>
-                    <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-green-100 transition-colors shadow-sm font-bold">
-                      📍 開啟地圖
-                    </a>
-                    <button v-if="item.memo" @click="activeMemo = item.memo" class="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-yellow-100 transition-colors shadow-sm font-bold">
-                      📝 讀取備忘錄
-                    </button>
-                  </div>
-                  <img v-if="item.image" :src="item.image" class="ml-[65px] md:ml-[85px] mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-100">
                 </div>
               </div>
             </div>
@@ -222,72 +250,73 @@
                 
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
-                <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow relative z-20">
                   
-                  <!-- 主行程列 -->
+                  <!-- 主行程列 (極致對齊版) -->
                   <div class="flex items-center gap-1 md:gap-2 w-full">
                     <div class="cursor-move text-gray-400 hover:text-gray-700 px-0.5 md:px-2 select-none text-xs md:text-base flex-shrink-0">☰</div>
                     
                     <div class="relative flex-shrink-0">
                       <input type="time" v-model="item.startTime" :disabled="itemIndex !== 0" @change="recalculateDay(activeDayTab)" 
-                             :class="['border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[65px] md:w-[120px] focus-theme outline-none', itemIndex !== 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-800']">
+                             :class="['border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[65px] md:w-[120px] focus-theme outline-none text-center', itemIndex !== 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-800']">
                     </div>
 
                     <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     
-                    <div class="flex items-center bg-white border border-gray-200 rounded compact-input flex-shrink-0">
-                      <span class="hidden md:inline text-xs text-gray-500 font-bold pl-1">停留</span>
-                      <span class="md:hidden text-[10px] text-gray-400 pr-0.5">⏱</span>
-                      <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-8 md:w-12 text-[11px] md:text-sm text-center outline-none focus:text-[#e91e63] font-bold bg-transparent">
+                    <!-- 停留時間 (有底色、去箭頭、完美置中) -->
+                    <div class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-1 md:px-2 md:py-1.5 flex-shrink-0">
+                      <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold mr-1">停留</span>
+                      <span class="md:hidden text-[10px] text-gray-400 mr-0.5">⏱</span>
+                      <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 text-[11px] md:text-sm text-center outline-none bg-transparent font-black text-gray-800 p-0 m-0 focus:text-[#e91e63]">
+                      <span class="hidden md:inline text-[10px] md:text-xs text-gray-500 font-bold ml-1">分</span>
                     </div>
 
                     <!-- 齒輪設定按鈕 -->
                     <div class="relative flex-shrink-0">
-                      <button @click="item.showMenu = !item.showMenu" class="text-gray-400 hover:text-gray-700 p-1 bg-white border border-gray-200 rounded md:text-base text-xs shadow-sm">⚙️</button>
+                      <button @click="item.showMenu = !item.showMenu" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
+                      
+                      <!-- 透明遮罩：點擊選單外部自動關閉 -->
+                      <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
                       
                       <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40 py-1 text-sm flex flex-col">
-                        <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg">
+                        <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg relative z-50">
                           <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus-theme">
                             <option value="" disabled selected>⏏️ 挪至他日...</option>
                             <option v-for="(d, idx) in tripData.itinerary" :key="idx" :value="idx" :disabled="idx === activeDayTab">Day {{idx+1}}</option>
                           </select>
                         </div>
-                        <button @click="openField(item, 'link')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><span class="w-4 text-center">🔗</span> 加入連結</button>
-                        <button @click="openField(item, 'map')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><span class="w-4 text-center">📍</span> 加入地圖</button>
-                        <button @click="openField(item, 'memo')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><span class="w-4 text-center">📝</span> 加入備忘錄</button>
-                        <button @click="openField(item, 'image')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><span class="w-4 text-center">🖼️</span> 加入圖片</button>
-                        <div class="h-px bg-gray-100 my-1"></div>
-                        <button @click="deleteItem(activeDayTab, itemIndex)" class="text-left px-3 py-1.5 text-red-500 hover:bg-red-50 font-bold flex items-center gap-2"><span class="w-4 text-center">🗑️</span> 刪除行程</button>
+                        <button @click="openField(item, 'link')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">🔗</span> 加入連結</button>
+                        <button @click="openField(item, 'map')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">📍</span> 加入地圖</button>
+                        <button @click="openField(item, 'memo')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">📝</span> 加入備忘錄</button>
+                        <button @click="openField(item, 'image')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">🖼️</span> 加入圖片</button>
+                        <div class="h-px bg-gray-100 my-1 relative z-50"></div>
+                        <button @click="deleteItem(activeDayTab, itemIndex)" class="text-left px-3 py-1.5 text-red-500 hover:bg-red-50 font-bold flex items-center gap-2 relative z-50"><span class="w-4 text-center">🗑️</span> 刪除行程</button>
                       </div>
                     </div>
                   </div>
 
-                  <!-- 膠囊按鈕與隱藏式輸入框 (編輯模式專用) -->
+                  <!-- 擴充膠囊區塊 -->
                   <div class="mt-1 pl-[25px] md:pl-[35px] flex flex-wrap gap-1.5">
                     
-                    <!-- 網址輸入/膠囊 -->
                     <template v-if="item.link !== undefined && item.link !== false">
-                      <!-- 確定後的膠囊狀態 -->
-                      <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
-                        <span class="text-blue-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="window.open(item.link, '_blank')">🔗 相關連結</span>
+                      <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
+                        <a :href="item.link" target="_blank" class="text-blue-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
                         <div class="border-l border-blue-200 pl-1 ml-1 flex gap-1">
                           <button @click="item.editLink = true" class="text-blue-400 hover:text-blue-600">✏️</button>
                           <button @click="item.link = false" class="text-blue-400 hover:text-red-500">✕</button>
                         </div>
                       </div>
-                      <!-- 正在編輯的長條輸入框 -->
                       <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
                         <span class="text-xs">🔗</span>
                         <input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
                         <button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
                     </template>
 
-                    <!-- 地圖輸入/膠囊 -->
                     <template v-if="item.map !== undefined && item.map !== false">
-                      <div v-if="!item.editMap && item.map" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
-                        <span class="text-green-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="window.open(item.map, '_blank')">📍 開啟地圖</span>
+                      <div v-if="!item.editMap && item.map" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
+                        <a :href="item.map" target="_blank" class="text-green-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">📍 開啟地圖</a>
                         <div class="border-l border-green-200 pl-1 ml-1 flex gap-1">
                           <button @click="item.editMap = true" class="text-green-400 hover:text-green-600">✏️</button>
                           <button @click="item.map = false" class="text-green-400 hover:text-red-500">✕</button>
@@ -296,14 +325,13 @@
                       <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
                         <span class="text-xs">📍</span>
                         <input type="text" v-model="item.map" placeholder="貼上 Google Maps..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
                         <button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
                     </template>
 
-                    <!-- 備忘錄輸入/膠囊 -->
                     <template v-if="item.memo !== undefined && item.memo !== false">
-                      <div v-if="!item.editMemo && item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
+                      <div v-if="!item.editMemo && item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
                         <span class="text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
                         <div class="border-l border-yellow-200 pl-1 ml-1 flex gap-1">
                           <button @click="item.editMemo = true" class="text-yellow-400 hover:text-yellow-600">✏️</button>
@@ -313,13 +341,12 @@
                       <div v-else class="w-full flex items-start gap-1 mt-1">
                         <textarea v-model="item.memo" placeholder="輸入備忘錄..." rows="2" class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none resize-y"></textarea>
                         <div class="flex flex-col gap-1">
-                          <button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                          <button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
                           <button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">✕</button>
                         </div>
                       </div>
                     </template>
 
-                    <!-- 圖片區塊 -->
                     <div v-if="item.image !== undefined && item.image !== false" class="w-full mt-1 flex items-start gap-2">
                       <div v-if="!item.editImage && item.image" class="flex-1 relative group inline-block">
                         <img :src="item.image" class="rounded-lg max-h-40 object-cover border border-gray-200 shadow-sm">
@@ -331,7 +358,7 @@
                       <div v-else class="flex-1 flex flex-col gap-1 bg-gray-50 border border-gray-200 p-2 rounded">
                         <div class="flex gap-1">
                           <input type="text" v-model="item.image" placeholder="貼上外部圖片網址 (推薦)" class="flex-1 text-[11px] md:text-xs border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
-                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button>
                           <button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                         </div>
                         <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
@@ -343,22 +370,24 @@
                   </div>
                 </div>
 
-                <!-- 交通串接 -->
+                <!-- 交通移動 (有底色、無箭頭、完美對齊) -->
                 <div v-if="itemIndex < tripData.itinerary[activeDayTab].items.length - 1" class="my-1.5 md:my-2 ml-1 md:ml-4 flex items-center gap-1 md:gap-2 relative z-10">
-                  <div class="bg-white border border-gray-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center gap-1 md:gap-2 shadow-sm text-[10px] md:text-xs focus-within:border-[#e91e63]">
-                    <span class="text-gray-500 font-bold hidden md:inline">🚌 移動</span>
-                    <span class="text-gray-500 font-bold md:hidden">🚌</span>
-                    <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold theme-text outline-none cursor-pointer max-w-[65px] md:max-w-none">
+                  <div class="bg-blue-50 border border-blue-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center shadow-sm focus-within:border-blue-400">
+                    <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs mr-1">🚌 移動</span>
+                    <span class="text-blue-600 font-bold md:hidden text-[10px] mr-1">🚌</span>
+                    <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold text-blue-700 outline-none cursor-pointer text-[10px] md:text-xs text-center pr-1">
                       <option>走路</option><option>自駕</option><option>地鐵/捷運</option><option>公車/客運</option>
                       <option>計程車</option><option>高鐵/新幹線</option><option>台鐵/火車</option>
                       <option>飛機</option><option>渡輪</option><option>自訂</option>
                     </select>
                     
                     <input v-if="tripData.itinerary[activeDayTab].transit[itemIndex].method === '自訂'" 
-                           type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="自訂" class="w-12 md:w-24 bg-transparent border-b border-gray-300 text-center outline-none text-gray-700">
-                    <span class="text-gray-300">|</span>
-                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-12 bg-transparent text-center outline-none font-bold text-gray-700">
-                    <span class="text-gray-500 font-bold hidden md:inline">分</span>
+                           type="text" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].customMethod" placeholder="自訂" class="w-12 md:w-24 bg-transparent border-b border-blue-300 text-center outline-none text-blue-800 text-[10px] md:text-xs">
+                    
+                    <span class="text-blue-300 mx-1 md:mx-2">|</span>
+                    
+                    <input type="number" v-model="tripData.itinerary[activeDayTab].transit[itemIndex].duration" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-6 md:w-8 bg-transparent text-center outline-none font-black text-blue-700 text-[10px] md:text-xs p-0 m-0">
+                    <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs ml-1">分</span>
                   </div>
                 </div>
               </div>
@@ -367,10 +396,6 @@
             <button @click="addItem(activeDayTab)" class="mt-4 w-full text-xs md:text-sm theme-text font-bold border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg py-2.5 hover:bg-gray-100 transition-colors focus-theme">
               ＋ 加入行程
             </button>
-          </div>
-          <!-- 針對非編輯者提示 -->
-          <div v-else class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-100">
-            <p class="text-gray-500 font-bold text-lg">您正在瀏覽訪客模式，請切換至「總行程」查看所有計畫。</p>
           </div>
         </div>
 
@@ -383,37 +408,28 @@
 
     createApp({
       setup() {
-        const isEditor = ref(true); // 模擬 Google 登入的編輯權限
+        const isEditor = ref(true); 
         const isSetup = ref(false); 
         const tabs = ['行程', '公費與名單', '交通', '住宿', '行李'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
-        const activeMemo = ref(null); // 控制備忘錄 Modal
+        const activeMemo = ref(null); 
 
-        // 依據權限顯示 Tabs，非編輯者只看得到部分模組
-        const visibleTabs = computed(() => {
-          return isEditor.value ? tabs : ['行程', '交通', '住宿']; 
-        });
+        const visibleTabs = computed(() => { return isEditor.value ? tabs : ['行程', '交通', '住宿']; });
 
         const setupData = ref({
           name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63'
         });
 
         const tripData = ref({
-          tripName: '濟州島探險之旅', destination: '濟州島', startDate: '', endDate: '', themeColor: '#e91e63',
+          tripName: '未命名行程', destination: '未知', startDate: '', endDate: '', themeColor: '#e91e63',
           companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: []
         });
 
-        // ==================== CSS 主題色核心驅動引擎 ====================
-        const updateThemeColor = (color) => {
-          document.documentElement.style.setProperty('--theme-color', color);
-        };
+        const updateThemeColor = (color) => { document.documentElement.style.setProperty('--theme-color', color); };
         watch(() => setupData.value.themeColor, (c) => { if(isSetup.value) updateThemeColor(c); });
         watch(() => tripData.value.themeColor, (c) => { if(!isSetup.value) updateThemeColor(c); });
-        watch(isSetup, (setupState) => {
-          updateThemeColor(setupState ? setupData.value.themeColor : tripData.value.themeColor);
-        });
-        // ==============================================================
+        watch(isSetup, (setupState) => { updateThemeColor(setupState ? setupData.value.themeColor : tripData.value.themeColor); });
 
         const generateId = () => Math.random().toString(36).substr(2, 9);
         const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
@@ -462,9 +478,7 @@
         };
 
         const generateTrip = () => {
-          if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) {
-            return alert('請填寫完整資訊並選擇日期！');
-          }
+          if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) { return alert('請填寫完整資訊並選擇日期！'); }
           
           tripData.value.tripName = setupData.value.name;
           tripData.value.destination = setupData.value.destination;
@@ -478,9 +492,7 @@
           
           if (tripData.value.itinerary.length > newDiffDays) {
             tripData.value.itinerary = tripData.value.itinerary.slice(0, newDiffDays);
-            if (activeDayTab.value !== 'overview' && activeDayTab.value >= newDiffDays) {
-                activeDayTab.value = 'overview';
-            }
+            if (activeDayTab.value !== 'overview' && activeDayTab.value >= newDiffDays) { activeDayTab.value = 'overview'; }
           }
 
           for(let i = 0; i < newDiffDays; i++) {
