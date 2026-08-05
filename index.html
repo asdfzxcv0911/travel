@@ -14,9 +14,8 @@
   <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
 
   <style>
-    :root {
-      --theme-color: #e91e63;
-    }
+    /* 核心變數宣告 */
+    :root { --theme-color: #e91e63; }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -24,33 +23,54 @@
       color: #374151;
     }
     
-    .theme-text { color: var(--theme-color); }
-    .theme-bg { background-color: var(--theme-color); }
+    .theme-text { color: var(--theme-color) !important; }
+    .theme-bg { background-color: var(--theme-color) !important; }
     .theme-bg-hover:hover { filter: brightness(0.9); }
-    .theme-border { border-color: var(--theme-color); }
+    .theme-border { border-color: var(--theme-color) !important; }
     
-    .custom-input {
-      width: 100%;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      padding: 0.75rem 1rem;
-      transition: all 0.2s;
-    }
+    .custom-input { width: 100%; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.75rem 1rem; transition: all 0.2s; }
     .custom-input:focus { border-color: var(--theme-color); outline: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.05); }
     .focus-theme:focus { border-color: var(--theme-color) !important; outline: none; }
     
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .dragging { opacity: 0.5; border: 2px dashed var(--theme-color); }
-    
     .compact-input { padding: 0.25rem; }
   </style>
 </head>
 <body>
-  <div id="app" class="min-h-screen" :style="{ '--theme-color': isSetup ? setupData.themeColor : tripData.themeColor }">
+  <div id="app" class="min-h-screen pb-20">
     
-    <!-- ==================== 【建立行程 (Setup)】 ==================== -->
-    <div v-show="isSetup" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center p-4 z-50">
+    <!-- 頂端權限切換列 (模擬未來 Google 登入系統) -->
+    <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-50 relative">
+      <div class="flex items-center gap-2">
+        <span>🔐 目前身分：</span>
+        <span v-if="isEditor" class="font-bold text-green-400">總編輯 (擁有所有權限)</span>
+        <span v-else class="font-bold text-yellow-400">訪客 (唯讀模式)</span>
+      </div>
+      <button @click="isEditor = !isEditor" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded">
+        切換身分測試
+      </button>
+    </div>
+
+    <!-- ==================== 【備忘錄彈出視窗 Modal】 ==================== -->
+    <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[100] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm">
+      <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+        <div class="theme-bg px-5 py-3 flex justify-between items-center">
+          <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
+          <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
+        </div>
+        <div class="p-6">
+          <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ activeMemo }}</p>
+        </div>
+        <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+          <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 【建立行程設定】 (僅編輯者可見) ==================== -->
+    <div v-show="isSetup && isEditor" class="fixed inset-0 bg-gray-900/50 flex justify-center items-center p-4 z-50">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in">
         <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
           <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
@@ -59,7 +79,6 @@
             <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
           </div>
         </div>
-
         <div class="p-4 md:p-6 overflow-y-auto space-y-5">
           <div>
             <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
@@ -67,14 +86,13 @@
           </div>
           <div>
             <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
-            <input type="text" v-model="setupData.destination" placeholder="您是在搜尋哪個城市呢？" class="custom-input py-2">
+            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
           </div>
           <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動計算天數)</label>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
             <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
           </div>
         </div>
-
         <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
           <button @click="isSetup = false" v-if="tripData.itinerary.length > 0" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm">取消</button>
           <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
@@ -84,7 +102,7 @@
 
 
     <!-- ==================== 【主控制台】 ==================== -->
-    <div v-show="!isSetup" class="pb-20">
+    <div v-show="!isSetup || !isEditor">
       
       <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
@@ -97,7 +115,7 @@
               <p class="text-gray-500 font-medium text-xs md:text-base">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
             </div>
             
-            <div class="flex flex-col gap-2">
+            <div v-if="isEditor" class="flex flex-col gap-2">
               <button @click="saveTrip" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1">
                 💾 暫存
               </button>
@@ -110,7 +128,7 @@
         
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
-            <button v-for="tab in tabs" :key="tab" @click="currentView = tab"
+            <button v-for="tab in visibleTabs" :key="tab" @click="currentView = tab"
               :class="['pb-2 md:pb-3 px-1 text-sm md:text-base font-bold transition-colors border-b-4 whitespace-nowrap', 
                        currentView === tab ? 'theme-border theme-text' : 'border-transparent text-gray-500 hover:text-gray-700']">
               {{ tab }}
@@ -139,7 +157,7 @@
             </button>
           </div>
 
-          <!-- ================= 總行程預覽 ================= -->
+          <!-- ================= 總行程預覽 (所有人皆可見) ================= -->
           <div v-if="activeDayTab === 'overview'" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div class="flex items-center gap-3 mb-3 md:mb-4">
@@ -156,26 +174,33 @@
                 
                 <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
                   <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                  
                   <div class="flex flex-wrap items-center gap-2 md:gap-3">
                     <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
                     <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
                     <span v-if="item.stay" class="text-[10px] md:text-xs text-gray-400 bg-white border border-gray-200 px-1 md:px-1.5 py-0.5 rounded">停 {{ item.stay }} 分</span>
                   </div>
                   
-                  <!-- 顯示總覽模式下的附加資訊 (只讀) -->
-                  <div class="ml-[65px] md:ml-[85px] mt-1 space-y-1">
-                    <a v-if="item.link" :href="item.link" target="_blank" class="block text-xs md:text-sm text-blue-500 hover:underline truncate w-full md:w-2/3">🔗 {{ item.link }}</a>
-                    <a v-if="item.map" :href="item.map" target="_blank" class="block text-xs md:text-sm text-blue-500 hover:underline truncate w-full md:w-2/3">📍 查看 Google 地圖</a>
-                    <p v-if="item.memo" class="text-xs md:text-sm text-gray-500 bg-gray-50 p-2 rounded whitespace-pre-line w-full md:w-5/6">📝 {{ item.memo }}</p>
-                    <img v-if="item.image" :src="item.image" class="mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-100">
+                  <!-- 小圖示膠囊按鈕 (僅唯讀模式使用) -->
+                  <div class="ml-[65px] md:ml-[85px] mt-1.5 flex flex-wrap gap-2">
+                    <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-blue-100 transition-colors shadow-sm font-bold">
+                      🔗 相關連結
+                    </a>
+                    <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-green-100 transition-colors shadow-sm font-bold">
+                      📍 開啟地圖
+                    </a>
+                    <button v-if="item.memo" @click="activeMemo = item.memo" class="flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 text-[11px] md:text-xs px-2 py-1 rounded-md border border-yellow-100 transition-colors shadow-sm font-bold">
+                      📝 讀取備忘錄
+                    </button>
                   </div>
+                  <img v-if="item.image" :src="item.image" class="ml-[65px] md:ml-[85px] mt-2 rounded-lg max-h-40 object-cover shadow-sm border border-gray-100">
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- ================= 單日編輯 ================= -->
-          <div v-else class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
+          <!-- ================= 單日編輯模式 (僅編輯者可見) ================= -->
+          <div v-else-if="isEditor" class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
             <div class="flex justify-between items-center mb-4 md:mb-6 border-b border-gray-100 pb-2 md:pb-3">
               <div>
                 <h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3>
@@ -198,8 +223,9 @@
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow">
+                  
+                  <!-- 主行程列 -->
                   <div class="flex items-center gap-1 md:gap-2 w-full">
-                    
                     <div class="cursor-move text-gray-400 hover:text-gray-700 px-0.5 md:px-2 select-none text-xs md:text-base flex-shrink-0">☰</div>
                     
                     <div class="relative flex-shrink-0">
@@ -213,14 +239,12 @@
                       <span class="hidden md:inline text-xs text-gray-500 font-bold pl-1">停留</span>
                       <span class="md:hidden text-[10px] text-gray-400 pr-0.5">⏱</span>
                       <input type="number" v-model="item.stay" @input="recalculateDay(activeDayTab)" placeholder="0" class="w-8 md:w-12 text-[11px] md:text-sm text-center outline-none focus:text-[#e91e63] font-bold bg-transparent">
-                      <span class="hidden md:inline text-xs text-gray-500 pr-1">分</span>
                     </div>
 
-                    <!-- 擴充設定按鈕 -->
+                    <!-- 齒輪設定按鈕 -->
                     <div class="relative flex-shrink-0">
                       <button @click="item.showMenu = !item.showMenu" class="text-gray-400 hover:text-gray-700 p-1 bg-white border border-gray-200 rounded md:text-base text-xs shadow-sm">⚙️</button>
                       
-                      <!-- 美化的下拉選單 -->
                       <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40 py-1 text-sm flex flex-col">
                         <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg">
                           <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus-theme">
@@ -238,85 +262,84 @@
                     </div>
                   </div>
 
-                  <!-- ================= 完美對齊的擴充內容顯示區 ================= -->
-                  <div class="mt-2 pl-6 md:pl-10 pr-2 space-y-2">
+                  <!-- 膠囊按鈕與隱藏式輸入框 (編輯模式專用) -->
+                  <div class="mt-1 pl-[25px] md:pl-[35px] flex flex-wrap gap-1.5">
                     
-                    <!-- 🔗 網址區塊 -->
-                    <div v-if="item.link !== undefined && item.link !== false" class="flex items-start gap-2">
-                      <span class="w-5 text-center text-xs md:text-sm mt-1.5 flex-shrink-0">🔗</span>
-                      <div v-if="!item.editLink && item.link" class="flex-1 flex items-center justify-between bg-white border border-gray-200 px-2 py-1.5 rounded">
-                        <a :href="item.link" target="_blank" class="text-blue-500 hover:underline text-xs md:text-sm truncate w-[200px] md:w-auto">{{ item.link }}</a>
-                        <div class="flex gap-2 ml-2 flex-shrink-0">
-                          <button @click="item.editLink = true" class="text-gray-400 hover:text-gray-700 text-xs">✏️</button>
-                          <button @click="item.link = false" class="text-gray-300 hover:text-red-400 text-xs">✕</button>
+                    <!-- 網址輸入/膠囊 -->
+                    <template v-if="item.link !== undefined && item.link !== false">
+                      <!-- 確定後的膠囊狀態 -->
+                      <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
+                        <span class="text-blue-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="window.open(item.link, '_blank')">🔗 相關連結</span>
+                        <div class="border-l border-blue-200 pl-1 ml-1 flex gap-1">
+                          <button @click="item.editLink = true" class="text-blue-400 hover:text-blue-600">✏️</button>
+                          <button @click="item.link = false" class="text-blue-400 hover:text-red-500">✕</button>
                         </div>
                       </div>
-                      <div v-else class="flex-1 flex items-center gap-1.5">
-                        <input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-xs md:text-sm bg-white border border-gray-300 rounded px-2 py-1.5 focus-theme outline-none">
-                        <button @click="item.editLink = false" class="theme-bg text-white px-2.5 py-1.5 rounded text-xs font-bold whitespace-nowrap">確定</button>
-                        <button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">取消</button>
+                      <!-- 正在編輯的長條輸入框 -->
+                      <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
+                        <span class="text-xs">🔗</span>
+                        <input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                        <button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
-                    </div>
+                    </template>
 
-                    <!-- 📍 地圖區塊 -->
-                    <div v-if="item.map !== undefined && item.map !== false" class="flex items-start gap-2">
-                      <span class="w-5 text-center text-xs md:text-sm mt-1.5 flex-shrink-0">📍</span>
-                      <div v-if="!item.editMap && item.map" class="flex-1 flex items-center justify-between bg-white border border-gray-200 px-2 py-1.5 rounded">
-                        <a :href="item.map" target="_blank" class="text-blue-500 hover:underline text-xs md:text-sm truncate w-[200px] md:w-auto">{{ item.map }}</a>
-                        <div class="flex gap-2 ml-2 flex-shrink-0">
-                          <button @click="item.editMap = true" class="text-gray-400 hover:text-gray-700 text-xs">✏️</button>
-                          <button @click="item.map = false" class="text-gray-300 hover:text-red-400 text-xs">✕</button>
+                    <!-- 地圖輸入/膠囊 -->
+                    <template v-if="item.map !== undefined && item.map !== false">
+                      <div v-if="!item.editMap && item.map" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
+                        <span class="text-green-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="window.open(item.map, '_blank')">📍 開啟地圖</span>
+                        <div class="border-l border-green-200 pl-1 ml-1 flex gap-1">
+                          <button @click="item.editMap = true" class="text-green-400 hover:text-green-600">✏️</button>
+                          <button @click="item.map = false" class="text-green-400 hover:text-red-500">✕</button>
                         </div>
                       </div>
-                      <div v-else class="flex-1 flex items-center gap-1.5">
-                        <input type="text" v-model="item.map" placeholder="貼上 Google Maps 網址..." class="flex-1 text-xs md:text-sm bg-white border border-gray-300 rounded px-2 py-1.5 focus-theme outline-none">
-                        <button @click="item.editMap = false" class="theme-bg text-white px-2.5 py-1.5 rounded text-xs font-bold whitespace-nowrap">確定</button>
-                        <button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">取消</button>
+                      <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
+                        <span class="text-xs">📍</span>
+                        <input type="text" v-model="item.map" placeholder="貼上 Google Maps..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                        <button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
                       </div>
-                    </div>
+                    </template>
 
-                    <!-- 📝 備忘錄區塊 -->
-                    <div v-if="item.memo !== undefined && item.memo !== false" class="flex items-start gap-2">
-                      <span class="w-5 text-center text-xs md:text-sm mt-1 flex-shrink-0">📝</span>
-                      <div v-if="!item.editMemo && item.memo" class="flex-1 flex items-start justify-between bg-white border border-gray-200 px-2 py-1.5 rounded min-h-[40px]">
-                        <p class="text-gray-600 text-xs md:text-sm whitespace-pre-line leading-relaxed">{{ item.memo }}</p>
-                        <div class="flex gap-2 ml-2 flex-shrink-0">
-                          <button @click="item.editMemo = true" class="text-gray-400 hover:text-gray-700 text-xs">✏️</button>
-                          <button @click="item.memo = false" class="text-gray-300 hover:text-red-400 text-xs">✕</button>
+                    <!-- 備忘錄輸入/膠囊 -->
+                    <template v-if="item.memo !== undefined && item.memo !== false">
+                      <div v-if="!item.editMemo && item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-[11px] md:text-xs">
+                        <span class="text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
+                        <div class="border-l border-yellow-200 pl-1 ml-1 flex gap-1">
+                          <button @click="item.editMemo = true" class="text-yellow-400 hover:text-yellow-600">✏️</button>
+                          <button @click="item.memo = false" class="text-yellow-400 hover:text-red-500">✕</button>
                         </div>
                       </div>
-                      <div v-else class="flex-1 flex items-start gap-1.5">
-                        <textarea v-model="item.memo" placeholder="輸入備忘錄..." rows="2" class="flex-1 text-xs md:text-sm bg-white border border-gray-300 rounded px-2 py-1.5 focus-theme outline-none resize-y"></textarea>
+                      <div v-else class="w-full flex items-start gap-1 mt-1">
+                        <textarea v-model="item.memo" placeholder="輸入備忘錄..." rows="2" class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none resize-y"></textarea>
                         <div class="flex flex-col gap-1">
-                          <button @click="item.editMemo = false" class="theme-bg text-white px-2.5 py-1.5 rounded text-xs font-bold whitespace-nowrap">確定</button>
-                          <button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">取消</button>
+                          <button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                          <button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">✕</button>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- 圖片區塊 -->
+                    <div v-if="item.image !== undefined && item.image !== false" class="w-full mt-1 flex items-start gap-2">
+                      <div v-if="!item.editImage && item.image" class="flex-1 relative group inline-block">
+                        <img :src="item.image" class="rounded-lg max-h-40 object-cover border border-gray-200 shadow-sm">
+                        <div class="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded shadow">
+                          <button @click="item.editImage = true" class="text-gray-600 hover:text-gray-900 text-[10px] px-1">更換</button>
+                          <button @click="item.image = false" class="text-red-400 hover:text-red-600 text-[10px] px-1 border-l border-gray-300 ml-1">刪除</button>
+                        </div>
+                      </div>
+                      <div v-else class="flex-1 flex flex-col gap-1 bg-gray-50 border border-gray-200 p-2 rounded">
+                        <div class="flex gap-1">
+                          <input type="text" v-model="item.image" placeholder="貼上外部圖片網址 (推薦)" class="flex-1 text-[11px] md:text-xs border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold">確定</button>
+                          <button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                        </div>
+                        <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
+                          <span class="text-[10px] text-gray-500">或從本機上傳 (自動壓縮)：</span>
+                          <input type="file" accept="image/*" @change="handleImageUpload($event, item)" class="text-[10px] text-gray-600 w-32 cursor-pointer">
                         </div>
                       </div>
                     </div>
-
-                    <!-- 🖼️ 圖片區塊 -->
-                    <div v-if="item.image !== undefined && item.image !== false" class="flex items-start gap-2">
-                      <span class="w-5 text-center text-xs md:text-sm mt-1 flex-shrink-0">🖼️</span>
-                      <div v-if="!item.editImage && item.image" class="flex-1 relative group">
-                        <img :src="item.image" class="rounded-lg max-h-48 md:max-h-64 object-cover border border-gray-200 shadow-sm w-full md:w-auto">
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded-lg shadow">
-                          <button @click="item.editImage = true" class="text-gray-600 hover:text-gray-900 text-xs px-1">更換</button>
-                          <button @click="item.image = false" class="text-red-400 hover:text-red-600 text-xs px-1 border-l border-gray-300 ml-1">刪除</button>
-                        </div>
-                      </div>
-                      <div v-else class="flex-1 flex flex-col gap-2 bg-white border border-gray-200 p-2 rounded">
-                        <div class="flex gap-1.5">
-                          <input type="text" v-model="item.image" placeholder="貼上圖片網址 (推薦，可永久保存)" class="flex-1 text-xs md:text-sm border border-gray-300 rounded px-2 py-1.5 focus-theme outline-none">
-                          <button @click="item.editImage = false" class="theme-bg text-white px-2.5 py-1.5 rounded text-xs font-bold">確定</button>
-                          <button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">取消</button>
-                        </div>
-                        <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
-                          <span class="text-xs text-gray-500">或從本機上傳 (會自動壓縮)：</span>
-                          <input type="file" accept="image/*" @change="handleImageUpload($event, item)" class="text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer w-48">
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
 
@@ -328,7 +351,7 @@
                     <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold theme-text outline-none cursor-pointer max-w-[65px] md:max-w-none">
                       <option>走路</option><option>自駕</option><option>地鐵/捷運</option><option>公車/客運</option>
                       <option>計程車</option><option>高鐵/新幹線</option><option>台鐵/火車</option>
-                      <option>飛機</option><option>渡輪</option><option>腳踏車</option><option>自訂</option>
+                      <option>飛機</option><option>渡輪</option><option>自訂</option>
                     </select>
                     
                     <input v-if="tripData.itinerary[activeDayTab].transit[itemIndex].method === '自訂'" 
@@ -345,31 +368,52 @@
               ＋ 加入行程
             </button>
           </div>
+          <!-- 針對非編輯者提示 -->
+          <div v-else class="text-center py-10 bg-white rounded-xl shadow-sm border border-gray-100">
+            <p class="text-gray-500 font-bold text-lg">您正在瀏覽訪客模式，請切換至「總行程」查看所有計畫。</p>
+          </div>
         </div>
 
-        <!-- ==================== 【公費與名單】 (其餘分頁隱藏保持清爽) ==================== -->
       </div>
     </div>
   </div>
 
   <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, computed, watch, onMounted } = Vue;
 
     createApp({
       setup() {
+        const isEditor = ref(true); // 模擬 Google 登入的編輯權限
         const isSetup = ref(false); 
         const tabs = ['行程', '公費與名單', '交通', '住宿', '行李'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
+        const activeMemo = ref(null); // 控制備忘錄 Modal
+
+        // 依據權限顯示 Tabs，非編輯者只看得到部分模組
+        const visibleTabs = computed(() => {
+          return isEditor.value ? tabs : ['行程', '交通', '住宿']; 
+        });
 
         const setupData = ref({
           name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63'
         });
 
         const tripData = ref({
-          tripName: '未命名行程', destination: '未知', startDate: '', endDate: '', themeColor: '#e91e63',
-          companions: ['我', '盈瑜'], itinerary: [], transports: [], expenses: [], luggage: []
+          tripName: '濟州島探險之旅', destination: '濟州島', startDate: '', endDate: '', themeColor: '#e91e63',
+          companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: []
         });
+
+        // ==================== CSS 主題色核心驅動引擎 ====================
+        const updateThemeColor = (color) => {
+          document.documentElement.style.setProperty('--theme-color', color);
+        };
+        watch(() => setupData.value.themeColor, (c) => { if(isSetup.value) updateThemeColor(c); });
+        watch(() => tripData.value.themeColor, (c) => { if(!isSetup.value) updateThemeColor(c); });
+        watch(isSetup, (setupState) => {
+          updateThemeColor(setupState ? setupData.value.themeColor : tripData.value.themeColor);
+        });
+        // ==============================================================
 
         const generateId = () => Math.random().toString(36).substr(2, 9);
         const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
@@ -377,7 +421,10 @@
         onMounted(() => {
           const savedData = localStorage.getItem('smartTravelApp');
           if (savedData) {
-            try { tripData.value = JSON.parse(savedData); } catch(e) {}
+            try { 
+              tripData.value = JSON.parse(savedData); 
+              updateThemeColor(tripData.value.themeColor);
+            } catch(e) {}
           } else {
             isSetup.value = true;
           }
@@ -486,16 +533,12 @@
           recalculateDay(dayIdx);
         };
 
-        // 擴充欄位開啟邏輯 (網址、地圖、備忘錄、圖片)
         const openField = (item, field) => {
-          if(item[field] === undefined || item[field] === false) {
-             item[field] = '';
-          }
+          if(item[field] === undefined || item[field] === false) { item[field] = ''; }
           item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true;
           item.showMenu = false;
         };
 
-        // 圖片上傳與自動壓縮技術 (防止塞爆 LocalStorage)
         const handleImageUpload = (e, item) => {
            const file = e.target.files[0];
            if(!file) return;
@@ -504,13 +547,13 @@
                const img = new Image();
                img.onload = () => {
                    const canvas = document.createElement('canvas');
-                   const MAX_WIDTH = 600; // 自動縮小到 600px 寬
+                   const MAX_WIDTH = 600;
                    const scaleSize = MAX_WIDTH / img.width;
                    canvas.width = MAX_WIDTH;
                    canvas.height = img.height * scaleSize;
                    const ctx = canvas.getContext('2d');
                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                   item.image = canvas.toDataURL('image/jpeg', 0.6); // 壓縮成 JPEG 60% 畫質
+                   item.image = canvas.toDataURL('image/jpeg', 0.6); 
                    item.editImage = false;
                }
                img.src = event.target.result;
@@ -537,18 +580,17 @@
           movedItem.showMenu = false; 
           if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.pop();
           recalculateDay(fromDayIdx);
-
           tripData.value.itinerary[toDayIdx].items.push(movedItem);
           if (tripData.value.itinerary[toDayIdx].items.length > 1) tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
           recalculateDay(toDayIdx);
-          
           event.target.value = ""; 
           alert(`✅ 已將行程挪至 Day ${toDayIdx + 1}`);
         };
 
         return {
-          isSetup, setupData, generateTrip, openSetup, saveTrip,
-          tabs, currentView, activeDayTab, tripData, formatDateRange,
+          isEditor, isSetup, setupData, generateTrip, openSetup, saveTrip,
+          tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange,
+          activeMemo,
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragDrop, moveToDay,
           openField, handleImageUpload
         }
