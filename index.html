@@ -31,28 +31,31 @@
     .checkbox-custom { accent-color: var(--theme-color); width: 1.25rem; height: 1.25rem; cursor: pointer; }
     .strikethrough { text-decoration: line-through; color: #9ca3af; }
     
-    /* 票券風格的特殊邊緣裁切效果 (僅電腦版顯示) */
+    /* 強制日曆在所有裝置上都不會被蓋住 */
+    .flatpickr-calendar { z-index: 100000 !important; }
+
+    /* 票券風格的特殊邊緣裁切效果 (僅電腦版) */
     @media (min-width: 768px) {
       .ticket-cutout {
-        mask-image: radial-gradient(circle at 0px 50%, transparent 10px, black 11px), radial-gradient(circle at 100% 50%, transparent 10px, black 11px);
+        mask-image: radial-gradient(circle at 0px 50%, transparent 12px, black 13px), radial-gradient(circle at 100% 50%, transparent 12px, black 13px);
         mask-size: 51% 100%, 51% 100%;
         mask-position: left, right;
         mask-repeat: no-repeat;
       }
-      .ticket-border { border-left: 2px dashed #e5e7eb; }
+      .ticket-divider { border-left: 2px dashed rgba(255,255,255,0.4); }
     }
   </style>
 </head>
 <body>
   <div id="app" class="min-h-screen pb-20" :style="{ '--theme-color': isSetup ? setupData.themeColor : tripData.themeColor }">
     
-    <!-- ==================== 【全域載入中】 ==================== -->
+    <!-- 全域載入中 -->
     <div v-if="appState === 'LOADING'" class="fixed inset-0 bg-white z-[300] flex flex-col justify-center items-center">
       <div class="text-6xl mb-4 animate-bounce">✈️</div>
       <h2 class="text-xl font-bold text-gray-700 animate-pulse">系統連線中...</h2>
     </div>
 
-    <!-- ==================== 【登入畫面】 ==================== -->
+    <!-- 登入畫面 -->
     <div v-if="appState === 'LOGIN'" class="fixed inset-0 bg-[#f3f4f6] z-[200] flex justify-center items-center p-4">
       <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
         <div class="text-5xl mb-6">🌍</div>
@@ -65,7 +68,7 @@
       </div>
     </div>
 
-    <!-- ==================== 【行程大廳 (Dashboard)】 ==================== -->
+    <!-- 行程大廳 (Dashboard) -->
     <div v-if="appState === 'DASHBOARD'" class="min-h-screen">
       <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
         <h1 class="text-xl font-bold flex items-center gap-2"><span>🏕️</span> 我的行程庫</h1>
@@ -89,15 +92,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="trip in myTrips" :key="trip.id" @click="openTrip(trip.id)" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition-shadow group relative">
             <div class="h-24 w-full" :style="{ backgroundColor: trip.themeColor || '#e91e63' }">
-              <div class="w-full h-full bg-black/10 flex items-center justify-center">
-                <span class="text-4xl shadow-sm opacity-90">✈️</span>
-              </div>
+              <div class="w-full h-full bg-black/10 flex items-center justify-center"><span class="text-4xl shadow-sm opacity-90">✈️</span></div>
             </div>
             <button @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
             <div class="p-5">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span>
-              </div>
+              <div class="flex items-center gap-2 mb-2"><span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span></div>
               <h3 class="text-xl font-bold text-gray-900 mb-1 truncate">{{ trip.tripName }}</h3>
               <p class="text-sm text-gray-500">{{ formatDateRange(trip.startDate, trip.endDate) }}</p>
             </div>
@@ -111,7 +110,7 @@
       </div>
     </div>
 
-    <!-- ==================== 【建立/編輯行程設定 Modal】 ==================== -->
+    <!-- 建立/編輯行程設定 Modal -->
     <div v-if="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[400]" @click.self="closeSetup">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
         <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
@@ -134,8 +133,8 @@
             <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
           </div>
           <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
-            <input type="text" id="tripDateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (點擊選取起訖區間)</label>
+            <input type="text" id="tripDateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer font-bold text-center" readonly>
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
@@ -200,7 +199,6 @@
         
         <!-- ==================== 【行程模組】 ==================== -->
         <div v-if="currentView === '行程'" class="space-y-4">
-          <!-- 保持原有的行程模組不變，僅確保 z-index toggleMenu 正常運作 -->
           <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-2 md:mb-4 border-b border-gray-200 pb-2 md:pb-3 px-2 md:px-0">
             <button @click="activeDayTab = 'overview'" 
                     :class="['px-4 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap shadow-sm', 
@@ -223,6 +221,17 @@
                   <h3 class="text-base md:text-lg font-black text-gray-800"><span class="theme-text">Day {{ dayIndex + 1 }}</span> - <span class="text-sm md:text-base text-gray-600">{{ day.dateStr }}</span></h3>
                   <div class="h-px bg-gray-300 flex-1"></div>
                 </div>
+
+                <!-- 動態注入的住宿與交通標籤 (依據日期自動顯示) -->
+                <div class="flex flex-wrap gap-2 mb-3 px-1 md:px-0">
+                   <div v-for="hotel in getHotelsForDay(dayIndex + 1)" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
+                      🏨 住宿: {{ hotel.name || '未填寫飯店' }}
+                   </div>
+                   <div v-for="trans in getTransportsForDay(dayIndex + 1)" class="bg-teal-50 border border-teal-200 text-teal-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
+                      {{ trans.type ? trans.type.charAt(0) : '🎫' }} {{ trans.type ? trans.type.substring(2) : '票券' }}: {{ trans.name || '未命名' }}
+                   </div>
+                </div>
+
                 <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
                   <div class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
                   <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
@@ -231,6 +240,9 @@
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
                       <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
                       <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                      <div v-if="item.stay" class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] md:text-xs">
+                        <span class="text-gray-500 font-bold mr-1">停留</span><span class="font-black text-gray-800">{{ formatStayTime(item.stay) }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -238,10 +250,22 @@
             </div>
           </div>
 
+          <!-- 單日編輯模式 -->
           <div v-else-if="isEditor" class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
-            <div class="flex justify-between items-center mb-4 md:mb-6 border-b border-gray-100 pb-2 md:pb-3">
+            <div class="flex justify-between items-center mb-2 md:mb-4 border-b border-gray-100 pb-2 md:pb-3">
               <div><h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3><p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p></div>
             </div>
+            
+            <!-- 動態注入的住宿與交通標籤 (編輯模式上方也顯示) -->
+            <div class="flex flex-wrap gap-2 mb-4">
+               <div v-for="hotel in getHotelsForDay(activeDayTab + 1)" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
+                  🏨 住宿: {{ hotel.name || '未填寫飯店' }}
+               </div>
+               <div v-for="trans in getTransportsForDay(activeDayTab + 1)" class="bg-teal-50 border border-teal-200 text-teal-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
+                  {{ trans.type ? trans.type.charAt(0) : '🎫' }} {{ trans.type ? trans.type.substring(2) : '票券' }}: {{ trans.name || '未命名' }}
+               </div>
+            </div>
+
             <div class="relative pl-3 md:pl-6 space-y-2">
               <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
@@ -267,14 +291,14 @@
           </div>
         </div>
 
-        <!-- ==================== 【交通模組：史詩級票券排版】 ==================== -->
+        <!-- ==================== 【交通模組：區間日曆與機票風格】 ==================== -->
         <div v-if="currentView === '交通'" class="space-y-4">
           <div class="flex justify-between items-center mb-2 md:mb-4 px-2 md:px-0">
             <div>
               <h2 class="text-xl md:text-2xl font-black text-gray-800">✈️ 交通票券與租車</h2>
-              <p class="text-xs md:text-sm text-gray-500 font-bold mt-1">統一管理您的所有移動憑證</p>
+              <p class="text-[10px] md:text-xs text-gray-500 font-bold mt-1">日期區間自動計算對應 Day，並顯示於行程總覽</p>
             </div>
-            <button v-if="isEditor" @click="addTransport" class="theme-bg theme-bg-hover text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-1">
+            <button v-if="isEditor" @click="addTransport" class="bg-teal-500 hover:bg-teal-600 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow transition-all flex items-center gap-1">
               <span class="text-lg leading-none">+</span> <span class="hidden md:inline">新增憑證</span>
             </button>
           </div>
@@ -283,106 +307,109 @@
             <p class="text-gray-400 font-bold">尚未新增任何交通票券或租車資訊</p>
           </div>
 
-          <!-- 交通列表 -->
           <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
-            <div v-for="(trans, idx) in tripData.transports" :key="trans.id" class="ticket-cutout bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative flex flex-col md:flex-row group transition-all hover:shadow-md">
+            <div v-for="(trans, idx) in tripData.transports" :key="trans.id" class="ticket-cutout bg-white rounded-xl shadow-lg border border-gray-100 flex flex-col md:flex-row transition-all hover:shadow-xl relative">
               
-              <!-- 左側：類型與名稱 (電腦版佔比小，手機版在上方) -->
-              <div class="md:w-1/4 bg-gray-50 p-4 md:p-6 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col justify-center relative">
-                <div class="absolute top-0 left-0 w-full h-1 theme-bg"></div>
-                <button v-if="isEditor" @click="removeTransport(idx)" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors md:hidden">🗑</button>
-                
-                <select v-if="isEditor" v-model="trans.type" class="bg-white border border-gray-200 rounded px-2 py-1 text-sm font-bold text-gray-700 outline-none focus-theme mb-2 w-max shadow-sm">
-                  <option>✈️ 航班</option><option>🚗 租車</option><option>🚅 高鐵/火車</option><option>🚢 渡輪</option><option>🚌 客運</option><option>🎫 交通票券</option>
-                </select>
-                <span v-else class="bg-gray-200 px-2 py-1 rounded text-sm font-bold text-gray-700 mb-2 w-max">{{ trans.type }}</span>
-                
-                <input v-if="isEditor" type="text" v-model="trans.name" placeholder="輸入班次 / 租車公司" class="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-base font-black outline-none focus-theme">
-                <span v-else class="font-black text-gray-900 text-lg">{{ trans.name || '未填寫憑證名稱' }}</span>
+              <!-- 刪除按鈕 (手機版獨立位置) -->
+              <button v-if="isEditor" @click="removeTransport(idx)" class="absolute top-2 right-2 text-white bg-black/20 hover:bg-red-500 rounded-full w-6 h-6 flex items-center justify-center transition-colors md:hidden z-20 text-xs">✕</button>
+
+              <!-- 左側票根 (電腦版佔1/4，手機版為頭部) -->
+              <div class="md:w-1/4 bg-gradient-to-br from-teal-400 to-emerald-500 text-white p-5 flex flex-col justify-center rounded-t-xl md:rounded-tr-none md:rounded-l-xl relative">
+                 <div class="flex flex-col gap-2 relative z-10">
+                    <select v-if="isEditor" v-model="trans.type" class="bg-white/20 border border-white/40 rounded px-2 py-1 text-sm font-bold text-white outline-none w-max cursor-pointer focus:bg-white focus:text-teal-700 transition-colors">
+                      <option class="text-gray-800">✈️ 航班</option><option class="text-gray-800">🚗 租車</option><option class="text-gray-800">🚅 高鐵/火車</option><option class="text-gray-800">🚢 渡輪</option><option class="text-gray-800">🚌 客運</option><option class="text-gray-800">🎫 交通票券</option>
+                    </select>
+                    <span v-else class="bg-white/20 border border-white/30 px-2 py-1 rounded text-sm font-bold w-max">{{ trans.type }}</span>
+                    
+                    <input v-if="isEditor" type="text" v-model="trans.name" placeholder="班次或租車公司" class="w-full bg-transparent border-b border-white/50 text-xl font-black outline-none placeholder-white/60 focus:border-white">
+                    <span v-else class="font-black text-2xl truncate">{{ trans.name || '未填寫名稱' }}</span>
+                 </div>
               </div>
 
-              <!-- 中間：時間與地點動線 (電腦版主力區塊) -->
-              <div class="md:flex-1 p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
-                
-                <!-- 出發區塊 -->
-                <div class="w-full md:flex-1 flex flex-col items-center md:items-start text-center md:text-left">
-                  <p class="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest">DEPARTURE 出發/取車</p>
-                  
-                  <div v-if="isEditor" class="w-full space-y-1">
-                    <div class="flex gap-1 justify-center md:justify-start">
-                       <input type="text" v-model="trans.depDate" placeholder="選擇日期" class="dynamic-date-picker w-24 text-center md:text-left text-lg font-black text-theme bg-transparent border-b border-dashed border-gray-300 focus:border-[#e91e63] outline-none cursor-pointer placeholder-gray-300">
-                       <input type="text" v-model="trans.depTime" placeholder="時間" class="dynamic-time-picker w-16 text-center md:text-left text-lg font-black text-gray-800 bg-transparent border-b border-dashed border-gray-300 focus:border-[#e91e63] outline-none cursor-pointer placeholder-gray-300">
-                    </div>
-                    <input type="text" v-model="trans.depLoc" placeholder="出發地點 / 車站 / 機場" class="w-full text-sm font-bold text-gray-700 bg-transparent border-b border-gray-200 focus:border-[#e91e63] outline-none py-1 text-center md:text-left">
-                    <div class="flex items-center text-xs mt-1">
-                      <span class="text-gray-400 mr-1">🔗</span>
-                      <input type="text" v-model="trans.depLink" placeholder="Google Maps 連結" class="w-full bg-transparent border-b border-gray-200 focus:border-[#e91e63] outline-none text-blue-500 text-center md:text-left">
-                    </div>
-                  </div>
-
-                  <div v-else class="w-full">
-                    <div class="text-xl font-black text-theme">{{ trans.depDate || '--/--' }} <span class="text-gray-800 ml-1">{{ trans.depTime || '--:--' }}</span></div>
-                    <div class="mt-1">
-                      <a v-if="trans.depLink" :href="trans.depLink" target="_blank" class="text-sm font-bold text-blue-600 hover:underline flex items-center justify-center md:justify-start gap-1">📍 {{ trans.depLoc || '點此查看地圖' }}</a>
-                      <p v-else class="text-sm font-bold text-gray-600">{{ trans.depLoc || '未填寫地點' }}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 視覺連接線 -->
-                <div class="flex flex-col items-center justify-center px-2">
-                  <div class="text-xs font-bold text-gray-400 mb-1 hidden md:block border border-gray-200 rounded-full px-2 py-0.5 bg-gray-50">{{ calculateDuration(trans) }}</div>
-                  <div class="text-gray-300 text-2xl hidden md:block">➔</div>
-                  <div class="text-gray-300 text-2xl md:hidden rotate-90">➔</div>
-                </div>
-
-                <!-- 抵達區塊 -->
-                <div class="w-full md:flex-1 flex flex-col items-center md:items-end text-center md:text-right">
-                  <p class="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest">ARRIVAL 抵達/還車</p>
-                  
-                  <div v-if="isEditor" class="w-full space-y-1">
-                    <div class="flex gap-1 justify-center md:justify-end">
-                       <input type="text" v-model="trans.arrDate" placeholder="選擇日期" class="dynamic-date-picker w-24 text-center md:text-right text-lg font-black text-theme bg-transparent border-b border-dashed border-gray-300 focus:border-[#e91e63] outline-none cursor-pointer placeholder-gray-300">
-                       <input type="text" v-model="trans.arrTime" placeholder="時間" class="dynamic-time-picker w-16 text-center md:text-right text-lg font-black text-gray-800 bg-transparent border-b border-dashed border-gray-300 focus:border-[#e91e63] outline-none cursor-pointer placeholder-gray-300">
-                    </div>
-                    <input type="text" v-model="trans.arrLoc" placeholder="抵達地點 / 車站 / 機場" class="w-full text-sm font-bold text-gray-700 bg-transparent border-b border-gray-200 focus:border-[#e91e63] outline-none py-1 text-center md:text-right">
-                    <div class="flex items-center justify-center md:justify-end text-xs mt-1">
-                      <span class="text-gray-400 mr-1">🔗</span>
-                      <input type="text" v-model="trans.arrLink" placeholder="Google Maps 連結" class="w-full bg-transparent border-b border-gray-200 focus:border-[#e91e63] outline-none text-blue-500 text-center md:text-right">
-                    </div>
-                  </div>
-
-                  <div v-else class="w-full">
-                    <div class="text-xl font-black text-theme">{{ trans.arrDate || '--/--' }} <span class="text-gray-800 ml-1">{{ trans.arrTime || '--:--' }}</span></div>
-                    <div class="mt-1 flex justify-center md:justify-end">
-                      <a v-if="trans.arrLink" :href="trans.arrLink" target="_blank" class="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">📍 {{ trans.arrLoc || '點此查看地圖' }}</a>
-                      <p v-else class="text-sm font-bold text-gray-600">{{ trans.arrLoc || '未填寫地點' }}</p>
-                    </div>
-                  </div>
-                </div>
+              <!-- 虛線分隔 (僅電腦版) -->
+              <div class="hidden md:flex flex-col justify-between items-center -ml-px -mr-px z-10 py-1 bg-white">
+                <div class="h-full ticket-divider"></div>
               </div>
 
-              <!-- 右側：備註與操作 (電腦版分離區塊) -->
-              <div class="md:w-48 p-4 md:p-6 bg-gray-50 border-t md:border-t-0 md:border-l border-gray-200 ticket-border flex flex-col justify-center relative">
-                <button v-if="isEditor" @click="removeTransport(idx)" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors hidden md:block text-xl">✕</button>
-                
-                <p class="text-[10px] text-gray-400 font-bold mb-1 uppercase tracking-widest text-center md:text-left">備註 / 訂位代號</p>
-                <textarea v-if="isEditor" v-model="trans.memo" placeholder="輸入備註資訊..." rows="3" class="w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-600 focus-theme outline-none resize-none shadow-sm"></textarea>
-                <div v-else class="text-xs text-gray-700 font-medium whitespace-pre-line text-center md:text-left break-all">{{ trans.memo || '無備註' }}</div>
+              <!-- 右側主內容 -->
+              <div class="flex-1 p-5 relative">
+                 <button v-if="isEditor" @click="removeTransport(idx)" class="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors hidden md:block text-xl">✕</button>
+                 
+                 <!-- 日期區間選擇器 (重點升級) -->
+                 <div class="mb-4 bg-teal-50 border border-teal-100 rounded-lg p-3 text-center relative max-w-sm mx-auto md:mx-0">
+                    <p class="text-[10px] text-teal-600 font-bold uppercase tracking-widest mb-1">使用期間 (可點選區間)</p>
+                    <div v-if="isEditor">
+                       <input type="text" v-model="trans.dateRange" placeholder="點擊選擇 起訖日期" class="range-date-picker w-full text-center text-sm md:text-base font-black text-teal-900 bg-white border border-teal-200 rounded py-1.5 cursor-pointer shadow-sm outline-none focus:border-teal-500">
+                    </div>
+                    <div v-else class="text-sm md:text-base font-black text-teal-900 tracking-wide">{{ trans.dateRange || '未設定日期區間' }}</div>
+                    <div class="mt-2 text-[10px] font-bold text-white bg-teal-500 rounded-full px-2 py-0.5 inline-block" v-if="calculateRelativeDays(trans.dateRange)">
+                       {{ calculateRelativeDays(trans.dateRange).text }}
+                    </div>
+                 </div>
+
+                 <!-- 時間與地點 -->
+                 <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <!-- 出發 -->
+                    <div class="flex-1 space-y-2">
+                       <div class="flex items-center gap-2">
+                          <span class="text-xs font-bold text-white bg-gray-400 px-1.5 py-0.5 rounded">出發/取車</span>
+                          <input v-if="isEditor" type="text" v-model="trans.depTime" placeholder="時間" class="time-picker w-16 text-center text-sm font-bold bg-white border border-gray-200 rounded px-1 py-1 focus-theme outline-none cursor-pointer">
+                          <span v-else class="text-sm font-black text-gray-800">{{ trans.depTime || '--:--' }}</span>
+                       </div>
+                       <input v-if="isEditor" type="text" v-model="trans.depLoc" placeholder="地點 / 車站 / 機場" class="w-full text-sm font-bold bg-white border border-gray-200 rounded px-2 py-1.5 focus-theme outline-none">
+                       <div v-if="isEditor" class="flex items-center bg-white border border-gray-200 rounded px-2 py-1">
+                         <span class="text-xs text-gray-400 mr-1">🔗</span>
+                         <input type="text" v-model="trans.depLink" placeholder="Google Maps 連結" class="w-full text-[10px] md:text-xs outline-none focus:text-blue-500">
+                       </div>
+                       <div v-else class="mt-1">
+                         <a v-if="trans.depLink" :href="trans.depLink" target="_blank" class="text-sm font-bold text-blue-600 hover:underline">📍 {{ trans.depLoc || '查看地圖' }}</a>
+                         <p v-else class="text-sm font-bold text-gray-700">{{ trans.depLoc || '未提供地點' }}</p>
+                       </div>
+                    </div>
+                    
+                    <div class="hidden md:block text-gray-300 text-2xl font-black">➔</div>
+                    <div class="md:hidden text-gray-300 text-xl font-black text-center -my-2">⬇</div>
+                    
+                    <!-- 抵達 -->
+                    <div class="flex-1 space-y-2 md:text-right">
+                       <div class="flex items-center md:justify-end gap-2">
+                          <span class="text-xs font-bold text-white bg-gray-400 px-1.5 py-0.5 rounded">抵達/還車</span>
+                          <input v-if="isEditor" type="text" v-model="trans.arrTime" placeholder="時間" class="time-picker w-16 text-center text-sm font-bold bg-white border border-gray-200 rounded px-1 py-1 focus-theme outline-none cursor-pointer">
+                          <span v-else class="text-sm font-black text-gray-800">{{ trans.arrTime || '--:--' }}</span>
+                       </div>
+                       <input v-if="isEditor" type="text" v-model="trans.arrLoc" placeholder="地點 / 車站 / 機場" class="w-full text-sm font-bold md:text-right bg-white border border-gray-200 rounded px-2 py-1.5 focus-theme outline-none">
+                       <div v-if="isEditor" class="flex items-center bg-white border border-gray-200 rounded px-2 py-1">
+                         <span class="text-xs text-gray-400 mr-1">🔗</span>
+                         <input type="text" v-model="trans.arrLink" placeholder="Google Maps 連結" class="w-full text-[10px] md:text-xs outline-none md:text-right focus:text-blue-500">
+                       </div>
+                       <div v-else class="mt-1">
+                         <a v-if="trans.arrLink" :href="trans.arrLink" target="_blank" class="text-sm font-bold text-blue-600 hover:underline">📍 {{ trans.arrLoc || '查看地圖' }}</a>
+                         <p v-else class="text-sm font-bold text-gray-700">{{ trans.arrLoc || '未提供地點' }}</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <!-- 備註 -->
+                 <div class="mt-4">
+                    <textarea v-if="isEditor" v-model="trans.memo" placeholder="備註 (例如：訂位代號、注意事項...)" rows="2" class="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs text-gray-600 focus-theme outline-none resize-none shadow-sm"></textarea>
+                    <div v-else-if="trans.memo" class="bg-gray-50 border border-gray-100 rounded px-3 py-2 text-xs text-gray-600 whitespace-pre-line shadow-sm border-l-2 border-l-teal-400">
+                      {{ trans.memo }}
+                    </div>
+                 </div>
               </div>
 
             </div>
           </div>
         </div>
 
-        <!-- ==================== 【住宿模組：區間選擇與自動算晚數】 ==================== -->
+        <!-- ==================== 【住宿模組：頂級訂房憑證排版】 ==================== -->
         <div v-if="currentView === '住宿'" class="space-y-4">
           <div class="flex justify-between items-center mb-2 md:mb-4 px-2 md:px-0">
             <div>
               <h2 class="text-xl md:text-2xl font-black text-gray-800">🏨 飯店與住宿</h2>
-              <p class="text-xs md:text-sm text-gray-500 font-bold mt-1">智慧日期區間，自動計算入住房晚</p>
+              <p class="text-[10px] md:text-xs text-gray-500 font-bold mt-1">智慧日期區間，自動計算晚數與對應 Day</p>
             </div>
-            <button v-if="isEditor" @click="addAccommodation" class="theme-bg theme-bg-hover text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition-all flex items-center gap-1">
+            <button v-if="isEditor" @click="addAccommodation" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow transition-all flex items-center gap-1">
               <span class="text-lg leading-none">+</span> <span class="hidden md:inline">新增住宿</span>
             </button>
           </div>
@@ -392,108 +419,96 @@
           </div>
 
           <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
-            <div v-for="(hotel, idx) in tripData.accommodations" :key="hotel.id" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative flex flex-col md:flex-row transition-all hover:shadow-md">
-              <!-- 左側裝飾條 -->
-              <div class="hidden md:block w-2 bg-indigo-500 h-auto"></div>
-              <div class="md:hidden h-2 bg-indigo-500 w-full"></div>
+            <div v-for="(hotel, idx) in tripData.accommodations" :key="hotel.id" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col md:flex-row hover:shadow-xl transition-all relative">
               
-              <button v-if="isEditor" @click="removeAccommodation(idx)" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors z-10 text-xl md:text-base">✕</button>
-              
-              <!-- 核心區塊：飯店資訊與日期 -->
-              <div class="flex-1 p-4 md:p-6 flex flex-col md:flex-row gap-6 items-center md:items-start">
-                
-                <!-- 視覺化日期區塊 -->
-                <div class="w-full md:w-auto flex flex-col items-center justify-center bg-indigo-50 rounded-xl border border-indigo-100 p-4 relative min-w-[220px]">
-                  <p class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-2">入住期間</p>
-                  
-                  <!-- 編輯模式：整合式 Range Picker -->
-                  <div v-if="isEditor" class="w-full text-center">
-                    <input type="text" v-model="hotel.dateRange" placeholder="點擊選擇 入住~退房 日期" class="hotel-range-picker w-full text-center text-sm md:text-base font-black text-indigo-900 bg-white border border-indigo-200 rounded py-2 cursor-pointer shadow-sm outline-none focus:border-indigo-500">
-                    <div class="mt-2 text-xs font-bold text-indigo-500 bg-indigo-100 rounded-full px-2 py-0.5 inline-block">
-                       {{ calculateNights(hotel.dateRange) }}
-                    </div>
-                  </div>
-                  
-                  <!-- 預覽模式 -->
-                  <div v-else class="w-full flex items-center justify-between gap-2">
-                     <div class="text-center">
-                        <div class="text-xs text-gray-500 font-bold">IN</div>
-                        <div class="text-lg font-black text-indigo-900">{{ splitDateRange(hotel.dateRange).in || '--/--' }}</div>
-                     </div>
-                     <div class="flex flex-col items-center px-1">
-                        <div class="text-indigo-300 text-xl leading-none">➔</div>
-                        <div class="text-[10px] font-bold text-white bg-indigo-400 rounded-full px-1.5 mt-1">{{ calculateNights(hotel.dateRange) }}</div>
-                     </div>
-                     <div class="text-center">
-                        <div class="text-xs text-gray-500 font-bold">OUT</div>
-                        <div class="text-lg font-black text-gray-700">{{ splitDateRange(hotel.dateRange).out || '--/--' }}</div>
-                     </div>
-                  </div>
-                </div>
-
-                <!-- 飯店詳細資訊區塊 -->
-                <div class="flex-1 w-full space-y-3">
-                  <!-- 名稱與連結 -->
-                  <div class="pr-6 md:pr-0">
-                    <label v-if="isEditor" class="block text-[10px] text-gray-400 font-bold mb-1 uppercase">HOTEL 飯店名稱與官網</label>
-                    <div v-if="isEditor" class="flex flex-col gap-1">
-                       <input type="text" v-model="hotel.name" placeholder="請輸入飯店名稱" class="w-full text-lg font-black bg-gray-50 border border-gray-200 rounded px-2 py-1.5 focus:border-indigo-500 outline-none">
-                       <div class="flex items-center bg-gray-50 border border-gray-200 rounded overflow-hidden">
-                         <span class="pl-2 pr-1 text-xs text-gray-400">🔗</span>
-                         <input type="text" v-model="hotel.nameLink" placeholder="飯店官網或訂房平台超連結" class="w-full text-xs px-1 py-1.5 focus:outline-none bg-transparent">
-                       </div>
+              <!-- 左側高級漸層區 -->
+              <div class="md:w-1/3 bg-gradient-to-br from-indigo-500 to-purple-600 p-5 md:p-6 flex flex-col relative text-white">
+                 <button v-if="isEditor" @click="removeAccommodation(idx)" class="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-20 text-xl">✕</button>
+                 
+                 <!-- 飯店名稱與官網 -->
+                 <div class="mb-4 relative z-10">
+                    <label v-if="isEditor" class="block text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-widest">Hotel Name</label>
+                    <input v-if="isEditor" type="text" v-model="hotel.name" placeholder="輸入飯店名稱" class="w-full text-xl font-black bg-transparent border-b border-white/50 rounded-none px-0 py-1 focus:border-white outline-none placeholder-indigo-200 mb-2">
+                    <div v-if="isEditor" class="flex items-center bg-black/20 rounded px-2 py-1">
+                      <span class="text-xs text-white/70 mr-1">🔗</span>
+                      <input type="text" v-model="hotel.nameLink" placeholder="官網或訂房平台超連結" class="w-full text-[10px] md:text-xs outline-none bg-transparent text-white placeholder-white/50">
                     </div>
                     <div v-else>
-                       <a v-if="hotel.nameLink" :href="hotel.nameLink" target="_blank" class="text-xl md:text-2xl font-black text-indigo-600 hover:underline flex items-center gap-1">{{ hotel.name || '未填寫飯店名稱' }} <span class="text-sm">🔗</span></a>
-                       <h3 v-else class="text-xl md:text-2xl font-black text-gray-900">{{ hotel.name || '未填寫飯店名稱' }}</h3>
+                       <a v-if="hotel.nameLink" :href="hotel.nameLink" target="_blank" class="text-2xl font-black hover:underline flex items-center gap-1">{{ hotel.name || '未填寫飯店名稱' }} <span class="text-sm">🔗</span></a>
+                       <h3 v-else class="text-2xl font-black">{{ hotel.name || '未填寫飯店名稱' }}</h3>
                     </div>
-                  </div>
+                 </div>
 
-                  <!-- 地址與代號 -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                     <!-- 地址 -->
-                     <div class="bg-gray-50 rounded-lg p-2 border border-gray-100 flex flex-col justify-center">
-                        <div v-if="isEditor">
-                           <div class="flex items-center gap-1 mb-1">
-                             <span class="text-gray-400 text-xs">📍</span>
-                             <input type="text" v-model="hotel.address" placeholder="輸入飯店地址" class="flex-1 text-xs font-bold bg-transparent outline-none border-b border-gray-200 focus:border-indigo-500">
-                           </div>
-                           <div class="flex items-center gap-1">
-                             <span class="text-gray-400 text-xs">🗺️</span>
-                             <input type="text" v-model="hotel.addressLink" placeholder="貼上 Google Maps 連結" class="flex-1 text-[10px] text-blue-500 bg-transparent outline-none border-b border-gray-200 focus:border-indigo-500">
-                           </div>
-                        </div>
-                        <div v-else class="flex items-start gap-1">
-                           <span class="text-gray-400 text-sm mt-0.5">📍</span>
-                           <div>
-                              <a v-if="hotel.addressLink" :href="hotel.addressLink" target="_blank" class="text-xs font-bold text-blue-600 hover:underline">{{ hotel.address || '點此開啟地圖導航' }}</a>
-                              <p v-else class="text-xs font-bold text-gray-600">{{ hotel.address || '未提供地址' }}</p>
-                           </div>
-                        </div>
-                     </div>
-                     <!-- 代號與備註 -->
-                     <div class="bg-gray-50 rounded-lg p-2 border border-gray-100 flex flex-col justify-center">
-                        <div v-if="isEditor" class="space-y-1">
-                           <div class="flex items-center gap-1">
-                             <span class="text-gray-400 text-xs">🎫</span>
-                             <input type="text" v-model="hotel.bookingRef" placeholder="訂房代號 (Booking Ref)" class="flex-1 text-xs font-mono font-bold bg-white border border-gray-200 rounded px-1.5 py-1 outline-none focus:border-indigo-500 shadow-sm">
-                           </div>
-                           <textarea v-model="hotel.memo" placeholder="短備註 (例如：含早餐、需付稅)" rows="1" class="w-full bg-white border border-gray-200 rounded px-1.5 py-1 text-[10px] text-gray-600 focus:border-indigo-500 outline-none resize-none shadow-sm"></textarea>
-                        </div>
-                        <div v-else class="space-y-1.5">
-                           <div v-if="hotel.bookingRef" class="flex items-center gap-1">
-                              <span class="text-gray-400 text-xs">🎫</span>
-                              <span class="text-[10px] text-gray-500 font-bold">代號：</span>
-                              <span class="text-xs font-mono font-black text-gray-800 bg-gray-200 px-1.5 py-0.5 rounded">{{ hotel.bookingRef }}</span>
-                           </div>
-                           <div v-if="hotel.memo" class="text-[10px] text-gray-600 font-medium whitespace-pre-line bg-white border border-gray-100 p-1.5 rounded shadow-sm">
-                              {{ hotel.memo }}
-                           </div>
-                           <div v-if="!hotel.bookingRef && !hotel.memo" class="text-xs text-gray-400 font-bold italic">無其他備註或代號</div>
-                        </div>
-                     </div>
-                  </div>
-                </div>
+                 <!-- 區間日曆與晚數 -->
+                 <div class="bg-white/10 border border-white/20 rounded-xl p-3 md:p-4 text-center relative z-10 mt-auto">
+                    <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間 (可點擊選擇)</p>
+                    <div v-if="isEditor">
+                       <input type="text" v-model="hotel.dateRange" placeholder="點擊選擇區間" class="range-date-picker w-full text-center text-sm md:text-base font-black text-white bg-transparent border-b border-dashed border-white/50 py-1 cursor-pointer outline-none placeholder-white/50 focus:border-white">
+                    </div>
+                    <div v-else class="text-sm md:text-base font-black tracking-wide">{{ hotel.dateRange || '未設定期間' }}</div>
+                    
+                    <div class="flex justify-center gap-2 mt-2">
+                       <span class="text-[10px] font-bold bg-indigo-900/50 text-white rounded-full px-2 py-0.5">{{ calculateNights(hotel.dateRange) }}</span>
+                       <span class="text-[10px] font-bold bg-white text-indigo-800 rounded-full px-2 py-0.5" v-if="calculateRelativeDays(hotel.dateRange)">{{ calculateRelativeDays(hotel.dateRange).text }}</span>
+                    </div>
+                 </div>
+              </div>
+
+              <!-- 右側細節區塊 -->
+              <div class="flex-1 p-5 md:p-6 relative bg-gray-50/50 flex flex-col justify-center gap-4">
+                 
+                 <div class="grid grid-cols-2 gap-4">
+                    <!-- Check-in / Check-out 時間 -->
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm relative pt-4">
+                       <span class="absolute -top-2 left-3 bg-gray-600 text-white px-1.5 rounded text-[9px] font-bold">Check-in</span>
+                       <div class="flex items-center gap-1">
+                          <span class="text-lg">🕒</span>
+                          <input v-if="isEditor" type="text" v-model="hotel.checkInTime" placeholder="時間" class="time-picker w-full text-sm font-black bg-transparent outline-none cursor-pointer">
+                          <span v-else class="text-sm font-black text-gray-800">{{ hotel.checkInTime || '依規定' }}</span>
+                       </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm relative pt-4">
+                       <span class="absolute -top-2 left-3 bg-gray-600 text-white px-1.5 rounded text-[9px] font-bold">Check-out</span>
+                       <div class="flex items-center gap-1">
+                          <span class="text-lg">🕒</span>
+                          <input v-if="isEditor" type="text" v-model="hotel.checkOutTime" placeholder="時間" class="time-picker w-full text-sm font-black bg-transparent outline-none cursor-pointer">
+                          <span v-else class="text-sm font-black text-gray-800">{{ hotel.checkOutTime || '依規定' }}</span>
+                       </div>
+                    </div>
+                 </div>
+
+                 <!-- 地址與代號 -->
+                 <div class="space-y-3">
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                       <div class="flex items-center gap-2 mb-1">
+                          <span class="text-gray-400 text-sm">📍</span>
+                          <input v-if="isEditor" type="text" v-model="hotel.address" placeholder="輸入飯店地址" class="flex-1 text-sm font-bold bg-transparent outline-none border-b border-transparent focus:border-indigo-500">
+                          <span v-else class="text-sm font-bold text-gray-800">{{ hotel.address || '未提供地址' }}</span>
+                       </div>
+                       <div v-if="isEditor" class="flex items-center gap-2 pl-6">
+                          <span class="text-gray-400 text-xs">🗺️</span>
+                          <input type="text" v-model="hotel.addressLink" placeholder="Google Maps 連結" class="flex-1 text-[10px] md:text-xs text-blue-500 bg-transparent outline-none border-b border-transparent focus:border-indigo-500">
+                       </div>
+                       <div v-else-if="hotel.addressLink" class="pl-6 mt-1">
+                          <a :href="hotel.addressLink" target="_blank" class="text-xs font-bold text-blue-600 hover:underline">開啟地圖導航</a>
+                       </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm flex items-center gap-2">
+                       <span class="text-gray-400 text-sm">🎫</span>
+                       <span class="text-xs text-gray-500 font-bold">訂房代號</span>
+                       <input v-if="isEditor" type="text" v-model="hotel.bookingRef" placeholder="Booking Ref." class="flex-1 text-sm font-mono font-black bg-gray-50 border border-gray-200 rounded px-2 py-1 outline-none focus:border-indigo-500 text-right">
+                       <span v-else class="flex-1 text-sm font-mono font-black text-gray-800 text-right bg-gray-100 rounded px-2 py-0.5">{{ hotel.bookingRef || '無代號' }}</span>
+                    </div>
+                 </div>
+
+                 <!-- 備註 -->
+                 <div class="mt-auto pt-2">
+                    <textarea v-if="isEditor" v-model="hotel.memo" placeholder="備註 (例如：已付清、含早餐...)" rows="2" class="w-full bg-white border border-gray-200 rounded px-3 py-2 text-xs text-gray-600 focus:border-indigo-500 outline-none resize-none shadow-sm"></textarea>
+                    <div v-else-if="hotel.memo" class="bg-indigo-50/50 border border-indigo-100 rounded px-3 py-2 text-xs text-gray-700 whitespace-pre-line shadow-sm border-l-2 border-l-indigo-400">
+                      {{ hotel.memo }}
+                    </div>
+                 </div>
 
               </div>
             </div>
@@ -524,10 +539,8 @@
                 <div class="space-y-2">
                   <div v-for="(item, itemIdx) in category.items" :key="item.id" class="flex items-start gap-2 group">
                     <input type="checkbox" v-model="item.isChecked" class="checkbox-custom mt-0.5 text-teal-500">
-                    
                     <input v-if="isEditor" type="text" v-model="item.name" :class="{'strikethrough': item.isChecked}" placeholder="項目名稱" class="flex-1 text-sm text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-teal-500 outline-none">
                     <span v-else :class="{'strikethrough': item.isChecked}" class="flex-1 text-sm text-gray-700">{{ item.name }}</span>
-                    
                     <button v-if="isEditor" @click="removeLuggageItem(catIdx, itemIdx)" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                   </div>
                 </div>
@@ -596,59 +609,70 @@
           luggage: []
         });
 
-        // ==================== 【進階 UI 與邏輯處理函數】 ====================
-        
-        // 交通模組：計算經過時間 (僅做簡單展示邏輯)
-        const calculateDuration = (trans) => {
-           if(trans.depTime && trans.arrTime) return '前往';
-           return '移動';
+        // ==================== 【全新核心：Day 自動換算邏輯】 ====================
+        const calculateRelativeDays = (dateRangeStr) => {
+            if (!tripData.value.startDate || !dateRangeStr || !dateRangeStr.includes(' 至 ')) return null;
+            try {
+                const parts = dateRangeStr.split(' 至 ');
+                const tripStart = new Date(tripData.value.startDate).setHours(0,0,0,0);
+                const d1 = new Date(parts[0]).setHours(0,0,0,0);
+                const d2 = new Date(parts[1]).setHours(0,0,0,0);
+                
+                const day1 = Math.round((d1 - tripStart) / 86400000) + 1;
+                const day2 = Math.round((d2 - tripStart) / 86400000) + 1;
+                
+                if (day1 > 0 && day2 > 0) return { start: day1, end: day2, text: `Day ${day1} ~ Day ${day2}` };
+            } catch(e) {}
+            return null;
         };
 
-        // 住宿模組：處理字串分割供預覽顯示
+        const calculateNights = (rangeStr) => {
+           if(!rangeStr || !rangeStr.includes(' 至 ')) return '請選完整區間';
+           const parts = rangeStr.split(' 至 ');
+           const diffDays = Math.ceil(Math.abs(new Date(parts[1]) - new Date(parts[0])) / (1000 * 60 * 60 * 24)); 
+           return diffDays > 0 ? `共住 ${diffDays} 晚` : '同日退房';
+        };
+
         const splitDateRange = (rangeStr) => {
-           if(!rangeStr || !rangeStr.includes('至')) return { in: '', out: '' };
+           if(!rangeStr || !rangeStr.includes(' 至 ')) return { in: '', out: '' };
            const parts = rangeStr.split(' 至 ');
            return { in: parts[0], out: parts[1] };
         };
 
-        // 住宿模組：自動計算晚數
-        const calculateNights = (rangeStr) => {
-           if(!rangeStr || !rangeStr.includes('至')) return '請選完整區間';
-           const parts = rangeStr.split(' 至 ');
-           const d1 = new Date(parts[0]);
-           const d2 = new Date(parts[1]);
-           const diffTime = Math.abs(d2 - d1);
-           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-           return diffDays > 0 ? `共住 ${diffDays} 晚` : '同日退房';
+        const getHotelsForDay = (dayNum) => {
+            return tripData.value.accommodations.filter(h => {
+                const days = calculateRelativeDays(h.dateRange);
+                if (!days) return false;
+                // 住到退房前一天算「入住中」
+                return dayNum >= days.start && dayNum < days.end;
+            });
         };
 
-        // 【終極修復】：安全綁定 Flatpickr 避免死機
+        const getTransportsForDay = (dayNum) => {
+            return tripData.value.transports.filter(t => {
+                const days = calculateRelativeDays(t.dateRange);
+                if (!days) return false;
+                return dayNum >= days.start && dayNum <= days.end;
+            });
+        };
+
+        // ==================== 【終極防呆：安全的 Flatpickr 綁定】 ====================
         const bindDynamicPickers = () => {
           if (!isEditor.value) return;
           nextTick(() => {
              try {
-                 // 交通的單日選擇
-                 document.querySelectorAll('.dynamic-date-picker:not(.flatpickr-input)').forEach(el => {
-                    flatpickr(el, { dateFormat: "Y/m/d", locale: "zh_tw", disableMobile: "true" });
+                 // 交通/住宿共用的區間日曆
+                 document.querySelectorAll('.range-date-picker:not(.flatpickr-input)').forEach(el => {
+                    flatpickr(el, { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", disableMobile: "true", appendTo: document.body, locale: { rangeSeparator: ' 至 ' } });
                  });
-                 // 交通的時間選擇
-                 document.querySelectorAll('.dynamic-time-picker:not(.flatpickr-input)').forEach(el => {
-                    flatpickr(el, { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true, disableMobile: "true" });
+                 // 交通/住宿共用的時間日曆
+                 document.querySelectorAll('.time-picker:not(.flatpickr-input)').forEach(el => {
+                    flatpickr(el, { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true, disableMobile: "true", appendTo: document.body });
                  });
-                 // 住宿的「區間範圍」選擇
-                 document.querySelectorAll('.hotel-range-picker:not(.flatpickr-input)').forEach(el => {
-                    flatpickr(el, { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", disableMobile: "true",
-                       // 替換預設的 "to" 為中文 "至" 方便分割計算
-                       locale: { rangeSeparator: ' 至 ' }
-                    });
-                 });
-             } catch (e) {
-                 console.error("Flatpickr 綁定錯誤:", e);
-             }
+             } catch (e) { console.error("Flatpickr Error:", e); }
           });
         };
 
-        // 監聽頁面切換自動綁定套件
         watch(currentView, () => { bindDynamicPickers(); });
 
         // 無感自動儲存
@@ -712,22 +736,24 @@
           tripData.value = { 
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             companions: ['我', '盈瑜'], itinerary: [], expenses: [],
-            transports: [ { id: generateId(), type: '🚗 租車', name: 'The Safe Rent A Car', depDate: '', depTime: '10:00', depLoc: '', depLink: '', arrDate: '', arrTime: '18:00', arrLoc: '', arrLink: '', memo: '' } ], 
+            transports: [ { id: generateId(), type: '🚗 租車', name: 'The Safe Rent A Car', dateRange: '', depTime: '10:00', depLoc: '', depLink: '', arrTime: '18:00', arrLoc: '', arrLink: '', memo: '' } ], 
             accommodations: [], luggage: []
           };
           setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63' };
           isEditor.value = true;
           appState.value = 'TRIP';
           isSetup.value = true;
+          // 新增行程 Modal 內的日曆綁定 (使用 appendTo: document.body 確保不被擋住)
           nextTick(() => {
-            // 修復 Modal 內的主要大日曆綁定
-            if(document.querySelector("#tripDateRangePicker")) {
-              flatpickr("#tripDateRangePicker", { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", minDate: "today",
-                onChange: function(selectedDates) {
-                  if(selectedDates.length === 2) { setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA'); setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA'); }
-                }
-              });
-            }
+            try {
+              if(document.querySelector("#tripDateRangePicker")) {
+                flatpickr("#tripDateRangePicker", { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", minDate: "today", disableMobile: "true", appendTo: document.body,
+                  onChange: function(selectedDates) {
+                    if(selectedDates.length === 2) { setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA'); setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA'); }
+                  }
+                });
+              }
+            } catch(e){}
           });
         };
 
@@ -770,13 +796,15 @@
           setupData.value = { name: tripData.value.tripName, destination: tripData.value.destination, startDate: tripData.value.startDate, endDate: tripData.value.endDate, themeColor: tripData.value.themeColor };
           isSetup.value = true;
           nextTick(() => {
-            if(document.querySelector("#tripDateRangePicker")) {
-              flatpickr("#tripDateRangePicker", { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", defaultDate: setupData.value.startDate ? [setupData.value.startDate, setupData.value.endDate] : [],
-                onChange: function(selectedDates) {
-                  if(selectedDates.length === 2) { setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA'); setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA'); }
-                }
-              });
-            }
+            try {
+              if(document.querySelector("#tripDateRangePicker")) {
+                flatpickr("#tripDateRangePicker", { mode: "range", dateFormat: "Y/m/d", locale: "zh_tw", disableMobile: "true", appendTo: document.body, defaultDate: setupData.value.startDate ? [setupData.value.startDate, setupData.value.endDate] : [],
+                  onChange: function(selectedDates) {
+                    if(selectedDates.length === 2) { setupData.value.startDate = selectedDates[0].toLocaleDateString('en-CA'); setupData.value.endDate = selectedDates[1].toLocaleDateString('en-CA'); }
+                  }
+                });
+              }
+            } catch(e){}
           });
         };
 
@@ -821,14 +849,15 @@
           targetItem.showMenu = !wasOpen;
         };
 
+        // 交通與住宿新增時自動呼叫 bindDynamicPickers
         const addTransport = () => { 
-          tripData.value.transports.push({ id: generateId(), type: '🎫 交通票券', name: '', depDate: '', depTime: '', depLoc: '', depLink: '', arrDate: '', arrTime: '', arrLoc: '', arrLink: '', memo: '' }); 
+          tripData.value.transports.push({ id: generateId(), type: '🎫 交通票券', name: '', dateRange: '', depTime: '', depLoc: '', depLink: '', arrTime: '', arrLoc: '', arrLink: '', memo: '' }); 
           bindDynamicPickers();
         };
         const removeTransport = (idx) => { tripData.value.transports.splice(idx, 1); };
         
         const addAccommodation = () => { 
-          tripData.value.accommodations.push({ id: generateId(), name: '', nameLink: '', dateRange: '', address: '', addressLink: '', bookingRef: '', memo: '' }); 
+          tripData.value.accommodations.push({ id: generateId(), name: '', nameLink: '', dateRange: '', checkInTime: '15:00', checkOutTime: '11:00', address: '', addressLink: '', bookingRef: '', memo: '' }); 
           bindDynamicPickers();
         };
         const removeAccommodation = (idx) => { tripData.value.accommodations.splice(idx, 1); };
@@ -865,8 +894,9 @@
           isOwner, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           saveStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, switchTab,
           stayOptions, formatStayTime, toggleMenu, 
-          // 擴充函數
-          calculateDuration, splitDateRange, calculateNights,
+          // 匯出新邏輯
+          calculateDuration: (t) => t.depTime && t.arrTime ? '前往' : '移動',
+          calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
           addTransport, removeTransport, addAccommodation, removeAccommodation,
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField
