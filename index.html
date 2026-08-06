@@ -143,15 +143,30 @@
           <button v-if="isOwner" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
           
           <span class="hidden md:inline">🔐 權限狀態：</span>
-          <span v-if="isEditor" class="font-bold text-green-400">擁有者 (編輯中)</span>
-          <span v-else class="font-bold text-yellow-400">訪客 (唯讀預覽)</span>
+          <span v-if="isEditor" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
+          <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
         </div>
-        <div class="flex gap-2">
-           <button v-if="isOwner" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-3 py-1 rounded text-white font-bold transition-colors shadow-sm text-[11px] md:text-xs flex items-center gap-1">
-             {{ isEditor ? '👁️ 預覽訪客畫面' : '✏️ 恢復編輯模式' }}
+        
+        <div class="flex items-center gap-2">
+           <!-- 自動儲存狀態文字 (僅編輯者可見) -->
+           <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
+
+           <!-- 設定按鈕 (僅編輯者可見) -->
+           <button v-if="isEditor" @click="openSetup" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700">
+             ⚙️ <span class="hidden sm:inline">設定</span>
+           </button>
+
+           <!-- 複製分享網址按鈕 (僅編輯者可見) -->
+           <button v-if="isEditor" @click="copyShareLink" class="theme-bg theme-bg-hover text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors">
+             🔗 <span class="hidden sm:inline">複製分享網址</span><span class="sm:hidden">分享</span>
+           </button>
+
+           <!-- 預覽/編輯切換按鈕 -->
+           <button v-if="isOwner" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-2 py-1 md:px-3 md:py-1 rounded text-white font-bold transition-colors shadow-sm text-[11px] md:text-xs flex items-center gap-1">
+             {{ isEditor ? '👁️ 預覽' : '✏️ 編輯' }}
            </button>
            
-           <button v-if="!isOwner && !currentUser" @click="loginWithGoogle" class="text-blue-400 hover:text-blue-300 font-bold text-xs">登入以建立行程</button>
+           <button v-if="!isOwner && !currentUser" @click="loginWithGoogle" class="text-blue-400 hover:text-blue-300 font-bold text-xs">登入建立</button>
         </div>
       </div>
 
@@ -181,20 +196,6 @@
               </div>
               <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">{{ tripData.tripName }}</h1>
               <p class="text-gray-500 font-medium text-xs md:text-base">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
-            </div>
-            
-            <div v-if="isEditor" class="flex flex-col gap-1 items-end">
-              <!-- 自動儲存狀態文字 -->
-              <span class="text-[11px] text-gray-500 font-bold h-4" :class="saveStatus.includes('正在') ? 'animate-pulse' : ''">{{ saveStatus }}</span>
-              
-              <div class="flex gap-2">
-                <button @click="copyShareLink" class="theme-bg theme-bg-hover text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
-                  🔗 複製分享網址
-                </button>
-                <button @click="openSetup" class="border border-gray-300 text-gray-600 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:bg-gray-50 font-bold text-xs md:text-sm shadow-sm flex items-center justify-center gap-1 transition-colors">
-                  ⚙️ 設定
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -227,7 +228,7 @@
             </button>
           </div>
 
-          <!-- 總行程 (所有人都可看) -->
+          <!-- 總行程 -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
