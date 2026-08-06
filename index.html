@@ -25,7 +25,6 @@
     .focus-theme:focus { border-color: var(--theme-color) !important; outline: none; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .dragging { opacity: 0.5; border: 2px dashed var(--theme-color); }
     .compact-input { padding: 0.25rem; }
     input[type="number"] { -moz-appearance: textfield; }
     input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -53,6 +52,40 @@
           <svg class="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
           使用 Google 登入
         </button>
+      </div>
+    </div>
+
+    <!-- ==================== 【建立行程設定 Modal】 ==================== -->
+    <div v-if="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[400]" @click.self="closeSetup">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
+        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+              <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
+              <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
+            </div>
+            <button @click="closeSetup" class="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors">✕</button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
+            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
+          </div>
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
+            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
+          </div>
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
+            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
+          </div>
+        </div>
+        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+          <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
+          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
+        </div>
       </div>
     </div>
 
@@ -98,41 +131,6 @@
         <div v-if="myTrips.length === 0" class="text-center py-20 border-2 border-dashed border-gray-300 rounded-3xl mt-6">
           <p class="text-gray-500 text-lg font-bold mb-4">目前還沒有任何行程喔！</p>
           <button @click="createNewTrip" class="text-blue-500 font-bold hover:underline">立即建立第一趟旅程</button>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- ==================== 【建立行程設定 Modal】 ==================== -->
-    <div v-if="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[400]" @click.self="closeSetup">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
-        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
-              <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
-              <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
-            </div>
-            <button @click="closeSetup" class="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors">✕</button>
-          </div>
-        </div>
-        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
-            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
-            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
-            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
-          </div>
-        </div>
-        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-          <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
-          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
         </div>
       </div>
     </div>
@@ -231,7 +229,7 @@
             </button>
           </div>
 
-          <!-- 總行程 (所有人都可看) -->
+          <!-- 總行程 -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
@@ -287,10 +285,12 @@
             <div class="relative pl-3 md:pl-6 space-y-2">
               <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
 
-              <!-- 修復的 z-index 邏輯 -->
+              <!-- 【終極修復 z-index】：直接綁定 style z-index: 9999 -->
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
-                   :class="['relative transition-all duration-300', item.showMenu ? 'z-[100]' : 'z-10']"
+                   :style="item.showMenu ? 'z-index: 9999; position: relative;' : 'z-index: 10; position: relative;'"
+                   class="transition-all duration-300"
                    draggable="true" @dragstart="dragStart(activeDayTab, itemIndex, $event)" @dragover.prevent @drop="dragDrop(activeDayTab, itemIndex)" @dragenter="dragEnter($event)" @dragleave="dragLeave($event)" @dragend="dragEnd">
+                
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow relative z-20">
@@ -311,8 +311,12 @@
                     </div>
 
                     <div class="relative flex-shrink-0">
-                      <button @click="item.showMenu = !item.showMenu" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
+                      <!-- 這裡改用 toggleMenu 函數 -->
+                      <button @click="toggleMenu(activeDayTab, itemIndex)" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
+                      
+                      <!-- 全螢幕遮罩，點擊任意處關閉選單 -->
                       <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
+                      
                       <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-40 py-1 text-sm flex flex-col">
                         <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg relative z-50">
                           <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus-theme">
@@ -534,7 +538,6 @@
 
                 <div class="space-y-2">
                   <div v-for="(item, itemIdx) in category.items" :key="item.id" class="flex items-start gap-2 group">
-                    <!-- Checkbox 所有人都可以點擊打勾 -->
                     <input type="checkbox" v-model="item.isChecked" class="checkbox-custom mt-0.5 text-teal-500">
                     
                     <input v-if="isEditor" type="text" v-model="item.name" :class="{'strikethrough': item.isChecked}" placeholder="項目名稱" class="flex-1 text-sm text-gray-700 bg-transparent border-b border-transparent hover:border-gray-200 focus:border-teal-500 outline-none">
@@ -588,7 +591,7 @@
         const saveStatus = ref('');
         let saveTimeout = null;
 
-        const tabs = ['行程', '公費與名單', '交通', '住宿', '行李'];
+        const tabs = ['行程', '交通', '住宿', '行李'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
         const activeMemo = ref(null); 
@@ -692,7 +695,6 @@
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             companions: ['我', '盈瑜'], itinerary: [], expenses: [],
             transports: [
-              { id: generateId(), type: '✈️ 航班', name: '', departure: '', arrival: '', memo: '' },
               { id: generateId(), type: '🚗 租車', name: 'The Safe Rent A Car', departure: '', arrival: '', memo: '' }
             ], 
             accommodations: [],
@@ -829,15 +831,22 @@
           }
         };
 
-        // 【交通模組功能】
+        // ==================== 【解決 Z-index 被蓋住的防呆切換函數】 ====================
+        const toggleMenu = (dayIdx, itemIdx) => {
+          const targetItem = tripData.value.itinerary[dayIdx].items[itemIdx];
+          const wasOpen = targetItem.showMenu;
+          // 先把所有的選單都關閉
+          tripData.value.itinerary.forEach(d => d.items.forEach(i => i.showMenu = false));
+          // 再切換目標選單的狀態
+          targetItem.showMenu = !wasOpen;
+        };
+
         const addTransport = () => { tripData.value.transports.push({ id: generateId(), type: '🎫 交通票券', name: '', departure: '', arrival: '', memo: '' }); };
         const removeTransport = (idx) => { tripData.value.transports.splice(idx, 1); };
         
-        // 【住宿模組功能】
         const addAccommodation = () => { tripData.value.accommodations.push({ id: generateId(), name: '', checkIn: '', checkOut: '', address: '', bookingRef: '', memo: '' }); };
         const removeAccommodation = (idx) => { tripData.value.accommodations.splice(idx, 1); };
         
-        // 【行李模組功能】
         const addLuggageCategory = () => { tripData.value.luggage.push({ name: '新分類', items: [] }); };
         const removeLuggageCategory = (idx) => { tripData.value.luggage.splice(idx, 1); };
         const addLuggageItem = (catIdx) => { tripData.value.luggage[catIdx].items.push({ id: generateId(), name: '', isChecked: false }); };
@@ -899,6 +908,7 @@
           saveStatus,
           tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo,
           stayOptions, formatStayTime, 
+          toggleMenu, // 匯出防呆切換函數
           addTransport, removeTransport, addAccommodation, removeAccommodation,
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, moveToDay, openField, handleImageUpload
