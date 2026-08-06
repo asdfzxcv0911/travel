@@ -227,7 +227,7 @@
             </button>
           </div>
 
-          <!-- 總行程 -->
+          <!-- 總行程 (所有人都可看) -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
@@ -428,7 +428,6 @@
         const isEditor = ref(false); 
         const isSetup = ref(false); 
         
-        // 自動儲存相關狀態
         const saveStatus = ref('');
         let saveTimeout = null;
 
@@ -450,7 +449,6 @@
           companions: ['我', '盈瑜'], itinerary: [], transports: [{ type: '🚗 租車', number: 'The Safe Rent A Car', from: '', to: '' }], expenses: [], luggage: []
         });
 
-        // 監聽資料異動，觸發無感自動儲存 (Debounce)
         watch(() => tripData.value, (newVal) => {
           if (appState.value === 'TRIP' && isEditor.value && !isSetup.value) {
             if (saveTimeout) clearTimeout(saveTimeout);
@@ -466,13 +464,12 @@
                 await setDoc(doc(db, "trips", currentTripId.value), tripData.value);
                 
                 saveStatus.value = '已自動儲存 ✅';
-                // 3秒後隱藏成功訊息
                 setTimeout(() => { if(saveStatus.value === '已自動儲存 ✅') saveStatus.value = ''; }, 3000);
               } catch(e) {
                 console.error(e);
                 saveStatus.value = '儲存失敗 ❌';
               }
-            }, 1500); // 停止修改 1.5 秒後，自動發送至雲端
+            }, 1500); 
           }
         }, { deep: true });
 
@@ -566,11 +563,9 @@
           }
         };
 
-        // 修改後的按鈕行為：確保網址是最新的並複製分享
         const copyShareLink = async () => {
           if (!currentUser.value) return alert("請先登入！");
           
-          // 如果還沒有 ID，強制觸發一次儲存並產生 ID
           if (!currentTripId.value) {
             currentTripId.value = Math.random().toString(36).substr(2, 10);
             tripData.value.ownerId = currentUser.value.uid;
@@ -702,9 +697,9 @@
         };
 
         return {
-          appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, saveTripToCloud, deleteTripFromCloud, copyShareLink,
+          appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, deleteTripFromCloud, copyShareLink,
           isOwner, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
-          saveStatus, // 匯出自動儲存狀態
+          saveStatus,
           tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo,
           stayOptions, formatStayTime, 
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, moveToDay, openField, handleImageUpload
