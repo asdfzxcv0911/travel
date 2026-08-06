@@ -56,40 +56,6 @@
       </div>
     </div>
 
-    <!-- ==================== 【建立行程設定 Modal】 ==================== -->
-    <div v-if="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[400]" @click.self="closeSetup">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
-        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
-              <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
-              <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
-            </div>
-            <button @click="closeSetup" class="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors">✕</button>
-          </div>
-        </div>
-        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
-            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
-            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
-          </div>
-          <div>
-            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
-            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
-          </div>
-        </div>
-        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-          <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
-          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
-        </div>
-      </div>
-    </div>
-
     <!-- ==================== 【行程大廳 (Dashboard)】 ==================== -->
     <div v-if="appState === 'DASHBOARD'" class="min-h-screen">
       <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
@@ -137,6 +103,41 @@
     </div>
 
 
+    <!-- ==================== 【建立行程設定 Modal】 ==================== -->
+    <div v-if="isSetup && isEditor" class="fixed inset-0 bg-gray-900/60 flex justify-center items-center p-4 z-[400]" @click.self="closeSetup">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90vh] animate-fade-in my-auto">
+        <div class="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center">
+          <h2 class="text-xl md:text-2xl font-bold text-gray-800">行程設定</h2>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+              <span class="text-xs md:text-sm font-bold text-gray-600">🎨 主題色</span>
+              <input type="color" v-model="setupData.themeColor" class="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent">
+            </div>
+            <button @click="closeSetup" class="text-gray-400 hover:text-gray-700 text-2xl font-bold transition-colors">✕</button>
+          </div>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto space-y-5">
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>行程名稱</label>
+            <input type="text" v-model="setupData.name" placeholder="請輸入行程名稱" class="custom-input py-2">
+          </div>
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>目的地</label>
+            <input type="text" v-model="setupData.destination" placeholder="如：濟州島" class="custom-input py-2">
+          </div>
+          <div>
+            <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (自動推算)</label>
+            <input type="text" id="dateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer" readonly>
+          </div>
+        </div>
+        <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+          <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
+          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
+        </div>
+      </div>
+    </div>
+
+
     <!-- ==================== 【個別行程編輯/預覽區 (TRIP)】 ==================== -->
     <div v-if="appState === 'TRIP'">
       
@@ -144,22 +145,21 @@
       <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
         <div class="flex items-center gap-2">
           <button v-if="isOwner" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
-          
           <span class="hidden md:inline">🔐 權限狀態：</span>
           <span v-if="isEditor" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
           <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
         </div>
         
         <div class="flex items-center gap-2">
-           <!-- 自動儲存狀態文字 (僅編輯者可見) -->
+           <!-- 自動儲存狀態文字 -->
            <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
 
-           <!-- 設定按鈕 (僅編輯者可見) -->
+           <!-- 設定按鈕 -->
            <button v-if="isEditor" @click="openSetup" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700">
              ⚙️ <span class="hidden sm:inline">設定</span>
            </button>
 
-           <!-- 複製分享網址按鈕 (僅編輯者可見) -->
+           <!-- 複製分享網址按鈕 -->
            <button v-if="isEditor" @click="copyShareLink" class="theme-bg theme-bg-hover text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors">
              🔗 <span class="hidden sm:inline">複製分享網址</span><span class="sm:hidden">分享</span>
            </button>
@@ -231,7 +231,7 @@
             </button>
           </div>
 
-          <!-- 總行程 (預覽或擁有者查看) -->
+          <!-- 總行程 (所有人都可看) -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
@@ -287,6 +287,7 @@
             <div class="relative pl-3 md:pl-6 space-y-2">
               <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
 
+              <!-- 修復的 z-index 邏輯 -->
               <div v-for="(item, itemIndex) in tripData.itinerary[activeDayTab].items" :key="item.id" 
                    :class="['relative transition-all duration-300', item.showMenu ? 'z-[100]' : 'z-10']"
                    draggable="true" @dragstart="dragStart(activeDayTab, itemIndex, $event)" @dragover.prevent @drop="dragDrop(activeDayTab, itemIndex)" @dragenter="dragEnter($event)" @dragleave="dragLeave($event)" @dragend="dragEnd">
@@ -600,18 +601,16 @@
 
         const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63' });
         
-        // 核心資料結構
         const tripData = ref({
           ownerId: '', tripName: '未命名行程', destination: '', startDate: '', endDate: '', themeColor: '#e91e63',
           companions: ['我', '盈瑜'], 
           itinerary: [], 
+          expenses: [],
           transports: [], 
           accommodations: [],
-          luggage: [],
-          expenses: []
+          luggage: []
         });
 
-        // 自動儲存邏輯
         watch(() => tripData.value, (newVal) => {
           if (appState.value === 'TRIP' && isEditor.value && !isSetup.value) {
             if (saveTimeout) clearTimeout(saveTimeout);
@@ -692,7 +691,6 @@
           tripData.value = { 
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             companions: ['我', '盈瑜'], itinerary: [], expenses: [],
-            // 預設帶入的交通與住宿結構
             transports: [
               { id: generateId(), type: '✈️ 航班', name: '', departure: '', arrival: '', memo: '' },
               { id: generateId(), type: '🚗 租車', name: 'The Safe Rent A Car', departure: '', arrival: '', memo: '' }
@@ -726,7 +724,6 @@
           
           if (docSnap.exists()) {
             const data = docSnap.data();
-            // 確保舊資料如果有缺陣列，自動補齊以防網頁出錯
             if (!data.transports) data.transports = [];
             if (!data.accommodations) data.accommodations = [];
             if (!data.luggage) data.luggage = [];
@@ -832,14 +829,15 @@
           }
         };
 
-        // 【擴充模組方法】
-        // 交通
+        // 【交通模組功能】
         const addTransport = () => { tripData.value.transports.push({ id: generateId(), type: '🎫 交通票券', name: '', departure: '', arrival: '', memo: '' }); };
         const removeTransport = (idx) => { tripData.value.transports.splice(idx, 1); };
-        // 住宿
+        
+        // 【住宿模組功能】
         const addAccommodation = () => { tripData.value.accommodations.push({ id: generateId(), name: '', checkIn: '', checkOut: '', address: '', bookingRef: '', memo: '' }); };
         const removeAccommodation = (idx) => { tripData.value.accommodations.splice(idx, 1); };
-        // 行李
+        
+        // 【行李模組功能】
         const addLuggageCategory = () => { tripData.value.luggage.push({ name: '新分類', items: [] }); };
         const removeLuggageCategory = (idx) => { tripData.value.luggage.splice(idx, 1); };
         const addLuggageItem = (catIdx) => { tripData.value.luggage[catIdx].items.push({ id: generateId(), name: '', isChecked: false }); };
@@ -852,7 +850,6 @@
           ];
         };
 
-        // 既有方法
         const addItem = (dayIdx) => { tripData.value.itinerary[dayIdx].items.push({ id: generateId(), startTime: '', activity: '', stay: '', showMenu: false }); tripData.value.itinerary[dayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); recalculateDay(dayIdx); };
         const deleteItem = (dayIdx, itemIdx) => { tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1); if (tripData.value.itinerary[dayIdx].transit.length > 0) tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1); recalculateDay(dayIdx); };
         const openField = (item, field) => { if(item[field] === undefined || item[field] === false) { item[field] = ''; } item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true; item.showMenu = false; };
@@ -902,10 +899,8 @@
           saveStatus,
           tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo,
           stayOptions, formatStayTime, 
-          // 擴充的方法
           addTransport, removeTransport, addAccommodation, removeAccommodation,
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
-          // 原有方法
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, moveToDay, openField, handleImageUpload
         }
       }
