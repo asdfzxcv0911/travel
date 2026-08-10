@@ -398,7 +398,7 @@
           </div>
         </div>
 
-        <!-- ==================== 【全新：超Ｑ航班與名單模組】 ==================== -->
+        <!-- ==================== 【超Ｑ航班與名單模組】 ==================== -->
         <div v-if="currentView === '航班'" class="max-w-3xl mx-auto space-y-4">
           
           <div class="flex justify-between items-center mb-6">
@@ -415,7 +415,6 @@
             <p class="text-blue-400 font-bold text-lg">尚未新增任何航班資訊</p>
           </div>
 
-          <!-- 圓潤可愛的機票卡片 -->
           <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
              
              <!-- 右上角操作按鈕 (僅圖示) -->
@@ -426,7 +425,7 @@
              </div>
              
              <!-- 依據去回程動態變色頭部 -->
-             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-4 flex flex-col gap-2 rounded-t-[28px] relative z-10 transition-colors duration-300">
+             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-5 flex flex-col gap-3 rounded-t-[28px] relative z-10 transition-colors duration-300">
                  
                  <div class="flex items-center gap-1.5 md:gap-2 mb-1 pr-16 md:pr-24">
                      <!-- 飛機圖示：去程🛫，回程🛬，國內線/中轉✈️ -->
@@ -533,24 +532,24 @@
                                  <option>👨</option><option>👩</option><option>👦</option><option>👧</option><option>👴</option><option>👵</option><option>👶</option><option>🧑</option>
                              </select>
                          </div>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.name" placeholder="姓名" class="font-bold text-gray-700 bg-transparent outline-none focus:border-b focus:border-sky-300 w-full uppercase text-sm md:text-base placeholder-gray-300 truncate">
-                         <span v-else class="font-bold text-gray-700 uppercase text-sm md:text-base truncate block w-full">{{ pax.name || '---' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.name" placeholder="姓名" class="font-bold text-gray-700 bg-transparent outline-none focus:border-b focus:border-sky-300 w-full uppercase text-[13px] md:text-base placeholder-gray-300 truncate">
+                         <span v-else class="font-bold text-gray-700 uppercase text-[13px] md:text-base truncate block w-full">{{ pax.name || '---' }}</span>
                      </div>
                      
                      <!-- 座位 -->
                      <div class="flex items-center gap-1 w-[60px] md:w-[80px] shrink-0 justify-start">
                          <span class="text-xs md:text-base grayscale opacity-80 shrink-0">💺</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">座位:</span>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.seat" placeholder="座位" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left uppercase text-sm md:text-base placeholder-blue-200">
-                         <span v-else class="font-bold text-[#3b82f6] uppercase text-sm md:text-base truncate">{{ pax.seat || '-' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.seat" placeholder="座位" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left uppercase text-[13px] md:text-base placeholder-blue-200">
+                         <span v-else class="font-bold text-[#3b82f6] uppercase text-[13px] md:text-base truncate">{{ pax.seat || '-' }}</span>
                      </div>
                      
                      <!-- 行李 -->
                      <div class="flex items-center gap-1 w-[70px] md:w-[90px] shrink-0 justify-start">
                          <span class="text-xs md:text-base grayscale opacity-80 shrink-0">💼</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">行李:</span>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.baggage" placeholder="行李" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left text-sm md:text-base placeholder-blue-200">
-                         <span v-else class="font-bold text-[#3b82f6] text-sm md:text-base truncate">{{ pax.baggage || '-' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.baggage" placeholder="行李" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left text-[13px] md:text-base placeholder-blue-200">
+                         <span v-else class="font-bold text-[#3b82f6] text-[13px] md:text-base truncate">{{ pax.baggage || '-' }}</span>
                      </div>
 
                      <!-- 刪除按鈕 -->
@@ -684,11 +683,9 @@
           <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
             <div v-for="(hotel, idx) in tripData.accommodations" :key="hotel.id" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col md:flex-row hover:shadow-xl transition-all relative">
               
-              <!-- 左側高級漸層區 -->
               <div class="md:w-1/3 bg-gradient-to-br from-indigo-500 to-purple-600 p-5 md:p-6 flex flex-col relative text-white">
                  <button v-if="isEditor" @click="removeAccommodation(idx)" class="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-20 text-xl">✕</button>
                  
-                 <!-- 飯店名稱與官網 -->
                  <div class="mb-4 relative z-10">
                     <label v-if="isEditor" class="block text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-widest">Hotel Name</label>
                     <input v-if="isEditor" type="text" v-model="hotel.name" placeholder="輸入飯店名稱" class="w-full text-xl font-black bg-transparent border-b border-white/50 rounded-none px-0 py-1 focus:border-white outline-none placeholder-indigo-200 mb-2">
@@ -702,7 +699,6 @@
                     </div>
                  </div>
 
-                 <!-- 區間日曆與晚數 -->
                  <div class="bg-white/10 border border-white/20 rounded-xl p-3 md:p-4 text-center relative z-10 mt-auto">
                     <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間 (可點擊選擇)</p>
                     <div v-if="isEditor">
@@ -717,9 +713,7 @@
                  </div>
               </div>
 
-              <!-- 右側細節區塊 -->
               <div class="flex-1 p-5 md:p-6 relative bg-gray-50/50 flex flex-col justify-center gap-4">
-                 
                  <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm relative pt-4">
                        <span class="absolute -top-2 left-3 bg-gray-600 text-white px-1.5 rounded text-[9px] font-bold">Check-in</span>
@@ -739,7 +733,6 @@
                     </div>
                  </div>
 
-                 <!-- 地址與代號 -->
                  <div class="space-y-3">
                     <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
                        <div class="flex items-center gap-2 mb-1">
@@ -764,7 +757,6 @@
                     </div>
                  </div>
 
-                 <!-- 備註 -->
                  <div class="mt-auto pt-2">
                     <textarea v-if="isEditor" v-model="hotel.memo" placeholder="備註 (例如：已付清、含早餐...)" rows="2" class="w-full bg-white border border-gray-200 rounded px-3 py-2 text-xs text-gray-600 focus:border-indigo-500 outline-none resize-none shadow-sm"></textarea>
                     <div v-else-if="hotel.memo" class="bg-indigo-50/50 border border-indigo-100 rounded px-3 py-2 text-xs text-gray-700 whitespace-pre-line shadow-sm border-l-2 border-l-indigo-400">
