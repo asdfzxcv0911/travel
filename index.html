@@ -94,9 +94,12 @@
             <div class="h-24 w-full" :style="{ backgroundColor: trip.themeColor || '#e91e63' }">
               <div class="w-full h-full bg-black/10 flex items-center justify-center"><span class="text-4xl shadow-sm opacity-90">✈️</span></div>
             </div>
-            <button @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
+            <button v-if="trip.ownerId === currentUser?.uid" @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
             <div class="p-5">
-              <div class="flex items-center gap-2 mb-2"><span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span></div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span>
+                <span v-if="trip.ownerId !== currentUser?.uid" class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-200">🤝 共同編輯</span>
+              </div>
               <h3 class="text-xl font-bold text-gray-900 mb-1 truncate">{{ trip.tripName }}</h3>
               <p class="text-sm text-gray-500">{{ formatDateRange(trip.startDate, trip.endDate) }}</p>
             </div>
@@ -138,12 +141,12 @@
           </div>
           <div>
             <label class="block mb-1.5 font-medium text-sm">共同編輯者信箱 (選填，多人請用逗號分隔)</label>
-            <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com, friend2@gmail.com" class="custom-input py-2 text-sm">
+            <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com" class="custom-input py-2 text-sm">
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
           <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
-          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">確定並載入</button>
+          <button @click="generateTrip" class="px-6 py-2 theme-bg theme-bg-hover text-white font-bold rounded-md shadow-md transition-all text-sm">儲存設定</button>
         </div>
       </div>
     </div>
@@ -171,7 +174,7 @@
              🔗 <span class="hidden sm:inline">複製分享網址</span><span class="sm:hidden">分享</span>
            </button>
            
-           <!-- 擁有者與共同編輯者都能切換預覽模式 (統一按鈕尺寸) -->
+           <!-- 擁有者與共同編輯者都能切換預覽模式 -->
            <button v-if="hasEditPermission" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-2 py-1 md:px-3 md:py-1 rounded text-white font-bold transition-colors shadow-sm flex items-center gap-1">
              {{ isEditor ? '👁️ 預覽' : '✏️ 編輯' }}
            </button>
@@ -711,7 +714,7 @@
         const hasEditPermission = computed(() => {
           if (!currentUser.value || !tripData.value) return false;
           if (tripData.value.ownerId === currentUser.value.uid) return true;
-          return tripData.value.coEditors && tripData.value.coEditors.includes(currentUser.value.email);
+          return tripData.value.coEditors && tripData.value.coEditors.includes(currentUser.value.email.toLowerCase());
         });
 
         const visibleTabs = computed(() => isEditor.value ? tabs : ['行程', '交通', '住宿']);
@@ -826,9 +829,21 @@
 
         const fetchMyTrips = async () => {
           if (!currentUser.value) return;
-          const q = query(collection(db, "trips"), where("ownerId", "==", currentUser.value.uid));
-          const querySnapshot = await getDocs(q);
-          myTrips.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          try {
+            const qOwner = query(collection(db, "trips"), where("ownerId", "==", currentUser.value.uid));
+            const snapOwner = await getDocs(qOwner);
+            const trips = snapOwner.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            const myEmail = currentUser.value.email.toLowerCase();
+            const qCo = query(collection(db, "trips"), where("coEditors", "array-contains", myEmail));
+            const snapCo = await getDocs(qCo);
+            snapCo.docs.forEach(doc => {
+               if (!trips.find(t => t.id === doc.id)) {
+                   trips.push({ id: doc.id, ...doc.data() });
+               }
+            });
+            myTrips.value = trips;
+          } catch(e) { console.error("Fetch Error:", e); }
         };
 
         const createNewTrip = () => {
@@ -867,10 +882,11 @@
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (!data.transports) data.transports = []; if (!data.accommodations) data.accommodations = []; if (!data.luggage) data.luggage = [];
-            if (!data.coEditors) data.coEditors = [];
+            if (!data.coEditors || !Array.isArray(data.coEditors)) data.coEditors = [];
             tripData.value = data; updateThemeColor(tripData.value.themeColor);
             
-            const canEdit = currentUser.value && (data.ownerId === currentUser.value.uid || data.coEditors.includes(currentUser.value.email));
+            const myEmail = currentUser.value ? currentUser.value.email.toLowerCase() : '';
+            const canEdit = currentUser.value && (data.ownerId === currentUser.value.uid || data.coEditors.some(e => e.toLowerCase() === myEmail));
             isEditor.value = !!canEdit;
             
             appState.value = 'TRIP'; isSetup.value = false;
@@ -914,14 +930,19 @@
           });
         };
 
-        const closeSetup = () => { if (tripData.value.itinerary && tripData.value.itinerary.length > 0) { isSetup.value = false; } else { isSetup.value = false; appState.value = 'DASHBOARD'; } };
+        const closeSetup = () => { 
+          if (setupData.value.coEditorsStr !== undefined) {
+             tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim().toLowerCase()).filter(e => e);
+          }
+          if (tripData.value.itinerary && tripData.value.itinerary.length > 0) { isSetup.value = false; } else { isSetup.value = false; appState.value = 'DASHBOARD'; } 
+        };
 
         const generateTrip = () => {
           if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) return alert('請填寫完整資訊並選擇日期！');
           tripData.value.tripName = setupData.value.name; tripData.value.destination = setupData.value.destination; tripData.value.startDate = setupData.value.startDate; tripData.value.endDate = setupData.value.endDate; tripData.value.themeColor = setupData.value.themeColor;
           
           if (setupData.value.coEditorsStr) {
-             tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim()).filter(e => e);
+             tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim().toLowerCase()).filter(e => e);
           } else {
              tripData.value.coEditors = [];
           }
