@@ -172,8 +172,8 @@
         </div>
         
         <div class="flex items-center gap-2">
-           <!-- 【修改】：版本號更新為 v3 -->
-           <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v3</span>
+           <!-- 版本紀錄更新為 v4 -->
+           <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v4</span>
            
            <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
            
@@ -420,19 +420,15 @@
 
           <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
              
-             <!-- 【修改】：右上角操作按鈕，圖示化 -->
              <div class="absolute top-4 right-4 flex gap-1.5 z-20">
                 <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="編輯">✏️</button>
                 <button v-if="isEditor && !flight.isLocked" @click="flight.isLocked = true" class="bg-white text-blue-600 hover:bg-gray-100 w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="完成">💾</button>
                 <button v-if="isEditor" @click="removeFlight(fIdx)" class="bg-black/20 hover:bg-red-500 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="刪除">✕</button>
              </div>
              
-             <!-- 依據去回程動態變色頭部 -->
              <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-5 flex flex-col gap-2 rounded-t-[28px] relative z-10 transition-colors duration-300">
                  
-                 <!-- 【修改】：頂部去除班號輸入，保留去回程與日期 -->
                  <div class="flex items-center gap-1.5 md:gap-2 mb-1 pr-16 md:pr-24">
-                     <!-- 飛機圖示：去程🛫，回程🛬，國內線/中轉✈️ -->
                      <span class="text-xl md:text-2xl hidden sm:inline">{{ flight.bound === '回程' ? '🛬' : (flight.bound === '國內線' ? '✈️' : '🛫') }}</span>
                      
                      <select v-if="isEditor && !flight.isLocked" v-model="flight.bound" class="bg-white/20 border-0 rounded px-2 py-0.5 outline-none cursor-pointer focus:text-blue-800 transition-colors text-white font-bold text-sm md:text-lg">
@@ -442,12 +438,10 @@
                      
                      <span class="mx-0.5 md:mx-1 opacity-70 text-white">|</span> 
                      
-                     <!-- 日期，確保寬度足以顯示 -->
                      <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depDate" placeholder="日期" class="flight-date-picker bg-transparent w-[90px] md:w-32 outline-none placeholder-white/70 cursor-pointer text-white font-bold text-sm md:text-lg">
                      <span v-else class="text-white font-bold text-sm md:text-lg">{{ flight.depDate || '--/--' }}</span>
                  </div>
 
-                 <!-- 【修改】：無底線自適應單行顯示 (航空公司 + 代號 + 放大鏡) -->
                  <div class="flex flex-nowrap w-full gap-1 md:gap-2 text-[10px] md:text-xs font-bold text-white items-center overflow-hidden">
                      <template v-if="isEditor && !flight.isLocked">
                         <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink max-w-[65%]">
@@ -462,20 +456,18 @@
                            </select>
                         </div>
                         <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink">
-                           <input v-model="flight.bookingRef" placeholder="班號/代號" class="w-16 md:w-24 bg-transparent outline-none text-white placeholder-white/50 uppercase text-ellipsis overflow-hidden">
+                           <input v-model="flight.bookingRef" placeholder="代號 / 班號" class="w-16 md:w-24 bg-transparent outline-none text-white placeholder-white/50 uppercase text-ellipsis overflow-hidden">
                         </div>
                      </template>
                      <template v-else>
-                        <!-- 完成後變成純文字，並截斷過長文字 -->
                         <span v-if="flight.airline" class="bg-white/20 px-1.5 py-0.5 rounded-md truncate shrink max-w-[65%]">{{ flight.airline }}</span>
                         <span v-if="flight.bookingRef" class="bg-white/20 px-1.5 py-0.5 rounded-md truncate shrink">代號: {{ flight.bookingRef }}</span>
-                        <!-- 【修改】：放大鏡 (鎖定時且有資訊時才出現) -->
                         <button v-if="flight.isLocked && (flight.airline || flight.bookingRef)" @click="searchFlightStatus(flight)" class="text-xs md:text-sm hover:scale-110 transition-transform bg-white/20 px-1.5 py-0.5 rounded-md flex-shrink-0 cursor-pointer ml-1" title="查詢航班動態">🔍</button>
                         <span v-if="!flight.airline && !flight.bookingRef" class="opacity-70 italic">未提供航班細節</span>
                      </template>
                  </div>
 
-                 <!-- 【新增】：主編者專屬訂單編號 -->
+                 <!-- 主編者專屬訂單編號 (確保填寫為空時依然顯示外框讓主編知道) -->
                  <div v-if="isOwner" class="flex flex-nowrap w-full text-[10px] md:text-xs font-bold text-white items-center overflow-hidden mt-0.5">
                      <template v-if="isEditor && !flight.isLocked">
                         <div class="flex items-center bg-black/10 px-1.5 py-1 rounded-md min-w-0 shrink max-w-full">
@@ -483,13 +475,12 @@
                            <input v-model="flight.orderNo" placeholder="僅主編者可見" class="w-24 md:w-32 bg-transparent outline-none text-white placeholder-white/50 uppercase text-ellipsis overflow-hidden">
                         </div>
                      </template>
-                     <template v-else-if="flight.orderNo">
-                        <span class="bg-black/10 px-1.5 py-0.5 rounded-md truncate shrink">訂單編號: {{ flight.orderNo }}</span>
+                     <template v-else>
+                        <span class="bg-black/10 px-1.5 py-0.5 rounded-md truncate shrink text-white/90">訂單編號: {{ flight.orderNo || '---' }}</span>
                      </template>
                  </div>
              </div>
 
-             <!-- 起降時間與機場主體區塊 -->
              <div class="px-4 md:px-6 py-8 pb-10 flex justify-between items-center text-center relative bg-white">
                  <div class="flex-1 flex flex-col items-center min-w-0">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.depCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
@@ -502,7 +493,6 @@
                      <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-4 md:mt-5">{{ flight.depTime || '--:--' }}</div>
                  </div>
 
-                 <!-- 【修改】：歷時置中，完美飛機圖，機型移至此處 -->
                  <div class="w-20 sm:w-32 flex flex-col items-center justify-center shrink-0 -mt-2">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.duration" placeholder="歷時 (3h 25m)" class="text-[10px] sm:text-xs font-bold text-gray-500 w-full text-center outline-none bg-transparent mb-1 placeholder-gray-300">
                      <div v-else class="text-[10px] sm:text-xs font-bold text-gray-500 mb-1">{{ flight.duration || '--h --m' }}</div>
@@ -513,7 +503,6 @@
                          <span class="tracking-[0.1em] sm:tracking-[0.2em] flex-1 overflow-hidden text-clip font-black text-xs md:text-sm">- - -</span>
                      </div>
                      
-                     <!-- 機型顯示於飛機圖示下方 -->
                      <div class="mt-0.5 flex justify-center w-full">
                          <input v-if="isEditor && !flight.isLocked" v-model="flight.aircraft" placeholder="機型 A321" class="text-[10px] sm:text-xs font-bold text-gray-400 bg-transparent border-b border-dashed border-gray-200 outline-none text-center w-14 sm:w-16 focus:border-blue-300 placeholder-gray-300 uppercase">
                          <div v-else-if="flight.aircraft" class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider">{{ flight.aircraft }}</div>
@@ -532,22 +521,18 @@
                  </div>
              </div>
 
-             <!-- 收合旅客資訊按鈕 -->
              <div class="bg-[#f8fafc] p-3 md:p-4 text-center border-t border-blue-50 cursor-pointer hover:bg-blue-50/80 transition-colors group" @click="flight.showPax = !flight.showPax">
                  <span class="text-[#eab308] mr-1 inline-block transition-transform group-hover:-translate-y-1" :class="{'rotate-180': !flight.showPax}">👆</span>
                  <span class="text-sm font-bold text-[#3b82f6]">{{ flight.showPax ? '收合旅客資訊' : '展開旅客資訊' }}</span>
              </div>
 
-             <!-- 完美單行手機版旅客名單 -->
              <div v-show="flight.showPax" class="px-4 md:px-8 pb-6 bg-[#f8fafc] space-y-1">
                  
                  <div v-if="flight.passengers.length === 0" class="text-center py-4 text-gray-400 font-bold text-xs">目前沒有旅客名單，點擊下方新增。</div>
 
-                 <!-- 【修改】：調整寬度與邊距，確保電腦版與手機版都不截斷 -->
                  <div v-for="(pax, pIdx) in flight.passengers" :key="pax.id" class="flex flex-row items-center justify-between gap-1 md:gap-4 border-b border-gray-100 border-dashed py-2.5 last:border-0 relative group">
                      
-                     <!-- 大頭貼與姓名 -->
-                     <div class="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0 shrink pr-1">
+                     <div class="flex items-center gap-1.5 md:gap-3 flex-[1.5] min-w-0 shrink pr-1">
                          <div class="relative bg-white shadow-sm rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0">
                              <span class="text-sm md:text-lg leading-none">{{ pax.avatar || '🧑' }}</span>
                              <select v-if="isEditor && !flight.isLocked" v-model="pax.avatar" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
@@ -558,7 +543,6 @@
                          <span v-else class="font-bold text-gray-700 uppercase text-[13px] md:text-base truncate block w-full">{{ pax.name || '---' }}</span>
                      </div>
                      
-                     <!-- 座位 (增加 md:w-[100px] 避免電腦版被截斷) -->
                      <div class="flex items-center gap-0.5 md:gap-1 w-[55px] sm:w-[60px] md:w-[100px] shrink-0 justify-end md:justify-start ml-auto">
                          <span class="text-[10px] md:text-base grayscale opacity-80 shrink-0">💺</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">座位:</span>
@@ -566,7 +550,6 @@
                          <span v-else class="font-bold text-[#3b82f6] uppercase text-[13px] md:text-base truncate text-right md:text-left w-full">{{ pax.seat || '-' }}</span>
                      </div>
                      
-                     <!-- 行李 (手機版微調到 75px 並加 ml-1 讓視覺往右，電腦版放大到 120px) -->
                      <div class="flex items-center gap-0.5 md:gap-1 w-[75px] sm:w-[80px] md:w-[120px] shrink-0 justify-end md:justify-start ml-1 md:ml-0">
                          <span class="text-[10px] md:text-base grayscale opacity-80 shrink-0">💼</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">行李:</span>
@@ -574,7 +557,6 @@
                          <span v-else class="font-bold text-[#3b82f6] text-[13px] md:text-base truncate text-right md:text-left w-full">{{ pax.baggage || '-' }}</span>
                      </div>
 
-                     <!-- 刪除按鈕 -->
                      <button v-if="isEditor && !flight.isLocked" @click="removePassenger(fIdx, pIdx)" class="text-gray-300 hover:text-red-500 font-bold w-5 shrink-0 text-right md:opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                      <div v-else-if="isEditor && flight.isLocked" class="w-5 shrink-0 text-right"></div>
                  </div>
@@ -1176,7 +1158,6 @@
           targetItem.showMenu = !wasOpen;
         };
 
-        // 【修改點】：為航班加上 orderNo 預設欄位
         const addFlight = () => {
            tripData.value.flights.push({ id: generateId(), isLocked: false, bound: '去程', airline: '', aircraft: '', depDate: '', depTime: '', depLoc: '', depCode: '', arrDate: '', arrTime: '', arrLoc: '', arrCode: '', duration: '', bookingRef: '', orderNo: '', memo: '', showPax: true, passengers: [] });
            bindDynamicPickers();
