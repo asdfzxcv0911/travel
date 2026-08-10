@@ -136,7 +136,6 @@
             <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (點擊選取起訖區間)</label>
             <input type="text" id="tripDateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer font-bold text-center" readonly>
           </div>
-          <!-- 【新增】：共同編輯者欄位 -->
           <div>
             <label class="block mb-1.5 font-medium text-sm">共同編輯者信箱 (選填，多人請用逗號分隔)</label>
             <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com, friend2@gmail.com" class="custom-input py-2 text-sm">
@@ -157,7 +156,6 @@
         <div class="flex items-center gap-2">
           <button v-if="currentUser" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
           <span class="hidden md:inline">🔐 權限狀態：</span>
-          <!-- 【修改】：精準顯示編輯者身分 -->
           <span v-if="isEditor && isOwner" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
           <span v-else-if="isEditor && !isOwner" class="font-bold text-green-400 hidden md:inline">共同編輯者 (編輯中)</span>
           <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
@@ -172,7 +170,7 @@
              🔗 <span class="hidden sm:inline">複製分享網址</span><span class="sm:hidden">分享</span>
            </button>
            
-           <!-- 【修改】：擁有者與共同編輯者都能切換預覽模式 -->
+           <!-- 擁有者與共同編輯者都能切換預覽模式 -->
            <button v-if="hasEditPermission" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-2 py-1 md:px-3 md:py-1 rounded text-white font-bold transition-colors shadow-sm text-[11px] md:text-xs flex items-center gap-1">
              {{ isEditor ? '👁️ 預覽' : '✏️ 編輯' }}
            </button>
@@ -307,10 +305,75 @@
                       <button @click="toggleMenu(activeDayTab, itemIndex)" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
                       <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
                       <div v-if="item.showMenu" class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-32 py-1 text-sm flex flex-col">
+                        
+                        <!-- 修復漏掉的兩個選項：挪至他日 與 圖片 -->
+                        <div class="px-2 py-1.5 border-b border-gray-100 bg-gray-50 rounded-t-lg relative z-50">
+                          <select @change="moveToDay(activeDayTab, itemIndex, $event)" class="w-full text-xs md:text-sm bg-white border border-gray-300 rounded p-1 text-gray-700 outline-none focus-theme">
+                            <option value="" disabled selected>⏏️ 挪至他日...</option>
+                            <option v-for="(d, idx) in tripData.itinerary" :key="idx" :value="idx" :disabled="idx === activeDayTab">Day {{idx+1}}</option>
+                          </select>
+                        </div>
+                        
+                        <button @click="openField(item, 'link')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">🔗</span> 加入連結</button>
+                        <button @click="openField(item, 'map')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">📍</span> 加入地圖</button>
+                        <button @click="openField(item, 'memo')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">📝</span> 加入備忘錄</button>
+                        <button @click="openField(item, 'image')" class="text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700 relative z-50"><span class="w-4 text-center">🖼️</span> 加入圖片</button>
+
+                        <div class="h-px bg-gray-100 my-1 relative z-50"></div>
                         <button @click="deleteItem(activeDayTab, itemIndex)" class="text-left px-3 py-1.5 text-red-500 hover:bg-red-50 font-bold flex items-center gap-2 relative z-50"><span class="w-4 text-center">🗑️</span> 刪除</button>
                       </div>
                     </div>
                   </div>
+                  
+                  <!-- 行程膠囊展開內容 -->
+                  <div class="mt-1 pl-[25px] md:pl-[35px] flex flex-wrap gap-1.5">
+                    <template v-if="item.link !== undefined && item.link !== false">
+                      <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
+                        <a :href="item.link" target="_blank" class="text-blue-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
+                        <div class="border-l border-blue-200 pl-1 ml-1 flex gap-1"><button @click="item.editLink = true" class="text-blue-400 hover:text-blue-600">✏️</button><button @click="item.link = false" class="text-blue-400 hover:text-red-500">✕</button></div>
+                      </div>
+                      <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
+                        <span class="text-xs">🔗</span><input type="text" v-model="item.link" placeholder="貼上網址..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editLink = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.link" @click="item.link = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                      </div>
+                    </template>
+                    <template v-if="item.map !== undefined && item.map !== false">
+                      <div v-if="!item.editMap && item.map" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
+                        <a :href="item.map" target="_blank" class="text-green-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">📍 開啟地圖</a>
+                        <div class="border-l border-green-200 pl-1 ml-1 flex gap-1"><button @click="item.editMap = true" class="text-green-400 hover:text-green-600">✏️</button><button @click="item.map = false" class="text-green-400 hover:text-red-500">✕</button></div>
+                      </div>
+                      <div v-else class="flex-1 min-w-[200px] flex items-center gap-1">
+                        <span class="text-xs">📍</span><input type="text" v-model="item.map" placeholder="貼上 Google Maps..." class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                        <button @click="item.editMap = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.map" @click="item.map = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                      </div>
+                    </template>
+                    <template v-if="item.memo !== undefined && item.memo !== false">
+                      <div v-if="!item.editMemo && item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5 text-[11px] md:text-xs shadow-sm">
+                        <span class="text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
+                        <div class="border-l border-yellow-200 pl-1 ml-1 flex gap-1"><button @click="item.editMemo = true" class="text-yellow-400 hover:text-yellow-600">✏️</button><button @click="item.memo = false" class="text-yellow-400 hover:text-red-500">✕</button></div>
+                      </div>
+                      <div v-else class="w-full flex items-start gap-1 mt-1">
+                        <textarea v-model="item.memo" placeholder="輸入備忘錄..." rows="2" class="flex-1 text-[11px] md:text-xs bg-white border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none resize-y"></textarea>
+                        <div class="flex flex-col gap-1"><button @click="item.editMemo = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.memo" @click="item.memo = false" class="text-gray-400 px-1 py-1 text-xs hover:text-gray-600">✕</button></div>
+                      </div>
+                    </template>
+                    <div v-if="item.image !== undefined && item.image !== false" class="w-full mt-1 flex items-start gap-2">
+                      <div v-if="!item.editImage && item.image" class="flex-1 relative group inline-block">
+                        <img :src="item.image" class="rounded-lg max-h-40 object-cover border border-gray-200 shadow-sm">
+                        <div class="absolute top-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded shadow"><button @click="item.editImage = true" class="text-gray-600 hover:text-gray-900 text-[10px] px-1">更換</button><button @click="item.image = false" class="text-red-400 hover:text-red-600 text-[10px] px-1 border-l border-gray-300 ml-1">刪除</button></div>
+                      </div>
+                      <div v-else class="flex-1 flex flex-col gap-1 bg-gray-50 border border-gray-200 p-2 rounded">
+                        <div class="flex gap-1">
+                          <input type="text" v-model="item.image" placeholder="外部圖片網址(推薦)" class="flex-1 text-[11px] md:text-xs border border-gray-300 rounded px-1.5 py-1 focus-theme outline-none">
+                          <button @click="item.editImage = false" class="theme-bg text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold shadow-sm">確定</button><button v-if="!item.image" @click="item.image = false" class="text-gray-400 px-1 text-xs hover:text-gray-600">✕</button>
+                        </div>
+                        <div class="flex items-center gap-2 pt-1 border-t border-gray-100">
+                          <span class="text-[10px] text-gray-500">或本機上傳：</span><input type="file" accept="image/*" @change="handleImageUpload($event, item)" class="text-[10px] text-gray-600 w-32 cursor-pointer">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -630,10 +693,8 @@
           luggage: []
         });
 
-        // 判斷是否為擁有者
         const isOwner = computed(() => !!(currentUser.value && tripData.value && tripData.value.ownerId === currentUser.value.uid));
         
-        // 【新增】：判斷是否有編輯權限 (擁有者 或 在共同編輯者名單內)
         const hasEditPermission = computed(() => {
           if (!currentUser.value || !tripData.value) return false;
           if (tripData.value.ownerId === currentUser.value.uid) return true;
@@ -705,7 +766,6 @@
 
         watch(currentView, () => { bindDynamicPickers(); });
 
-        // 無感自動儲存
         watch(() => tripData.value, (newVal) => {
           if (appState.value === 'TRIP' && isEditor.value && !isSetup.value) {
             if (saveTimeout) clearTimeout(saveTimeout);
@@ -716,7 +776,7 @@
                   currentTripId.value = Math.random().toString(36).substr(2, 10);
                   window.history.replaceState({}, '', `?id=${currentTripId.value}`);
                 }
-                // 儲存時保留原本的擁有者
+                tripData.value.ownerId = currentUser.value.uid;
                 await setDoc(doc(db, "trips", currentTripId.value), tripData.value);
                 saveStatus.value = '已自動儲存 ✅';
                 setTimeout(() => { if(saveStatus.value === '已自動儲存 ✅') saveStatus.value = ''; }, 3000);
@@ -801,7 +861,6 @@
             if (!data.coEditors) data.coEditors = [];
             tripData.value = data; updateThemeColor(tripData.value.themeColor);
             
-            // 【修改】：檢查登入者是否有編輯權限
             const canEdit = currentUser.value && (data.ownerId === currentUser.value.uid || data.coEditors.includes(currentUser.value.email));
             isEditor.value = !!canEdit;
             
@@ -852,7 +911,6 @@
           if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) return alert('請填寫完整資訊並選擇日期！');
           tripData.value.tripName = setupData.value.name; tripData.value.destination = setupData.value.destination; tripData.value.startDate = setupData.value.startDate; tripData.value.endDate = setupData.value.endDate; tripData.value.themeColor = setupData.value.themeColor;
           
-          // 處理共同編輯者字串
           if (setupData.value.coEditorsStr) {
              tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim()).filter(e => e);
           } else {
@@ -923,6 +981,41 @@
         const deleteItem = (dayIdx, itemIdx) => { tripData.value.itinerary[dayIdx].items.splice(itemIdx, 1); if (tripData.value.itinerary[dayIdx].transit.length > 0) tripData.value.itinerary[dayIdx].transit.splice(Math.max(0, itemIdx - 1), 1); recalculateDay(dayIdx); };
         const openField = (item, field) => { if(item[field] === undefined || item[field] === false) { item[field] = ''; } item['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = true; item.showMenu = false; };
 
+        // 重新補回的核心函數
+        const handleImageUpload = (e, item) => {
+           const file = e.target.files[0]; if(!file) return;
+           const reader = new FileReader();
+           reader.onload = (event) => {
+               const img = new Image();
+               img.onload = () => {
+                   const canvas = document.createElement('canvas'); const MAX_WIDTH = 600; const scaleSize = MAX_WIDTH / img.width;
+                   canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                   item.image = canvas.toDataURL('image/jpeg', 0.6); item.editImage = false;
+               }; img.src = event.target.result;
+           }; reader.readAsDataURL(file);
+        };
+
+        const moveToDay = (fromDayIdx, itemIdx, event) => {
+          const toDayIdx = parseInt(event.target.value); if(isNaN(toDayIdx)) return;
+          const movedItem = tripData.value.itinerary[fromDayIdx].items.splice(itemIdx, 1)[0]; movedItem.showMenu = false; 
+          if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.pop();
+          recalculateDay(fromDayIdx);
+          tripData.value.itinerary[toDayIdx].items.push(movedItem);
+          if (tripData.value.itinerary[toDayIdx].items.length > 1) tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
+          recalculateDay(toDayIdx); event.target.value = ""; alert(`✅ 已將行程挪至 Day ${toDayIdx + 1}`);
+        };
+
+        let dragInfo = { day: null, item: null };
+        const dragStart = (dayIdx, itemIdx, e) => { dragInfo = { day: dayIdx, item: itemIdx }; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => e.target.classList.add('dragging'), 0); };
+        const dragEnter = (e) => e.target.closest('.z-10')?.classList.add('border-dashed', 'border-2', 'border-[#e91e63]');
+        const dragLeave = (e) => e.target.closest('.z-10')?.classList.remove('border-dashed', 'border-2', 'border-[#e91e63]');
+        const dragEnd = () => { document.querySelectorAll('.dragging, .border-dashed').forEach(el => el.classList.remove('dragging', 'border-dashed', 'border-2', 'border-[#e91e63]')); };
+        const dragDrop = (dayIdx, targetIdx) => {
+          if (dragInfo.day !== dayIdx || dragInfo.item === targetIdx) return dragEnd();
+          const movedItem = tripData.value.itinerary[dayIdx].items.splice(dragInfo.item, 1)[0];
+          tripData.value.itinerary[dayIdx].items.splice(targetIdx, 0, movedItem); recalculateDay(dayIdx); dragEnd(); 
+        };
+
         return {
           appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, deleteTripFromCloud, copyShareLink,
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
@@ -931,7 +1024,8 @@
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
           addTransport, removeTransport, addAccommodation, removeAccommodation,
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
-          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField
+          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField,
+          handleImageUpload, moveToDay // 補回這兩個重要的函數
         }
       }
     }).mount('#app')
