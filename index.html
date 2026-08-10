@@ -248,7 +248,6 @@
             </button>
           </div>
 
-          <!-- 總行程 (所有人都可看) -->
           <div v-if="activeDayTab === 'overview' || !isEditor" class="space-y-6 md:space-y-8 pb-10 px-2 md:px-0">
             <div v-for="(day, dayIndex) in tripData.itinerary" :key="`overview-${dayIndex}`" class="relative">
               <div v-show="activeDayTab === 'overview' || activeDayTab === dayIndex">
@@ -286,7 +285,6 @@
             </div>
           </div>
 
-          <!-- 單日編輯模式 -->
           <div v-else-if="isEditor" class="bg-white p-3 md:p-8 rounded-xl border border-gray-200 shadow-sm relative">
             <div class="flex justify-between items-center mb-2 md:mb-4 border-b border-gray-100 pb-2 md:pb-3">
               <div><h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3><p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p></div>
@@ -420,45 +418,37 @@
           <!-- 圓潤可愛的機票卡片 -->
           <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
              
-             <!-- 【修改】：右上角 新增 完成/編輯 與 刪除 按鈕 -->
-             <div class="absolute top-3 right-3 flex gap-2 z-20">
-                <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold transition-colors">✏️ 編輯</button>
-                <button v-if="isEditor && !flight.isLocked" @click="flight.isLocked = true" class="bg-white text-blue-600 hover:bg-gray-100 px-2 py-1 rounded text-[11px] md:text-xs font-bold transition-colors shadow-sm">💾 完成</button>
-                <button v-if="isEditor" @click="removeFlight(fIdx)" class="bg-black/20 hover:bg-red-500 text-white px-2 py-1 rounded text-[11px] md:text-xs font-bold transition-colors">✕</button>
+             <!-- 右上角操作按鈕 (僅圖示) -->
+             <div class="absolute top-4 right-4 flex gap-1.5 z-20">
+                <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="編輯">✏️</button>
+                <button v-if="isEditor && !flight.isLocked" @click="flight.isLocked = true" class="bg-white text-blue-600 hover:bg-gray-100 w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="完成">💾</button>
+                <button v-if="isEditor" @click="removeFlight(fIdx)" class="bg-black/20 hover:bg-red-500 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="刪除">✕</button>
              </div>
              
              <!-- 依據去回程動態變色頭部 -->
-             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-5 flex flex-col gap-3 rounded-t-[28px] relative z-10 transition-colors duration-300">
+             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-4 flex flex-col gap-2 rounded-t-[28px] relative z-10 transition-colors duration-300">
                  
-                 <div class="flex justify-between items-center pr-16 md:pr-24 gap-2 mb-2">
-                     <div class="flex items-center font-bold text-white text-base md:text-xl gap-1.5 md:gap-2 whitespace-nowrap">
-                         <!-- 【修改】：手機版隱藏飛機圖示防擁擠 -->
-                         <span class="text-xl hidden sm:inline">🛫</span>
-                         
-                         <select v-if="isEditor && !flight.isLocked" v-model="flight.bound" class="bg-white/20 border-0 rounded px-2 py-0.5 outline-none cursor-pointer focus:text-blue-800 transition-colors">
-                            <option class="text-gray-800">去程</option><option class="text-gray-800">回程</option><option class="text-gray-800">國內線</option><option class="text-gray-800">中轉</option>
-                         </select>
-                         <span v-else class="bg-white/20 px-2 py-0.5 rounded">{{ flight.bound || '去程' }}</span>
-                         
-                         <span class="mx-0.5 md:mx-1 opacity-70">|</span> 
-                         
-                         <!-- 【修改】：微調日期輸入框寬度 -->
-                         <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depDate" placeholder="日期" class="flight-date-picker bg-transparent w-[90px] md:w-28 outline-none placeholder-white/70 cursor-pointer">
-                         <span v-else>{{ flight.depDate || '--/--' }}</span>
-                     </div>
+                 <div class="flex items-center gap-1.5 md:gap-2 mb-1 pr-16 md:pr-24">
+                     <!-- 飛機圖示：去程🛫，回程🛬，國內線/中轉✈️ -->
+                     <span class="text-xl md:text-2xl">{{ flight.bound === '回程' ? '🛬' : (flight.bound === '國內線' ? '✈️' : '🛫') }}</span>
                      
-                     <div class="bg-white/90 px-3 py-1 rounded-full text-sm md:text-base font-black shadow-sm flex items-center shrink-0" :class="flight.bound === '回程' ? 'text-[#f43f5e]' : (flight.bound === '國內線' ? 'text-[#10b981]' : 'text-[#3b82f6]')">
-                         <input v-if="isEditor && !flight.isLocked" v-model="flight.flightNo" placeholder="班號" class="w-16 md:w-24 bg-transparent outline-none text-center placeholder-current uppercase">
-                         <span v-else class="uppercase">{{ flight.flightNo || '---' }}</span>
-                     </div>
+                     <select v-if="isEditor && !flight.isLocked" v-model="flight.bound" class="bg-white/20 border-0 rounded px-2 py-0.5 outline-none cursor-pointer focus:text-blue-800 transition-colors text-white font-bold text-sm md:text-lg">
+                        <option class="text-gray-800">去程</option><option class="text-gray-800">回程</option><option class="text-gray-800">國內線</option><option class="text-gray-800">中轉</option>
+                     </select>
+                     <span v-else class="bg-white/20 px-2 py-0.5 rounded text-white font-bold text-sm md:text-lg">{{ flight.bound || '去程' }}</span>
+                     
+                     <span class="mx-0.5 md:mx-1 opacity-70 text-white">|</span> 
+                     
+                     <!-- 日期，確保寬度足以顯示 -->
+                     <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depDate" placeholder="日期" class="flight-date-picker bg-transparent w-[90px] md:w-32 outline-none placeholder-white/70 cursor-pointer text-white font-bold text-sm md:text-lg">
+                     <span v-else class="text-white font-bold text-sm md:text-lg">{{ flight.depDate || '--/--' }}</span>
                  </div>
 
-                 <!-- 無底線自適應下拉選單設計 -->
-                 <div class="flex flex-wrap gap-2 text-[11px] md:text-xs font-bold text-white items-center">
+                 <!-- 無底線自適應單行顯示 -->
+                 <div class="flex flex-nowrap w-full gap-1 md:gap-2 text-[10px] md:text-xs font-bold text-white items-center overflow-hidden">
                      <template v-if="isEditor && !flight.isLocked">
-                        <div class="flex items-center bg-white/20 px-2 py-1 rounded-md max-w-full overflow-hidden">
-                           <span class="mr-1 opacity-80 shrink-0">航空公司:</span>
-                           <select v-model="flight.airline" class="bg-transparent outline-none cursor-pointer font-bold text-white pr-4 shrink w-max max-w-[150px] md:max-w-xs text-ellipsis" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 4 5\'%3E%3Cpath fill=\'%23ffffff\' d=\'M2 0L0 2h4zm0 5L0 3h4z\'/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right center; background-size: 8px 10px;">
+                        <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink flex-[1.5]">
+                           <select v-model="flight.airline" class="bg-transparent outline-none cursor-pointer font-bold text-white w-full text-ellipsis overflow-hidden appearance-none pr-3" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 4 5\'%3E%3Cpath fill=\'%23ffffff\' d=\'M2 0L0 2h4zm0 5L0 3h4z\'/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right center; background-size: 8px 10px;">
                               <option value="" disabled class="text-gray-500">選擇航空...</option>
                               <optgroup label="🇹🇼 台灣籍航空" class="text-gray-800 bg-white">
                                 <option>長榮航空 (EVA Air)</option><option>中華航空 (China Airlines)</option><option>星宇航空 (STARLUX)</option><option>台灣虎航 (Tigerair)</option><option>華信航空 (Mandarin)</option><option>立榮航空 (UNI Air)</option>
@@ -468,21 +458,18 @@
                               </optgroup>
                            </select>
                         </div>
-                        <div class="flex items-center bg-white/20 px-2 py-1 rounded-md shrink-0">
-                           <span class="mr-1 opacity-80">機型:</span>
-                           <input v-model="flight.aircraft" placeholder="例 A321" class="w-14 bg-transparent outline-none text-white placeholder-white/50 uppercase">
+                        <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink flex-1">
+                           <input v-model="flight.aircraft" placeholder="機型" class="w-full bg-transparent outline-none text-white placeholder-white/50 uppercase text-ellipsis overflow-hidden text-center md:text-left">
                         </div>
-                        <div class="flex items-center bg-white/20 px-2 py-1 rounded-md shrink-0">
-                           <span class="mr-1 opacity-80">代號:</span>
-                           <input v-model="flight.bookingRef" placeholder="PNR" class="w-16 bg-transparent outline-none text-white placeholder-white/50 uppercase">
+                        <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink flex-1">
+                           <input v-model="flight.bookingRef" placeholder="班號/代號" class="w-full bg-transparent outline-none text-white placeholder-white/50 uppercase text-ellipsis overflow-hidden text-center md:text-left">
                         </div>
                      </template>
                      <template v-else>
-                        <!-- 【修改】：完成後變成純文字，拔掉所有外框與底線 -->
-                        <span v-if="flight.airline" class="bg-white/20 px-2 py-0.5 rounded-md">{{ flight.airline }}</span>
-                        <span v-if="flight.aircraft" class="bg-white/20 px-2 py-0.5 rounded-md">機型: {{ flight.aircraft }}</span>
-                        <span v-if="flight.bookingRef" class="bg-white/20 px-2 py-0.5 rounded-md">代號: {{ flight.bookingRef }}</span>
-                        <!-- 防呆：如果都沒填 -->
+                        <!-- 完成後變成純文字，並截斷過長文字 -->
+                        <span v-if="flight.airline" class="bg-white/20 px-1.5 py-0.5 rounded-md truncate shrink flex-[1.5]">{{ flight.airline }}</span>
+                        <span v-if="flight.aircraft" class="bg-white/20 px-1.5 py-0.5 rounded-md truncate shrink flex-1 text-center md:text-left">機型: {{ flight.aircraft }}</span>
+                        <span v-if="flight.bookingRef" class="bg-white/20 px-1.5 py-0.5 rounded-md truncate shrink flex-1 text-center md:text-left">代號: {{ flight.bookingRef }}</span>
                         <span v-if="!flight.airline && !flight.aircraft && !flight.bookingRef" class="opacity-70 italic">未提供航班細節</span>
                      </template>
                  </div>
@@ -490,12 +477,12 @@
 
              <!-- 起降時間與機場主體區塊 -->
              <div class="px-4 md:px-6 py-8 pb-10 flex justify-between items-center text-center relative bg-white">
-                 <div class="flex-1 flex flex-col items-center">
+                 <div class="flex-1 flex flex-col items-center min-w-0">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.depCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
                      <div v-else class="text-4xl sm:text-5xl font-black text-[#3b82f6] tracking-wider">{{ flight.depCode || '---' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.depLoc" placeholder="出發機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300">
-                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5">{{ flight.depLoc || '出發機場' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.depLoc" placeholder="出發機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300 truncate">
+                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5 truncate w-full">{{ flight.depLoc || '出發機場' }}</div>
                      
                      <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-4 md:mt-5 placeholder-gray-200 cursor-pointer">
                      <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-4 md:mt-5">{{ flight.depTime || '--:--' }}</div>
@@ -513,12 +500,12 @@
                      </div>
                  </div>
 
-                 <div class="flex-1 flex flex-col items-center">
+                 <div class="flex-1 flex flex-col items-center min-w-0">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.arrCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
                      <div v-else class="text-4xl sm:text-5xl font-black text-[#3b82f6] tracking-wider">{{ flight.arrCode || '---' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.arrLoc" placeholder="抵達機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300">
-                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5">{{ flight.arrLoc || '抵達機場' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.arrLoc" placeholder="抵達機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300 truncate">
+                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5 truncate w-full">{{ flight.arrLoc || '抵達機場' }}</div>
                      
                      <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.arrTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-4 md:mt-5 placeholder-gray-200 cursor-pointer">
                      <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-4 md:mt-5">{{ flight.arrTime || '--:--' }}</div>
@@ -531,45 +518,43 @@
                  <span class="text-sm font-bold text-[#3b82f6]">{{ flight.showPax ? '收合旅客資訊' : '展開旅客資訊' }}</span>
              </div>
 
-             <!-- 完美單行手機版旅客名單 -->
+             <!-- 完美單行手機版旅客名單 (字體放大) -->
              <div v-show="flight.showPax" class="px-4 md:px-8 pb-6 bg-[#f8fafc] space-y-1">
                  
                  <div v-if="flight.passengers.length === 0" class="text-center py-4 text-gray-400 font-bold text-xs">目前沒有旅客名單，點擊下方新增。</div>
 
-                 <!-- 【修改】：重新設計 Flex 佈局，保證姓名欄位佔據最大空間，座位與行李固定寬度，絕對維持一行 -->
                  <div v-for="(pax, pIdx) in flight.passengers" :key="pax.id" class="flex flex-row items-center justify-between gap-1 md:gap-3 border-b border-gray-100 border-dashed py-2.5 last:border-0 relative group">
                      
-                     <!-- 大頭貼與姓名 (Flex-1 確保佔滿所有剩餘空間) -->
-                     <div class="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0 shrink-0">
+                     <!-- 大頭貼與姓名 (空間放大) -->
+                     <div class="flex items-center gap-1.5 md:gap-3 flex-[1.5] min-w-0 shrink-0">
                          <div class="relative bg-white shadow-sm rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0">
                              <span class="text-sm md:text-lg leading-none">{{ pax.avatar || '🧑' }}</span>
                              <select v-if="isEditor && !flight.isLocked" v-model="pax.avatar" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
                                  <option>👨</option><option>👩</option><option>👦</option><option>👧</option><option>👴</option><option>👵</option><option>👶</option><option>🧑</option>
                              </select>
                          </div>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.name" placeholder="姓名" class="font-bold text-gray-700 bg-transparent outline-none focus:border-b focus:border-sky-300 w-full uppercase text-[11px] md:text-sm placeholder-gray-300 truncate">
-                         <span v-else class="font-bold text-gray-700 uppercase text-[11px] md:text-sm truncate block w-full">{{ pax.name || '---' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.name" placeholder="姓名" class="font-bold text-gray-700 bg-transparent outline-none focus:border-b focus:border-sky-300 w-full uppercase text-sm md:text-base placeholder-gray-300 truncate">
+                         <span v-else class="font-bold text-gray-700 uppercase text-sm md:text-base truncate block w-full">{{ pax.name || '---' }}</span>
                      </div>
                      
-                     <!-- 座位 (固定適中寬度) -->
-                     <div class="flex items-center gap-1 w-[70px] md:w-[90px] shrink-0 justify-start">
+                     <!-- 座位 -->
+                     <div class="flex items-center gap-1 w-[60px] md:w-[80px] shrink-0 justify-start">
                          <span class="text-xs md:text-base grayscale opacity-80 shrink-0">💺</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">座位:</span>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.seat" placeholder="座位" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left uppercase text-[11px] md:text-sm placeholder-blue-200">
-                         <span v-else class="font-bold text-[#3b82f6] uppercase text-[11px] md:text-sm truncate">{{ pax.seat || '-' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.seat" placeholder="座位" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left uppercase text-sm md:text-base placeholder-blue-200">
+                         <span v-else class="font-bold text-[#3b82f6] uppercase text-sm md:text-base truncate">{{ pax.seat || '-' }}</span>
                      </div>
                      
-                     <!-- 行李 (固定適中寬度) -->
-                     <div class="flex items-center gap-1 w-[80px] md:w-[100px] shrink-0 justify-start">
+                     <!-- 行李 -->
+                     <div class="flex items-center gap-1 w-[70px] md:w-[90px] shrink-0 justify-start">
                          <span class="text-xs md:text-base grayscale opacity-80 shrink-0">💼</span>
                          <span class="hidden md:inline text-sm text-gray-500 font-bold shrink-0">行李:</span>
-                         <input v-if="isEditor && !flight.isLocked" v-model="pax.baggage" placeholder="行李" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left text-[11px] md:text-sm placeholder-blue-200">
-                         <span v-else class="font-bold text-[#3b82f6] text-[11px] md:text-sm truncate">{{ pax.baggage || '-' }}</span>
+                         <input v-if="isEditor && !flight.isLocked" v-model="pax.baggage" placeholder="行李" class="font-bold text-[#3b82f6] bg-transparent outline-none focus:border-b focus:border-sky-300 w-full text-left text-sm md:text-base placeholder-blue-200">
+                         <span v-else class="font-bold text-[#3b82f6] text-sm md:text-base truncate">{{ pax.baggage || '-' }}</span>
                      </div>
 
-                     <!-- 刪除按鈕 (固定最小寬度) -->
+                     <!-- 刪除按鈕 -->
                      <button v-if="isEditor && !flight.isLocked" @click="removePassenger(fIdx, pIdx)" class="text-gray-300 hover:text-red-500 font-bold w-5 shrink-0 text-right md:opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
-                     <!-- 為了排版對齊，如果鎖定狀態且有編輯權限，補一個空框維持間距 -->
                      <div v-else-if="isEditor && flight.isLocked" class="w-5 shrink-0 text-right"></div>
                  </div>
                  
@@ -699,9 +684,11 @@
           <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
             <div v-for="(hotel, idx) in tripData.accommodations" :key="hotel.id" class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col md:flex-row hover:shadow-xl transition-all relative">
               
+              <!-- 左側高級漸層區 -->
               <div class="md:w-1/3 bg-gradient-to-br from-indigo-500 to-purple-600 p-5 md:p-6 flex flex-col relative text-white">
                  <button v-if="isEditor" @click="removeAccommodation(idx)" class="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-20 text-xl">✕</button>
                  
+                 <!-- 飯店名稱與官網 -->
                  <div class="mb-4 relative z-10">
                     <label v-if="isEditor" class="block text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-widest">Hotel Name</label>
                     <input v-if="isEditor" type="text" v-model="hotel.name" placeholder="輸入飯店名稱" class="w-full text-xl font-black bg-transparent border-b border-white/50 rounded-none px-0 py-1 focus:border-white outline-none placeholder-indigo-200 mb-2">
@@ -715,6 +702,7 @@
                     </div>
                  </div>
 
+                 <!-- 區間日曆與晚數 -->
                  <div class="bg-white/10 border border-white/20 rounded-xl p-3 md:p-4 text-center relative z-10 mt-auto">
                     <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間 (可點擊選擇)</p>
                     <div v-if="isEditor">
@@ -729,7 +717,9 @@
                  </div>
               </div>
 
+              <!-- 右側細節區塊 -->
               <div class="flex-1 p-5 md:p-6 relative bg-gray-50/50 flex flex-col justify-center gap-4">
+                 
                  <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm relative pt-4">
                        <span class="absolute -top-2 left-3 bg-gray-600 text-white px-1.5 rounded text-[9px] font-bold">Check-in</span>
@@ -749,6 +739,7 @@
                     </div>
                  </div>
 
+                 <!-- 地址與代號 -->
                  <div class="space-y-3">
                     <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
                        <div class="flex items-center gap-2 mb-1">
@@ -773,6 +764,7 @@
                     </div>
                  </div>
 
+                 <!-- 備註 -->
                  <div class="mt-auto pt-2">
                     <textarea v-if="isEditor" v-model="hotel.memo" placeholder="備註 (例如：已付清、含早餐...)" rows="2" class="w-full bg-white border border-gray-200 rounded px-3 py-2 text-xs text-gray-600 focus:border-indigo-500 outline-none resize-none shadow-sm"></textarea>
                     <div v-else-if="hotel.memo" class="bg-indigo-50/50 border border-indigo-100 rounded px-3 py-2 text-xs text-gray-700 whitespace-pre-line shadow-sm border-l-2 border-l-indigo-400">
@@ -1025,8 +1017,7 @@
           currentTripId.value = null; 
           tripData.value = { 
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
-            coEditors: [],
-            companions: ['我', '盈瑜'], itinerary: [], expenses: [],
+            coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
             flights: [], transports: [], accommodations: [], luggage: []
           };
           setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '' };
@@ -1171,7 +1162,6 @@
           targetItem.showMenu = !wasOpen;
         };
 
-        // 【修改點】：為航班加入 isLocked 屬性
         const addFlight = () => {
            tripData.value.flights.push({ id: generateId(), isLocked: false, bound: '去程', airline: '', flightNo: '', aircraft: '', depDate: '', depTime: '', depLoc: '', depCode: '', arrDate: '', arrTime: '', arrLoc: '', arrCode: '', duration: '', bookingRef: '', memo: '', showPax: true, passengers: [] });
            bindDynamicPickers();
