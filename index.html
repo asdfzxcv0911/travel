@@ -141,7 +141,7 @@
           </div>
           <div>
             <label class="block mb-1.5 font-medium text-sm">共同編輯者信箱 (選填，多人請用逗號分隔)</label>
-            <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com" class="custom-input py-2 text-sm">
+            <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com, friend2@gmail.com" class="custom-input py-2 text-sm">
           </div>
         </div>
         <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
@@ -262,8 +262,10 @@
                 </div>
 
                 <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
-                  <div class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
+                  <!-- 隱藏空行程時的垂直線 -->
+                  <div v-if="day.items.length > 0" class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
                   <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
+                  
                   <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
                     <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
@@ -296,7 +298,8 @@
             </div>
 
             <div class="relative pl-3 md:pl-6 space-y-2">
-              <div class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
+              <!-- 只有當有行程時才顯示左側的垂直線 -->
+              <div v-if="tripData.itinerary[activeDayTab].items.length > 0" class="absolute left-0 md:left-2.5 top-2 bottom-0 w-0.5 bg-gray-200 z-0"></div>
               
               <div v-if="tripData.itinerary[activeDayTab].items.length === 0" class="text-gray-400 text-sm font-bold ml-2 py-4">目前當日沒有行程，請點擊下方新增。</div>
 
@@ -883,6 +886,20 @@
             const data = docSnap.data();
             if (!data.transports) data.transports = []; if (!data.accommodations) data.accommodations = []; if (!data.luggage) data.luggage = [];
             if (!data.coEditors || !Array.isArray(data.coEditors)) data.coEditors = [];
+            
+            // 【修復舊資料】：將舊版預設的空白行程清除，改為真正的空狀態
+            if (data.itinerary) {
+               data.itinerary.forEach(day => {
+                  if (day.items && day.items.length === 1) {
+                     const item = day.items[0];
+                     if (!item.activity && !item.stay && item.startTime === '09:00') {
+                        day.items = [];
+                        day.transit = [];
+                     }
+                  }
+               });
+            }
+
             tripData.value = data; updateThemeColor(tripData.value.themeColor);
             
             const myEmail = currentUser.value ? currentUser.value.email.toLowerCase() : '';
