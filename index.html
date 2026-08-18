@@ -72,6 +72,10 @@
           <svg class="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
           使用 Google 登入
         </button>
+        <!-- 新增：專門給預覽環境用的訪客按鈕 -->
+        <button @click="guestLogin" class="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors border border-gray-200">
+          👀 訪客免登入測試 (僅限預覽環境)
+        </button>
       </div>
     </div>
 
@@ -164,15 +168,8 @@
       <!-- 頂部權限列 -->
       <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
         <div class="flex items-center gap-2">
-          <button v-if="currentUser" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
-          <span class="hidden md:inline">🔐 權限狀態：</span>
-          <span v-if="isEditor && isOwner" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
-          <span v-else-if="isEditor && !isOwner" class="font-bold text-green-400 hidden md:inline">共同編輯者 (編輯中)</span>
-          <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
-        </div>
-        
-        <div class="flex items-center gap-2">
-           <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v5</span>
+           <!-- 版本紀錄更新為 v6 -->
+           <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v6</span>
            
            <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
            
@@ -419,14 +416,13 @@
 
           <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
              
-             <!-- 右上角操作按鈕 (僅圖示) -->
              <div class="absolute top-4 right-4 flex gap-1.5 z-20">
                 <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="編輯">✏️</button>
                 <button v-if="isEditor && !flight.isLocked" @click="flight.isLocked = true" class="bg-white text-blue-600 hover:bg-gray-100 w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="完成">💾</button>
                 <button v-if="isEditor" @click="removeFlight(fIdx)" class="bg-black/20 hover:bg-red-500 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="刪除">✕</button>
              </div>
              
-             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-5 flex flex-col gap-2 rounded-t-[28px] relative z-10 transition-colors duration-300">
+             <div :class="flight.bound === '回程' ? 'bg-[#f43f5e]' : (flight.bound === '國內線' ? 'bg-[#10b981]' : 'bg-[#3b82f6]')" class="px-5 md:px-6 py-5 flex flex-col gap-3 rounded-t-[28px] relative z-10 transition-colors duration-300">
                  
                  <div class="flex items-center gap-1.5 md:gap-2 mb-1 pr-16 md:pr-24">
                      <span class="text-xl md:text-2xl hidden sm:inline">{{ flight.bound === '回程' ? '🛬' : (flight.bound === '國內線' ? '✈️' : '🛫') }}</span>
@@ -442,7 +438,7 @@
                      <span v-else class="text-white font-bold text-sm md:text-lg">{{ flight.depDate || '--/--' }}</span>
                  </div>
 
-                 <div class="flex flex-nowrap w-full gap-1 md:gap-2 text-[10px] md:text-xs font-bold text-white items-center overflow-hidden mt-1">
+                 <div class="flex flex-nowrap w-full gap-1 md:gap-2 text-[10px] md:text-xs font-bold text-white items-center overflow-hidden">
                      <template v-if="isEditor && !flight.isLocked">
                         <div class="flex items-center bg-white/20 px-1 py-1 rounded-md min-w-0 shrink max-w-[65%]">
                            <select v-model="flight.airline" class="bg-transparent outline-none cursor-pointer font-bold text-white w-full text-ellipsis overflow-hidden appearance-none pr-3" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 4 5\'%3E%3Cpath fill=\'%23ffffff\' d=\'M2 0L0 2h4zm0 5L0 3h4z\'/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right center; background-size: 8px 10px;">
@@ -533,7 +529,7 @@
 
                  <div v-for="(pax, pIdx) in flight.passengers" :key="pax.id" class="flex flex-row items-center justify-between gap-1 md:gap-4 border-b border-gray-100 border-dashed py-2.5 last:border-0 relative group">
                      
-                     <div class="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0 shrink pr-1">
+                     <div class="flex items-center gap-1.5 md:gap-3 flex-[1.5] min-w-0 shrink pr-1">
                          <div class="relative bg-white shadow-sm rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center shrink-0">
                              <span class="text-sm md:text-lg leading-none">{{ pax.avatar || '🧑' }}</span>
                              <select v-if="isEditor && !flight.isLocked" v-model="pax.avatar" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
@@ -991,6 +987,185 @@
           </div>
         </div>
 
+        <!-- ==================== 【花費模組】 ==================== -->
+        <div v-if="currentView === '花費'" class="space-y-4">
+          <div class="flex justify-between items-center mb-2 md:mb-4 px-2 md:px-0">
+            <div>
+              <h2 class="text-xl md:text-2xl font-black text-gray-800">💸 預算與花費總覽</h2>
+              <p class="text-[10px] md:text-xs text-gray-500 font-bold mt-1">智慧計算家庭總開銷，並以圓餅圖呈現分類</p>
+            </div>
+            
+            <div class="flex flex-col items-end gap-2">
+               <button v-if="isEditor" @click="addExpense" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow transition-all flex items-center gap-1">
+                 <span class="text-lg leading-none">+</span> <span class="hidden md:inline">新增記帳</span>
+               </button>
+               <!-- 隱私開關 (僅主編可見與修改) -->
+               <div v-if="isEditor && tripData.expenseSettings" class="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full shadow-inner border border-gray-200">
+                  <span class="text-[10px] font-bold" :class="tripData.expenseSettings.isPublic ? 'text-green-600' : 'text-gray-500'">
+                     {{ tripData.expenseSettings.isPublic ? '👀 訪客可見' : '🔒 僅共編可見' }}
+                  </span>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" v-model="tripData.expenseSettings.isPublic" class="sr-only peer">
+                    <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                  </label>
+               </div>
+            </div>
+          </div>
+
+          <!-- 人數設定區卡片 (僅編輯模式顯示) -->
+          <div v-if="isEditor && tripData.expenseSettings" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-5 mx-2 md:mx-0">
+             <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-black text-gray-700">👥 參與分攤人數設定</h3>
+                <span class="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-0.5 rounded">系統將依此乘以個人單價</span>
+             </div>
+             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="flex items-center justify-between bg-blue-50 p-2 rounded-lg border border-blue-100">
+                   <span class="text-xs font-black text-blue-700">👨 大人</span>
+                   <input type="number" v-model.number="tripData.expenseSettings.pax.adult" class="w-12 bg-white border border-blue-200 rounded text-center text-sm font-black text-blue-900 outline-none focus:border-blue-400">
+                </div>
+                <div class="flex items-center justify-between bg-green-50 p-2 rounded-lg border border-green-100">
+                   <span class="text-xs font-black text-green-700">👦 小孩</span>
+                   <input type="number" v-model.number="tripData.expenseSettings.pax.child" class="w-12 bg-white border border-green-200 rounded text-center text-sm font-black text-green-900 outline-none focus:border-green-400">
+                </div>
+                <div class="flex items-center justify-between bg-yellow-50 p-2 rounded-lg border border-yellow-100">
+                   <span class="text-xs font-black text-yellow-700">👶 幼兒</span>
+                   <input type="number" v-model.number="tripData.expenseSettings.pax.toddler" class="w-12 bg-white border border-yellow-200 rounded text-center text-sm font-black text-yellow-900 outline-none focus:border-yellow-400">
+                </div>
+                <div class="flex items-center justify-between bg-pink-50 p-2 rounded-lg border border-pink-100">
+                   <span class="text-xs font-black text-pink-700">🍼 嬰兒</span>
+                   <input type="number" v-model.number="tripData.expenseSettings.pax.infant" class="w-12 bg-white border border-pink-200 rounded text-center text-sm font-black text-pink-900 outline-none focus:border-pink-400">
+                </div>
+             </div>
+          </div>
+
+          <!-- 圓餅圖與總額儀表板 -->
+          <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 md:p-8 mx-2 md:mx-0 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden">
+             <!-- 背景裝飾 -->
+             <div class="absolute -right-10 -top-10 text-[150px] opacity-5 select-none pointer-events-none">💰</div>
+             
+             <!-- 圓餅圖區域 -->
+             <div class="relative w-40 h-40 md:w-48 md:h-48 flex-shrink-0 flex items-center justify-center">
+                 <div class="absolute inset-0 rounded-full shadow-inner" :style="pieChartStyle"></div>
+                 <!-- 挖空變甜甜圈 -->
+                 <div class="absolute inset-4 md:inset-6 bg-white rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center">
+                    <span class="text-[10px] md:text-xs text-gray-400 font-bold mb-0.5">總花費</span>
+                    <span class="text-lg md:text-xl font-black text-gray-800 tracking-tighter">{{ formatCurrency(totalExpense) }}</span>
+                 </div>
+             </div>
+
+             <!-- 統計數據與圖例 -->
+             <div class="flex-1 w-full relative z-10">
+                <div class="mb-4">
+                   <h3 class="text-sm font-bold text-gray-500 mb-1">家庭預估總開銷</h3>
+                   <div class="text-4xl md:text-5xl font-black text-gray-900">{{ formatCurrency(totalExpense) }}</div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-y-3 gap-x-4">
+                   <div v-for="cat in expenseTotalsByCategory" :key="cat.name" class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full shadow-sm" :style="{ backgroundColor: cat.color }"></div>
+                      <div class="flex flex-col">
+                         <span class="text-[10px] text-gray-500 font-bold">{{ cat.icon }} {{ cat.name }}</span>
+                         <span class="text-xs md:text-sm font-black text-gray-800">{{ formatCurrency(cat.amount) }}</span>
+                      </div>
+                   </div>
+                </div>
+                
+                <div v-if="totalExpense === 0" class="text-sm text-gray-400 font-bold mt-2 border-t border-dashed border-gray-200 pt-4">
+                   目前還沒有任何花費喔，請點擊上方按鈕開始記帳！
+                </div>
+             </div>
+          </div>
+
+          <!-- 記帳明細清單 -->
+          <div class="space-y-4 px-2 md:px-0">
+             <div v-for="(exp, idx) in tripData.expenses" :key="exp.id" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative group transition-all hover:shadow-md">
+                
+                <!-- 編輯/完成/刪除按鈕 -->
+                <div v-if="isEditor" class="absolute top-3 right-3 flex gap-1.5 z-20">
+                    <button v-if="exp.isLocked" @click="exp.isLocked = false" class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="編輯">✏️</button>
+                    <button v-if="!exp.isLocked" @click="exp.isLocked = true" class="bg-yellow-50 text-yellow-600 border border-yellow-200 hover:bg-yellow-100 w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="完成">💾</button>
+                    <button @click="removeExpense(idx)" class="bg-gray-100 hover:bg-red-500 text-gray-400 hover:text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors shadow-sm" title="刪除">✕</button>
+                </div>
+
+                <!-- 編輯模式 -->
+                <div v-if="isEditor && !exp.isLocked" class="p-4 md:p-5 bg-yellow-50/30">
+                   <div class="flex flex-col md:flex-row gap-4">
+                      <!-- 左側：類別與名稱 -->
+                      <div class="flex-1 space-y-3">
+                         <div class="flex gap-2">
+                            <select v-model="exp.category" class="bg-white border border-gray-200 rounded-lg px-2 py-2 text-sm font-bold outline-none cursor-pointer focus:border-yellow-400">
+                               <option v-for="c in expenseCategories" :key="c.name" :value="c.name">{{ c.icon }} {{ c.name }}</option>
+                            </select>
+                            <input type="text" v-model="exp.name" placeholder="項目名稱 (例如：環球影城門票)" class="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-yellow-400">
+                         </div>
+                         <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1.5 rounded">單價</span>
+                            <input type="number" v-model.number="exp.unitPrice" placeholder="輸入個人單價" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-black text-gray-800 outline-none focus:border-yellow-400">
+                         </div>
+                      </div>
+
+                      <!-- 右側：人數勾選與小計 -->
+                      <div class="md:w-64 bg-white rounded-xl p-3 border border-yellow-100 shadow-sm">
+                         <p class="text-[10px] font-bold text-gray-400 mb-2 border-b border-dashed border-gray-100 pb-1">適用對象 (勾選自動計算人數)</p>
+                         <div class="grid grid-cols-2 gap-2 mb-3">
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                               <input type="checkbox" v-model="exp.appliesTo.adult" class="checkbox-custom !w-4 !h-4 !accent-blue-500">
+                               <span class="text-xs font-bold text-gray-600 group-hover:text-blue-600">大人 ({{tripData.expenseSettings?.pax.adult}})</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                               <input type="checkbox" v-model="exp.appliesTo.child" class="checkbox-custom !w-4 !h-4 !accent-green-500">
+                               <span class="text-xs font-bold text-gray-600 group-hover:text-green-600">小孩 ({{tripData.expenseSettings?.pax.child}})</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                               <input type="checkbox" v-model="exp.appliesTo.toddler" class="checkbox-custom !w-4 !h-4 !accent-yellow-500">
+                               <span class="text-xs font-bold text-gray-600 group-hover:text-yellow-600">幼兒 ({{tripData.expenseSettings?.pax.toddler}})</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer group">
+                               <input type="checkbox" v-model="exp.appliesTo.infant" class="checkbox-custom !w-4 !h-4 !accent-pink-500">
+                               <span class="text-xs font-bold text-gray-600 group-hover:text-pink-600">嬰兒 ({{tripData.expenseSettings?.pax.infant}})</span>
+                            </label>
+                         </div>
+                         <div class="bg-gray-50 rounded-lg p-2 flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-500">此項小計</span>
+                            <span class="text-lg font-black text-gray-900">{{ formatCurrency(calculateExpenseItemTotal(exp)) }}</span>
+                         </div>
+                      </div>
+                   </div>
+                   <textarea v-model="exp.memo" placeholder="備註 (選填)..." rows="1" class="w-full mt-3 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-600 outline-none resize-none focus:border-yellow-400"></textarea>
+                </div>
+
+                <!-- 鎖定/純觀看模式 -->
+                <div v-else class="p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-3 md:gap-4 relative z-10 pr-16 md:pr-24">
+                   <div class="flex items-center gap-3 flex-1 min-w-0">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-100 shrink-0" :style="{ backgroundColor: getCategoryColor(exp.category) + '20', color: getCategoryColor(exp.category) }">
+                         {{ getCategoryIcon(exp.category) }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                         <h4 class="text-base md:text-lg font-black text-gray-800 truncate">{{ exp.name || '未命名花費' }}</h4>
+                         <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">單價 {{ formatCurrency(exp.unitPrice || 0) }}</span>
+                            <span class="text-[10px] font-bold text-gray-400 px-1">×</span>
+                            <span v-if="exp.appliesTo.adult" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">👨 {{tripData.expenseSettings?.pax.adult}}</span>
+                            <span v-if="exp.appliesTo.child" class="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">👦 {{tripData.expenseSettings?.pax.child}}</span>
+                            <span v-if="exp.appliesTo.toddler" class="text-[10px] font-bold text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">👶 {{tripData.expenseSettings?.pax.toddler}}</span>
+                            <span v-if="exp.appliesTo.infant" class="text-[10px] font-bold text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100">🍼 {{tripData.expenseSettings?.pax.infant}}</span>
+                         </div>
+                      </div>
+                   </div>
+                   
+                   <div class="md:text-right flex flex-row md:flex-col items-center justify-between md:items-end md:justify-center border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-3 md:pt-0 md:pl-4 mt-2 md:mt-0">
+                      <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:mb-1">Subtotal</span>
+                      <span class="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">{{ formatCurrency(calculateExpenseItemTotal(exp)) }}</span>
+                   </div>
+
+                   <div v-if="exp.memo" class="w-full mt-2 bg-gray-50 text-[10px] md:text-xs text-gray-500 rounded p-2 border border-gray-100 border-l-2 border-l-gray-400 md:hidden">
+                      {{ exp.memo }}
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1029,7 +1204,7 @@
         const saveStatus = ref('');
         let saveTimeout = null;
 
-        const tabs = ['行程', '航班', '交通', '住宿', '行李'];
+        const tabs = ['行程', '航班', '交通', '住宿', '行李', '花費'];
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
         const activeMemo = ref(null); 
@@ -1042,6 +1217,7 @@
           companions: ['我', '盈瑜'], 
           itinerary: [], 
           expenses: [],
+          expenseSettings: { isPublic: false, pax: { adult: 2, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
           flights: [], 
           transports: [], 
           accommodations: [],
@@ -1056,7 +1232,14 @@
           return tripData.value.coEditors && tripData.value.coEditors.includes(currentUser.value.email.toLowerCase());
         });
 
-        const visibleTabs = computed(() => isEditor.value ? tabs : ['行程', '航班', '交通', '住宿']);
+        const visibleTabs = computed(() => {
+          if (isEditor.value) return tabs;
+          const guestTabs = ['行程', '航班', '交通', '住宿'];
+          if (tripData.value.expenseSettings && tripData.value.expenseSettings.isPublic) {
+             guestTabs.push('花費');
+          }
+          return guestTabs;
+        });
 
         const calculateRelativeDays = (dateRangeStr) => {
             if (!tripData.value.startDate || !dateRangeStr || !dateRangeStr.includes(' 至 ')) return null;
@@ -1103,6 +1286,72 @@
             });
         };
 
+        // --- 花費模組專用函數區塊 ---
+        const expenseCategories = [
+          { name: '機票', icon: '✈️', color: '#3b82f6' },
+          { name: '住宿', icon: '🏨', color: '#8b5cf6' },
+          { name: '交通', icon: '🚅', color: '#10b981' },
+          { name: '餐飲', icon: '🍔', color: '#f59e0b' },
+          { name: '門票', icon: '🎟️', color: '#f43f5e' },
+          { name: '購物', icon: '🛍️', color: '#ec4899' },
+          { name: '其他', icon: '📄', color: '#64748b' }
+        ];
+
+        const getCategoryIcon = (catName) => expenseCategories.find(c => c.name === catName)?.icon || '📄';
+        const getCategoryColor = (catName) => expenseCategories.find(c => c.name === catName)?.color || '#64748b';
+
+        const calculateExpenseItemTotal = (item) => {
+          let count = 0;
+          if (item.appliesTo.adult) count += (tripData.value.expenseSettings?.pax?.adult || 0);
+          if (item.appliesTo.child) count += (tripData.value.expenseSettings?.pax?.child || 0);
+          if (item.appliesTo.toddler) count += (tripData.value.expenseSettings?.pax?.toddler || 0);
+          if (item.appliesTo.infant) count += (tripData.value.expenseSettings?.pax?.infant || 0);
+          return count * (Number(item.unitPrice) || 0);
+        };
+
+        const totalExpense = computed(() => {
+          if (!tripData.value.expenses) return 0;
+          return tripData.value.expenses.reduce((sum, item) => sum + calculateExpenseItemTotal(item), 0);
+        });
+
+        const expenseTotalsByCategory = computed(() => {
+          if (!tripData.value.expenses) return [];
+          let totals = {};
+          expenseCategories.forEach(c => totals[c.name] = { ...c, amount: 0 });
+          tripData.value.expenses.forEach(item => {
+            if (totals[item.category]) totals[item.category].amount += calculateExpenseItemTotal(item);
+          });
+          return Object.values(totals).filter(t => t.amount > 0).sort((a,b) => b.amount - a.amount);
+        });
+
+        const pieChartStyle = computed(() => {
+          if (totalExpense.value === 0) return 'background: #e2e8f0;';
+          let gradient = [];
+          let currentAngle = 0;
+          expenseTotalsByCategory.value.forEach(item => {
+            let angle = (item.amount / totalExpense.value) * 100;
+            if (angle > 0) {
+               gradient.push(`${item.color} ${currentAngle}% ${currentAngle + angle}%`);
+               currentAngle += angle;
+            }
+          });
+          return `background: conic-gradient(${gradient.join(', ')});`;
+        });
+
+        const addExpense = () => {
+          if (!tripData.value.expenses) tripData.value.expenses = [];
+          tripData.value.expenses.push({
+            id: generateId(), isLocked: false, category: '其他', name: '', unitPrice: '',
+            appliesTo: { adult: true, child: false, toddler: false, infant: false }, memo: ''
+          });
+        };
+        const removeExpense = (idx) => { tripData.value.expenses.splice(idx, 1); };
+
+        const formatCurrency = (val) => {
+          return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: tripData.value.expenseSettings?.currency || 'TWD', maximumFractionDigits: 0 }).format(val);
+        };
+        // -----------------------------
+
         const bindDynamicPickers = () => {
           if (!isEditor.value) return;
           nextTick(() => {
@@ -1133,7 +1382,7 @@
               try {
                 if (!currentTripId.value) {
                   currentTripId.value = Math.random().toString(36).substr(2, 10);
-                  window.history.replaceState({}, '', `?id=${currentTripId.value}`);
+                  try { window.history.replaceState({}, '', `?id=${currentTripId.value}`); } catch(e){}
                 }
                 await setDoc(doc(db, "trips", currentTripId.value), tripData.value);
                 saveStatus.value = '已自動儲存 ✅';
@@ -1162,15 +1411,56 @@
         onMounted(() => {
           const urlParams = new URLSearchParams(window.location.search);
           const tripIdFromUrl = urlParams.get('id');
+          
           onAuthStateChanged(auth, async (user) => {
-            currentUser.value = user;
-            if (tripIdFromUrl) { await loadTripFromCloud(tripIdFromUrl); } 
-            else { if (user) { await fetchMyTrips(); appState.value = 'DASHBOARD'; } else { appState.value = 'LOGIN'; } }
+            // 檢查本機是否留有「訪客免登入」的記憶
+            const isGuest = localStorage.getItem('smarttravel_is_guest') === 'true';
+            
+            if (isGuest) {
+               let guestUid = localStorage.getItem('smarttravel_guest_uid') || 'guest_user_999';
+               currentUser.value = { uid: guestUid, email: 'guest@smarttravel.com', displayName: '測試訪客' };
+            } else {
+               currentUser.value = user;
+            }
+
+            if (tripIdFromUrl) { 
+               await loadTripFromCloud(tripIdFromUrl); 
+            } else { 
+               if (currentUser.value) { 
+                  await fetchMyTrips(); 
+                  appState.value = 'DASHBOARD'; 
+               } else { 
+                  appState.value = 'LOGIN'; 
+               } 
+            }
           });
         });
 
         const loginWithGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
-        const logout = () => { signOut(auth); appState.value = 'LOGIN'; };
+        
+        // 升級版訪客登入：發配專屬 ID 並記在本機
+        const guestLogin = () => {
+          let guestUid = localStorage.getItem('smarttravel_guest_uid');
+          if (!guestUid) {
+             guestUid = 'guest_' + Math.random().toString(36).substr(2, 9);
+             localStorage.setItem('smarttravel_guest_uid', guestUid);
+          }
+          currentUser.value = { uid: guestUid, email: 'guest@smarttravel.com', displayName: '測試訪客' };
+          localStorage.setItem('smarttravel_is_guest', 'true');
+          fetchMyTrips();
+          appState.value = 'DASHBOARD';
+        };
+
+        const logout = () => { 
+          // 如果是訪客，登出時清空本機記憶
+          if (currentUser.value && currentUser.value.uid.startsWith('guest_')) {
+             localStorage.removeItem('smarttravel_is_guest');
+             currentUser.value = null; 
+             appState.value = 'LOGIN';
+          } else {
+             signOut(auth).then(() => { appState.value = 'LOGIN'; }); 
+          }
+        };
 
         const fetchMyTrips = async () => {
           if (!currentUser.value) return;
@@ -1196,6 +1486,7 @@
           tripData.value = { 
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
+            expenseSettings: { isPublic: false, pax: { adult: 2, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
             flights: [], transports: [], accommodations: [], luggage: []
           };
           setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '' };
@@ -1217,8 +1508,14 @@
 
         const switchTab = (tab) => { currentView.value = tab; };
 
-        const openTrip = async (id) => { window.history.pushState({}, '', `?id=${id}`); await loadTripFromCloud(id); };
-        const backToDashboard = () => { window.history.pushState({}, '', window.location.pathname); fetchMyTrips(); appState.value = 'DASHBOARD'; };
+        const openTrip = async (id) => { 
+          try { window.history.pushState({}, '', `?id=${id}`); } catch(e){}
+          await loadTripFromCloud(id); 
+        };
+        const backToDashboard = () => { 
+          try { window.history.pushState({}, '', window.location.pathname); } catch(e){}
+          fetchMyTrips(); appState.value = 'DASHBOARD'; 
+        };
 
         const loadTripFromCloud = async (id) => {
           appState.value = 'LOADING'; currentTripId.value = id;
@@ -1229,6 +1526,10 @@
             if (!data.transports) data.transports = []; if (!data.accommodations) data.accommodations = []; if (!data.luggage) data.luggage = [];
             if (!data.coEditors || !Array.isArray(data.coEditors)) data.coEditors = [];
             
+            // 資料回溯相容性處理：加上 expenses 與 expenseSettings
+            if (!data.expenses) data.expenses = [];
+            if (!data.expenseSettings) data.expenseSettings = { isPublic: false, pax: { adult: 2, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' };
+
             if (data.itinerary) {
                data.itinerary.forEach(day => {
                   if (day.items && day.items.length === 1) {
@@ -1252,15 +1553,31 @@
         };
 
         const copyShareLink = async () => {
-          if (!currentUser.value) return alert("請先登入！");
+          if (!currentUser.value) {
+             saveStatus.value = '❌ 請先登入';
+             setTimeout(() => { if(saveStatus.value === '❌ 請先登入') saveStatus.value = ''; }, 3000);
+             return;
+          }
           if (!currentTripId.value) {
             currentTripId.value = Math.random().toString(36).substr(2, 10);
             tripData.value.ownerId = currentUser.value.uid;
-            window.history.replaceState({}, '', `?id=${currentTripId.value}`);
+            try { window.history.replaceState({}, '', `?id=${currentTripId.value}`); } catch(e){}
             await setDoc(doc(db, "trips", currentTripId.value), tripData.value);
             saveStatus.value = '已自動儲存 ✅';
           }
-          navigator.clipboard.writeText(window.location.href).then(() => { alert("✅ 專屬分享網址已複製到剪貼簿，直接貼給朋友即可。"); });
+          
+          const dummy = document.createElement('input');
+          document.body.appendChild(dummy);
+          dummy.value = window.location.href;
+          dummy.select();
+          try {
+            document.execCommand('copy');
+            saveStatus.value = '✅ 網址已複製';
+          } catch(err) {
+            saveStatus.value = '❌ 複製失敗';
+          }
+          document.body.removeChild(dummy);
+          setTimeout(() => { if(saveStatus.value === '✅ 網址已複製' || saveStatus.value === '❌ 複製失敗') saveStatus.value = ''; }, 3000);
         };
 
         const deleteTripFromCloud = async (id) => { if(confirm("確定要刪除這趟旅程嗎？刪除後無法恢復喔！")) { await deleteDoc(doc(db, "trips", id)); await fetchMyTrips(); } };
@@ -1438,16 +1755,17 @@
         };
 
         return {
-          appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, logout, deleteTripFromCloud, copyShareLink,
+          appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, guestLogin, logout, deleteTripFromCloud, copyShareLink,
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           saveStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, switchTab,
-          stayOptions, formatStayTime, toggleMenu, 
+          stayOptions, formatStayTime, toggleMenu,
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
           addFlight, removeFlight, addPassenger, removePassenger, searchFlightStatus,
           addTransport, removeTransport, addAccommodation, removeAccommodation,
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
+          expenseCategories, getCategoryIcon, getCategoryColor, calculateExpenseItemTotal, totalExpense, expenseTotalsByCategory, pieChartStyle, addExpense, removeExpense, formatCurrency,
           addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField,
-          handleImageUpload, moveToDay
+          handleImageUpload, moveToDay, guestLogin
         }
       }
     }).mount('#app')
