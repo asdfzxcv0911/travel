@@ -504,23 +504,24 @@
                  </div>
              </div>
 
-             <div class="px-4 md:px-6 py-8 pb-10 flex justify-between items-center text-center relative bg-white">
+             <!-- 緊湊化微調：縮減 padding (py-4 pb-4)，行距改為 mt-2 -->
+             <div class="px-4 md:px-6 py-4 pb-4 flex justify-between items-center text-center relative bg-white">
                  <div class="flex-1 flex flex-col items-center min-w-0">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.depCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
                      <div v-else class="text-4xl sm:text-5xl font-black text-[#3b82f6] tracking-wider">{{ flight.depCode || '---' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.depLoc" placeholder="出發機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300 truncate">
-                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5 truncate w-full">{{ flight.depLoc || '出發機場' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.depLoc" placeholder="出發機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-0.5 placeholder-gray-300 truncate">
+                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-0.5 truncate w-full">{{ flight.depLoc || '出發機場' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-4 md:mt-5 placeholder-gray-200 cursor-pointer">
-                     <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-4 md:mt-5">{{ flight.depTime || '--:--' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.depTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-2 md:mt-2 placeholder-gray-200 cursor-pointer">
+                     <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-2 md:mt-2">{{ flight.depTime || '--:--' }}</div>
                  </div>
 
-                 <div class="w-20 sm:w-32 flex flex-col items-center justify-center shrink-0 -mt-2">
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.duration" placeholder="歷時 (3h 25m)" class="text-[10px] sm:text-xs font-bold text-gray-500 w-full text-center outline-none bg-transparent mb-1 placeholder-gray-300">
-                     <div v-else class="text-[10px] sm:text-xs font-bold text-gray-500 mb-1">{{ flight.duration || '--h --m' }}</div>
+                 <div class="w-20 sm:w-32 flex flex-col items-center justify-center shrink-0">
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.duration" placeholder="歷時 (3h 25m)" class="text-[10px] sm:text-xs font-bold text-gray-500 w-full text-center outline-none bg-transparent mb-0.5 placeholder-gray-300">
+                     <div v-else class="text-[10px] sm:text-xs font-bold text-gray-500 mb-0.5">{{ flight.duration || '--h --m' }}</div>
                      
-                     <div class="flex items-center justify-center w-full text-blue-200/60 opacity-80 mt-1 relative">
+                     <div class="flex items-center justify-center w-full text-blue-200/60 opacity-80 relative">
                          <span class="tracking-[0.1em] sm:tracking-[0.2em] flex-1 overflow-hidden text-clip font-black text-xs md:text-sm">- - -</span>
                          <span class="text-[#60a5fa] text-xl sm:text-2xl mx-1 transform relative z-10" style="rotate: 45deg;">✈️</span>
                          <span class="tracking-[0.1em] sm:tracking-[0.2em] flex-1 overflow-hidden text-clip font-black text-xs md:text-sm">- - -</span>
@@ -536,11 +537,11 @@
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.arrCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
                      <div v-else class="text-4xl sm:text-5xl font-black text-[#3b82f6] tracking-wider">{{ flight.arrCode || '---' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.arrLoc" placeholder="抵達機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-1.5 placeholder-gray-300 truncate">
-                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-1.5 truncate w-full">{{ flight.arrLoc || '抵達機場' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.arrLoc" placeholder="抵達機場" class="text-[11px] md:text-sm text-gray-500 w-full text-center outline-none bg-transparent mt-0.5 placeholder-gray-300 truncate">
+                     <div v-else class="text-[11px] md:text-sm text-gray-500 mt-0.5 truncate w-full">{{ flight.arrLoc || '抵達機場' }}</div>
                      
-                     <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.arrTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-4 md:mt-5 placeholder-gray-200 cursor-pointer">
-                     <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-4 md:mt-5">{{ flight.arrTime || '--:--' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" type="text" v-model="flight.arrTime" placeholder="時間" class="flight-time-picker text-2xl sm:text-3xl font-black text-gray-800 w-24 text-center outline-none bg-transparent mt-2 md:mt-2 placeholder-gray-200 cursor-pointer">
+                     <div v-else class="text-2xl sm:text-3xl font-black text-gray-800 mt-2 md:mt-2">{{ flight.arrTime || '--:--' }}</div>
                  </div>
              </div>
 
