@@ -1169,33 +1169,35 @@
                 </div>
 
                 <!-- 鎖定/純觀看模式 -->
-                <div v-else class="p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-3 md:gap-4 relative z-10 pr-16 md:pr-24">
-                   <div class="flex items-center gap-3 flex-1 min-w-0">
-                      <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-100 shrink-0" :style="{ backgroundColor: getCategoryColor(exp.category) + '20', color: getCategoryColor(exp.category) }">
-                         {{ getCategoryIcon(exp.category) }}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                         <h4 class="text-base md:text-lg font-black text-gray-800 truncate">{{ exp.name || '未命名花費' }}</h4>
-                         <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                            <div v-for="detail in exp.details" :key="detail.id" class="flex items-center bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 shadow-sm">
-                               <span class="text-[10px] font-bold mr-1" :class="getTypeColor(detail.type)">{{ getTypeLabel(detail.type) }}</span>
-                               <span class="text-[10px] font-bold text-gray-600">{{ formatCurrency(detail.price || 0, exp.currency) }}</span>
-                               <span class="text-[10px] font-bold text-gray-400 mx-1">×</span>
-                               <span class="text-[10px] font-bold text-gray-600">{{ getMultiplier(detail.type) }}</span>
+                <div v-else class="p-4 md:p-5 relative z-10 pr-16 md:pr-24">
+                   <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <div class="flex items-center gap-3 flex-1 min-w-0">
+                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-100 shrink-0" :style="{ backgroundColor: getCategoryColor(exp.category) + '20', color: getCategoryColor(exp.category) }">
+                            {{ getCategoryIcon(exp.category) }}
+                         </div>
+                         <div class="flex-1 min-w-0">
+                            <h4 class="text-base md:text-lg font-black text-gray-800 truncate">{{ exp.name || '未命名花費' }}</h4>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                               <div v-for="detail in exp.details" :key="detail.id" class="flex items-center bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 shadow-sm">
+                                  <span class="text-[10px] font-bold mr-1" :class="getTypeColor(detail.type)">{{ getTypeLabel(detail.type) }}</span>
+                                  <span class="text-[10px] font-bold text-gray-600">{{ formatCurrency(detail.price || 0, exp.currency) }}</span>
+                                  <span class="text-[10px] font-bold text-gray-400 mx-1">×</span>
+                                  <span class="text-[10px] font-bold text-gray-600">{{ getMultiplier(detail.type) }}</span>
+                               </div>
                             </div>
                          </div>
                       </div>
-                   </div>
-                   
-                   <div class="md:text-right flex flex-row md:flex-col items-center justify-between md:items-end md:justify-center border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-3 md:pt-0 md:pl-4 mt-2 md:mt-0 shrink-0">
-                      <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:mb-1">Subtotal</span>
-                      <span class="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">{{ formatCurrency(calculateExpenseItemTotalTWD(exp), 'TWD') }}</span>
-                      <div v-if="exp.currency !== 'TWD'" class="text-[10px] font-bold text-gray-400 mt-0.5">
-                         外幣: {{ formatCurrency(calculateExpenseItemTotalForeign(exp), exp.currency) }} <br class="hidden md:block"> <span class="md:hidden">|</span> (匯率 {{ exp.exchangeRate }})
+                      
+                      <div class="md:text-right flex flex-row md:flex-col items-center justify-between md:items-end md:justify-center border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-3 md:pt-0 md:pl-4 mt-2 md:mt-0 shrink-0">
+                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:mb-1">Subtotal</span>
+                         <span class="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">{{ formatCurrency(calculateExpenseItemTotalTWD(exp), 'TWD') }}</span>
+                         <div v-if="exp.currency !== 'TWD'" class="text-[10px] font-bold text-gray-400 mt-0.5">
+                            外幣: {{ formatCurrency(calculateExpenseItemTotalForeign(exp), exp.currency) }} <br class="hidden md:block"> <span class="md:hidden">|</span> (匯率 {{ exp.exchangeRate }})
+                         </div>
                       </div>
                    </div>
 
-                   <div v-if="exp.memo" class="w-full mt-2 bg-gray-50 text-[10px] md:text-xs text-gray-500 rounded p-2 border border-gray-100 border-l-2 border-l-gray-400 md:hidden">
+                   <div v-if="exp.memo" class="w-full mt-3 bg-gray-50 text-[10px] md:text-xs text-gray-500 rounded p-2 border border-gray-100 border-l-2 border-l-gray-400">
                       {{ exp.memo }}
                    </div>
                 </div>
