@@ -13,12 +13,37 @@
   <meta name="application-name" content="智慧旅遊">
   <meta name="theme-color" content="#e91e63">
   
-  <!-- 可愛地球+飛機 App 圖示 (內建 SVG 向量格式，極致清晰不破圖) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e0f2fe'/><text x='12' y='72' font-size='48'>🌍</text><text x='48' y='42' font-size='38'>✈️</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e0f2fe'/><text x='12' y='72' font-size='48'>🌍</text><text x='48' y='42' font-size='38'>✈️</text></svg>">
-  
-  <!-- PWA Manifest 設定 (讓 Android 安裝時支援全螢幕) -->
-  <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"我的智慧旅遊計畫","short_name":"智慧旅遊","start_url":".","display":"standalone","background_color":"#ffffff","theme_color":"#e91e63","icons":[{"src":"data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" rx=\"22\" fill=\"%23e0f2fe\"/><text x=\"12\" y=\"72\" font-size=\"48\">🌍</text><text x=\"48\" y=\"42\" font-size=\"38\">✈️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+  <!-- PWA 圖示與 Manifest 自動生成腳本 (解決 iOS/Android 不支援 SVG 圖示變白底的問題) -->
+  <link id="dynamic-favicon" rel="icon" type="image/png" href="">
+  <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192" href="">
+  <link id="dynamic-manifest" rel="manifest" href="">
+  <script>
+    (function(){
+      // 透過 Canvas 繪製專屬地球飛機圖示，轉換為標準 PNG，保證 100% 跨平台顯示
+      var canvas = document.createElement('canvas');
+      canvas.width = 192; canvas.height = 192;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#e0f2fe';
+      ctx.beginPath();
+      if(ctx.roundRect) { ctx.roundRect(0, 0, 192, 192, 40); } else { ctx.rect(0,0,192,192); }
+      ctx.fill();
+      ctx.font = '80px Arial';
+      ctx.fillText('🌍', 24, 130);
+      ctx.fillText('✈️', 90, 80);
+      var dataURL = canvas.toDataURL('image/png');
+      
+      document.getElementById('dynamic-favicon').href = dataURL;
+      document.getElementById('dynamic-apple-icon').href = dataURL;
+      
+      var manifest = {
+        name: "我的智慧旅遊計畫", short_name: "智慧旅遊", start_url: ".", display: "standalone",
+        background_color: "#ffffff", theme_color: "#e91e63",
+        icons: [{ src: dataURL, sizes: "192x192", type: "image/png" }]
+      };
+      var manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+      document.getElementById('dynamic-manifest').href = URL.createObjectURL(manifestBlob);
+    })();
+  </script>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -200,39 +225,8 @@
     <!-- ==================== 【個別行程編輯/預覽區 (TRIP)】 ==================== -->
     <div v-if="appState === 'TRIP'">
       
-      <!-- 頂部權限列 -->
-      <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center z-[60] relative">
-        <div class="flex items-center gap-2">
-          <button v-if="currentUser" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
-          <span class="hidden md:inline">🔐 權限狀態：</span>
-          <span v-if="isEditor && isOwner" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
-          <span v-else-if="isEditor && !isOwner" class="font-bold text-green-400 hidden md:inline">共同編輯者 (編輯中)</span>
-          <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
-        </div>
-        
-        <div class="flex items-center gap-2">
-           <!-- 版本更新為 v15 (匯率機制+防當機保護) -->
-           <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v15</span>
-           
-           <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
-           
-           <button v-if="isEditor" @click="openSetup" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700">
-             ⚙️ <span class="hidden sm:inline">設定</span>
-           </button>
-           <button v-if="isEditor" @click="copyShareLink" class="theme-bg theme-bg-hover text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors">
-             🔗 <span class="hidden sm:inline" id="shareBtnText">複製分享網址</span><span class="sm:hidden">分享</span>
-           </button>
-           
-           <button v-if="hasEditPermission" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-2 py-1 md:px-3 md:py-1 rounded text-white font-bold transition-colors shadow-sm flex items-center gap-1">
-             {{ isEditor ? '👁️ 預覽' : '✏️ 編輯' }}
-           </button>
-           
-           <button v-if="!hasEditPermission && !currentUser" @click="loginWithGoogle" class="text-blue-400 hover:text-blue-300 font-bold text-xs">登入參與編輯</button>
-        </div>
-      </div>
-
-      <!-- 備忘錄 Modal -->
-      <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[200] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
+      <!-- 備忘錄 Modal (移到外層，避免被 sticky 覆蓋) -->
+      <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[300] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
         <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
           <div class="theme-bg px-5 py-3 flex justify-between items-center">
             <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
@@ -247,32 +241,69 @@
         </div>
       </div>
 
-      <!-- 標題與導覽列 -->
-      <div class="bg-white shadow-sm border-b border-gray-200 mb-4 md:mb-6 relative z-30">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="flex items-center gap-3 mb-1 md:mb-2">
-                <span class="text-gray-500 font-medium text-sm md:text-base">📍 {{ tripData.destination }}</span>
-              </div>
-              <h1 class="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">{{ tripData.tripName }}</h1>
-              <p class="text-gray-500 font-medium text-xs md:text-base">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
-            </div>
+      <!-- 【全新固定頂部區塊】包含權限列、標題、導覽列 -->
+      <div class="sticky top-0 z-[100] w-full shadow-md bg-white flex flex-col">
+        <!-- 頂部權限列 -->
+        <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center relative z-20">
+          <div class="flex items-center gap-2">
+            <button v-if="currentUser" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
+            <span class="hidden md:inline">🔐 權限狀態：</span>
+            <span v-if="isEditor && isOwner" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
+            <span v-else-if="isEditor && !isOwner" class="font-bold text-green-400 hidden md:inline">共同編輯者 (編輯中)</span>
+            <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
+          </div>
+          
+          <div class="flex items-center gap-2">
+             <!-- 版本更新為 v16 (加入動態 PNG Icon 與 固定置頂列) -->
+             <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v16</span>
+             
+             <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
+             
+             <button v-if="isEditor" @click="openSetup" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700">
+               ⚙️ <span class="hidden sm:inline">設定</span>
+             </button>
+             <button v-if="isEditor" @click="copyShareLink" class="theme-bg theme-bg-hover text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors">
+               🔗 <span class="hidden sm:inline" id="shareBtnText">複製分享網址</span><span class="sm:hidden">分享</span>
+             </button>
+             
+             <button v-if="hasEditPermission" @click="isEditor = !isEditor" :class="isEditor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'" class="px-2 py-1 md:px-3 md:py-1 rounded text-white font-bold transition-colors shadow-sm flex items-center gap-1">
+               {{ isEditor ? '👁️ 預覽' : '✏️ 編輯' }}
+             </button>
+             
+             <button v-if="!hasEditPermission && !currentUser" @click="loginWithGoogle" class="text-blue-400 hover:text-blue-300 font-bold text-xs">登入參與編輯</button>
           </div>
         </div>
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
-            <button v-for="tab in visibleTabs" :key="tab" @click="switchTab(tab)"
-              :class="['pb-2 md:pb-3 px-1 text-sm md:text-base font-bold transition-colors border-b-4 whitespace-nowrap', 
-                       currentView === tab ? 'theme-border theme-text' : 'border-transparent text-gray-500 hover:text-gray-700']">
-              {{ tab }}
-            </button>
+
+        <!-- 標題與導覽列 -->
+        <div class="bg-white border-b border-gray-200 relative z-10">
+          <!-- 微調了上下邊距 (py-3 md:py-5)，節省置頂空間 -->
+          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 relative">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="flex items-center gap-3 mb-0.5 md:mb-1">
+                  <span class="text-gray-500 font-medium text-[11px] md:text-sm">📍 {{ tripData.destination }}</span>
+                </div>
+                <!-- 調整字體大小 -->
+                <h1 class="text-xl md:text-3xl font-bold text-gray-900 mb-0.5 md:mb-1">{{ tripData.tripName }}</h1>
+                <p class="text-gray-500 font-medium text-[10px] md:text-xs">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
+              </div>
+            </div>
+          </div>
+          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
+              <button v-for="tab in visibleTabs" :key="tab" @click="switchTab(tab)"
+                :class="['pb-2 md:pb-3 px-1 text-sm md:text-base font-bold transition-colors border-b-4 whitespace-nowrap', 
+                         currentView === tab ? 'theme-border theme-text' : 'border-transparent text-gray-500 hover:text-gray-700']">
+                {{ tab }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Main Content Area -->
-      <div :class="{'flight-bg min-h-[70vh] -mt-6 pt-10 pb-16 px-4 md:px-8': currentView === '航班', 'max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pb-12': currentView !== '航班'}" class="animate-fade-in relative z-20">
+      <!-- 取代原本標題的 mb-4 md:mb-6，改用 mt-4 md:mt-6 推開下方內容 -->
+      <div :class="{'flight-bg min-h-[70vh] pt-6 pb-16 px-4 md:px-8': currentView === '航班', 'max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pb-12 mt-4 md:mt-6': currentView !== '航班'}" class="animate-fade-in relative z-20">
         
         <!-- ==================== 【行程模組】 ==================== -->
         <div v-if="currentView === '行程'" class="space-y-4">
