@@ -13,35 +13,69 @@
   <meta name="application-name" content="智慧旅遊">
   <meta name="theme-color" content="#e91e63">
   
-  <!-- PWA 圖示與 Manifest 自動生成腳本 (解決 iOS/Android 不支援 SVG 圖示變白底的問題) -->
+  <!-- PWA 圖示與 Manifest 自動生成腳本 (全新設計：超卡哇伊地球與小飛機) -->
   <link id="dynamic-favicon" rel="icon" type="image/png" href="">
   <link id="dynamic-apple-icon" rel="apple-touch-icon" sizes="192x192" href="">
   <link id="dynamic-manifest" rel="manifest" href="">
   <script>
     (function(){
-      // 透過 Canvas 繪製專屬地球飛機圖示，轉換為標準 PNG，保證 100% 跨平台顯示
-      var canvas = document.createElement('canvas');
-      canvas.width = 192; canvas.height = 192;
-      var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#e0f2fe';
-      ctx.beginPath();
-      if(ctx.roundRect) { ctx.roundRect(0, 0, 192, 192, 40); } else { ctx.rect(0,0,192,192); }
-      ctx.fill();
-      ctx.font = '80px Arial';
-      ctx.fillText('🌍', 24, 130);
-      ctx.fillText('✈️', 90, 80);
-      var dataURL = canvas.toDataURL('image/png');
+      // 全新設計：超Ｑ微笑地球與飛機的高畫質 SVG 向量圖
+      var svg = `<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'>
+        <rect width='192' height='192' rx='44' fill='#38bdf8'/>
+        <path d='M0 130 Q48 100 96 130 T192 110 L192 192 L0 192 Z' fill='#0ea5e9' opacity='0.4'/>
+        <path d='M0 150 Q60 120 120 150 T192 130 L192 192 L0 192 Z' fill='#0284c7' opacity='0.3'/>
+        <!-- Cute Globe -->
+        <circle cx='96' cy='115' r='45' fill='#bae6fd'/>
+        <!-- Landmasses -->
+        <path d='M65 100 C65 80, 85 70, 95 90 C105 110, 80 120, 70 110 Z' fill='#6ee7b7'/>
+        <path d='M105 100 C115 80, 135 90, 130 110 C125 130, 100 120, 105 100 Z' fill='#6ee7b7'/>
+        <path d='M85 135 C80 125, 95 120, 105 130 C110 140, 90 145, 85 135 Z' fill='#6ee7b7'/>
+        <!-- Eyes with sparkles -->
+        <circle cx='82' cy='112' r='4.5' fill='#0f172a'/>
+        <circle cx='110' cy='112' r='4.5' fill='#0f172a'/>
+        <circle cx='80.5' cy='110.5' r='1.5' fill='#ffffff'/>
+        <circle cx='108.5' cy='110.5' r='1.5' fill='#ffffff'/>
+        <!-- Smile -->
+        <path d='M89 120 Q96 128 103 120' fill='none' stroke='#0f172a' stroke-width='2.5' stroke-linecap='round'/>
+        <!-- Rosy Cheeks -->
+        <ellipse cx='72' cy='116' rx='5' ry='3.5' fill='#f43f5e' opacity='0.4'/>
+        <ellipse cx='120' cy='116' rx='5' ry='3.5' fill='#f43f5e' opacity='0.4'/>
+        <!-- Flight Path -->
+        <path d='M45 100 C30 50, 80 20, 140 45' fill='none' stroke='#ffffff' stroke-width='3.5' stroke-dasharray='8 6' stroke-linecap='round'/>
+        <!-- Cute Airplane -->
+        <g transform='translate(140, 45) rotate(25) scale(1.3)'>
+          <path d='M15 0 L-10 -8 L-5 0 L-10 8 Z' fill='#ffffff'/>
+          <path d='M-5 0 L-10 -15 L2 -2 Z' fill='#e2e8f0'/>
+          <path d='M-5 0 L-10 15 L2 2 Z' fill='#cbd5e1'/>
+        </g>
+        <!-- Sparkle Stars -->
+        <path d='M35 40 L37 45 L42 47 L37 49 L35 54 L33 49 L28 47 L33 45 Z' fill='#fef08a'/>
+        <path d='M155 90 L156 93 L159 94 L156 95 L155 98 L154 95 L151 94 L154 93 Z' fill='#fef08a'/>
+        <path d='M140 140 L141 142 L143 143 L141 144 L140 146 L139 144 L137 143 L139 142 Z' fill='#fef08a'/>
+      </svg>`;
       
-      document.getElementById('dynamic-favicon').href = dataURL;
-      document.getElementById('dynamic-apple-icon').href = dataURL;
-      
-      var manifest = {
-        name: "我的智慧旅遊計畫", short_name: "智慧旅遊", start_url: ".", display: "standalone",
-        background_color: "#ffffff", theme_color: "#e91e63",
-        icons: [{ src: dataURL, sizes: "192x192", type: "image/png" }]
+      // 透過 Image 物件與 Canvas 自動轉譯為無瑕疵的 PNG 格式
+      var img = new Image();
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = 192; canvas.height = 192;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var dataURL = canvas.toDataURL('image/png');
+        
+        document.getElementById('dynamic-favicon').href = dataURL;
+        document.getElementById('dynamic-apple-icon').href = dataURL;
+        
+        var manifest = {
+          name: "我的智慧旅遊計畫", short_name: "智慧旅遊", start_url: ".", display: "standalone",
+          background_color: "#ffffff", theme_color: "#e91e63",
+          icons: [{ src: dataURL, sizes: "192x192", type: "image/png" }]
+        };
+        var manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        document.getElementById('dynamic-manifest').href = URL.createObjectURL(manifestBlob);
       };
-      var manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-      document.getElementById('dynamic-manifest').href = URL.createObjectURL(manifestBlob);
+      // 安全載入 SVG 字串
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     })();
   </script>
   
@@ -133,8 +167,8 @@
     </div>
 
     <!-- 行程大廳 (Dashboard) -->
-    <div v-if="appState === 'DASHBOARD'" class="min-h-screen">
-      <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
+    <div v-if="appState === 'DASHBOARD'" class="min-h-screen flex flex-col">
+      <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md relative z-20">
         <h1 class="text-xl font-bold flex items-center gap-2"><span>🏕️</span> 我的行程庫</h1>
         <div class="flex items-center gap-4">
           <span class="text-sm text-gray-300 hidden md:inline">嗨, {{ currentUser?.displayName }}</span>
@@ -142,7 +176,7 @@
         </div>
       </div>
       
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1">
         <div class="flex justify-between items-end mb-8">
           <div>
             <h2 class="text-3xl font-black text-gray-800 mb-2">所有旅程</h2>
@@ -216,24 +250,8 @@
     </div>
 
     <!-- ==================== 【個別行程編輯/預覽區 (TRIP)】 ==================== -->
-    <div v-if="appState === 'TRIP'">
+    <div v-if="appState === 'TRIP'" class="flex flex-col min-h-screen">
       
-      <!-- 備忘錄 Modal (移到外層，避免被 sticky 覆蓋) -->
-      <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[300] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
-        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
-          <div class="theme-bg px-5 py-3 flex justify-between items-center">
-            <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
-            <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
-          </div>
-          <div class="p-6">
-            <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
-          </div>
-          <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-            <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
-          </div>
-        </div>
-      </div>
-
       <!-- 【全新固定頂部區塊】包含權限列、標題、導覽列 -->
       <div class="sticky top-0 z-[100] w-full shadow-md bg-white flex flex-col">
         <!-- 頂部權限列 -->
@@ -247,8 +265,8 @@
           </div>
           
           <div class="flex items-center gap-2">
-             <!-- 版本更新為 v16 (加入動態 PNG Icon 與 固定置頂列) -->
-             <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v16</span>
+             <!-- 版本更新為 v17 (高畫質手繪 SVG PNG 轉換) -->
+             <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v17</span>
              
              <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
              
@@ -269,14 +287,12 @@
 
         <!-- 標題與導覽列 -->
         <div class="bg-white border-b border-gray-200 relative z-10">
-          <!-- 微調了上下邊距 (py-3 md:py-5)，節省置頂空間 -->
           <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-5 relative">
             <div class="flex justify-between items-start">
               <div>
                 <div class="flex items-center gap-3 mb-0.5 md:mb-1">
                   <span class="text-gray-500 font-medium text-[11px] md:text-sm">📍 {{ tripData.destination }}</span>
                 </div>
-                <!-- 調整字體大小 -->
                 <h1 class="text-xl md:text-3xl font-bold text-gray-900 mb-0.5 md:mb-1">{{ tripData.tripName }}</h1>
                 <p class="text-gray-500 font-medium text-[10px] md:text-xs">{{ formatDateRange(tripData.startDate, tripData.endDate) }} (共 {{ tripData.itinerary.length }} 天)</p>
               </div>
@@ -294,9 +310,24 @@
         </div>
       </div>
 
+      <!-- 備忘錄 Modal -->
+      <div v-if="activeMemo" class="fixed inset-0 bg-black/60 z-[300] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeMemo = null">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+          <div class="theme-bg px-5 py-3 flex justify-between items-center">
+            <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
+            <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
+          </div>
+          <div class="p-6">
+            <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
+          </div>
+          <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+            <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Content Area -->
-      <!-- 取代原本標題的 mb-4 md:mb-6，改用 mt-4 md:mt-6 推開下方內容 -->
-      <div class="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pb-12 mt-4 md:mt-6 animate-fade-in relative z-20">
+      <div class="max-w-5xl mx-auto w-full px-2 sm:px-6 lg:px-8 pb-12 mt-4 md:mt-6 animate-fade-in relative z-20 flex-1">
         
         <!-- ==================== 【行程模組】 ==================== -->
         <div v-if="currentView === '行程'" class="space-y-4">
@@ -467,7 +498,7 @@
         <!-- ==================== 【超Ｑ航班與名單模組】 ==================== -->
         <div v-if="currentView === '航班'" class="space-y-4">
           
-          <div class="flex justify-between items-center mb-2 md:mb-4 px-2 md:px-0">
+          <div class="flex justify-between items-center mb-6">
             <div>
               <h2 class="text-xl md:text-2xl font-black text-gray-800">✈️ 航班資訊總覽</h2>
               <p class="text-[10px] md:text-xs text-gray-500 font-bold mt-1">統一管理您的班機細節與同行旅客清單</p>
@@ -477,12 +508,11 @@
             </button>
           </div>
 
-          <div v-if="!tripData.flights || tripData.flights.length === 0" class="text-center py-12 bg-white rounded-xl border border-gray-200 mx-2 md:mx-0">
-            <p class="text-gray-400 font-bold">尚未新增任何航班資訊</p>
+          <div v-if="!tripData.flights || tripData.flights.length === 0" class="text-center py-16 bg-white rounded-xl border border-gray-200">
+            <p class="text-gray-400 font-bold text-lg">尚未新增任何航班資訊</p>
           </div>
 
-          <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
-             <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative transition-transform hover:-translate-y-1">
+          <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border border-gray-200 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
              
              <div class="absolute top-4 right-4 flex gap-1.5 z-20">
                 <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="編輯">✏️</button>
@@ -544,8 +574,7 @@
                  </div>
              </div>
 
-             <!-- 緊湊化微調：縮減 padding (py-4 pb-4)，行距改為 mt-2 -->
-             <div class="px-4 md:px-6 py-4 pb-4 flex justify-between items-center text-center relative bg-white">
+             <div class="px-4 md:px-6 py-4 pb-6 flex justify-between items-center text-center relative bg-white">
                  <div class="flex-1 flex flex-col items-center min-w-0">
                      <input v-if="isEditor && !flight.isLocked" v-model="flight.depCode" placeholder="代碼" class="text-4xl sm:text-5xl font-black text-[#3b82f6] w-full text-center outline-none bg-transparent placeholder-blue-100 uppercase tracking-wide">
                      <div v-else class="text-4xl sm:text-5xl font-black text-[#3b82f6] tracking-wider">{{ flight.depCode || '---' }}</div>
@@ -558,8 +587,8 @@
                  </div>
 
                  <div class="w-20 sm:w-32 flex flex-col items-center justify-center shrink-0">
-                     <input v-if="isEditor && !flight.isLocked" v-model="flight.duration" placeholder="歷時 (3h 25m)" class="text-[10px] sm:text-xs font-bold text-gray-500 w-full text-center outline-none bg-transparent mb-0.5 placeholder-gray-300">
-                     <div v-else class="text-[10px] sm:text-xs font-bold text-gray-500 mb-0.5">{{ flight.duration || '--h --m' }}</div>
+                     <input v-if="isEditor && !flight.isLocked" v-model="flight.duration" placeholder="歷時 (3h 25m)" class="text-[10px] sm:text-xs font-bold text-gray-500 w-full text-center outline-none bg-transparent mb-1 placeholder-gray-300">
+                     <div v-else class="text-[10px] sm:text-xs font-bold text-gray-500 mb-1">{{ flight.duration || '--h --m' }}</div>
                      
                      <div class="flex items-center justify-center w-full text-blue-200/60 opacity-80 relative">
                          <span class="tracking-[0.1em] sm:tracking-[0.2em] flex-1 overflow-hidden text-clip font-black text-xs md:text-sm">- - -</span>
@@ -627,7 +656,6 @@
                  
                  <button v-if="isEditor && !flight.isLocked" @click="addPassenger(fIdx)" class="w-full mt-2 text-xs font-bold text-[#60a5fa] bg-white border-2 border-dashed border-blue-100 rounded-xl py-2.5 hover:bg-blue-50 hover:border-blue-300 transition-colors">＋ 加入旅客資訊</button>
              </div>
-          </div>
           </div>
         </div>
 
@@ -1211,32 +1239,32 @@
                 </div>
 
                 <!-- 鎖定/純觀看模式 -->
-                <div v-else class="p-4 md:p-5 relative z-10 pr-16 md:pr-24">
-                   <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                      <div class="flex items-center gap-3 flex-1 min-w-0">
-                         <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-100 shrink-0" :style="{ backgroundColor: getCategoryColor(exp.category) + '20', color: getCategoryColor(exp.category) }">
-                            {{ getCategoryIcon(exp.category) }}
-                         </div>
-                         <div class="flex-1 min-w-0">
-                            <h4 class="text-base md:text-lg font-black text-gray-800 truncate">{{ exp.name || '未命名花費' }}</h4>
-                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                               <div v-for="detail in exp.details" :key="detail.id" class="flex items-center bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 shadow-sm">
-                                  <span class="text-[10px] font-bold mr-1" :class="getTypeColor(detail.type)">{{ getTypeLabel(detail.type) }}</span>
-                                  <span class="text-[10px] font-bold text-gray-600">{{ formatCurrency(detail.price || 0, exp.currency) }}</span>
-                                  <span class="text-[10px] font-bold text-gray-400 mx-1">×</span>
-                                  <span class="text-[10px] font-bold text-gray-600">{{ getMultiplier(detail.type) }}</span>
-                               </div>
-                            </div>
-                         </div>
-                      </div>
-                      
-                      <div class="md:text-right flex flex-row md:flex-col items-center justify-between md:items-end md:justify-center border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-3 md:pt-0 md:pl-4 mt-2 md:mt-0 shrink-0">
-                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:mb-1">Subtotal</span>
-                         <span class="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">{{ formatCurrency(calculateExpenseItemTotalTWD(exp), 'TWD') }}</span>
-                         <div v-if="exp.currency !== 'TWD'" class="text-[10px] font-bold text-gray-400 mt-0.5">
-                            外幣: {{ formatCurrency(calculateExpenseItemTotalForeign(exp), exp.currency) }} <br class="hidden md:block"> <span class="md:hidden">|</span> (匯率 {{ exp.exchangeRate }})
-                         </div>
-                      </div>
+                <div v-else class="p-4 md:p-5">
+                   <div class="flex flex-col md:flex-row md:items-start gap-3 md:gap-4 relative z-10 pr-16 md:pr-24">
+                       <div class="flex items-center gap-3 w-full md:w-auto md:flex-1 min-w-0">
+                          <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm border border-gray-100 shrink-0" :style="{ backgroundColor: getCategoryColor(exp.category) + '20', color: getCategoryColor(exp.category) }">
+                             {{ getCategoryIcon(exp.category) }}
+                          </div>
+                          <div class="flex-1 min-w-0">
+                             <h4 class="text-base md:text-lg font-black text-gray-800 truncate">{{ exp.name || '未命名花費' }}</h4>
+                             <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                <div v-for="detail in exp.details" :key="detail.id" class="flex items-center bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 shadow-sm">
+                                   <span class="text-[10px] font-bold mr-1" :class="getTypeColor(detail.type)">{{ getTypeLabel(detail.type) }}</span>
+                                   <span class="text-[10px] font-bold text-gray-600">{{ formatCurrency(detail.price || 0, exp.currency) }}</span>
+                                   <span class="text-[10px] font-bold text-gray-400 mx-1">×</span>
+                                   <span class="text-[10px] font-bold text-gray-600">{{ getMultiplier(detail.type) }}</span>
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div class="md:text-right flex flex-row md:flex-col items-center justify-between md:items-end md:justify-center border-t md:border-t-0 md:border-l border-dashed border-gray-200 pt-3 md:pt-0 md:pl-4 mt-2 md:mt-0 shrink-0">
+                          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest md:mb-1">Subtotal</span>
+                          <span class="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">{{ formatCurrency(calculateExpenseItemTotalTWD(exp), 'TWD') }}</span>
+                          <div v-if="exp.currency !== 'TWD'" class="text-[10px] font-bold text-gray-400 mt-0.5">
+                             外幣: {{ formatCurrency(calculateExpenseItemTotalForeign(exp), exp.currency) }} <br class="hidden md:block"> <span class="md:hidden">|</span> (匯率 {{ exp.exchangeRate }})
+                          </div>
+                       </div>
                    </div>
 
                    <div v-if="exp.memo" class="w-full mt-3 bg-gray-50 text-[10px] md:text-xs text-gray-500 rounded p-2 border border-gray-100 border-l-2 border-l-gray-400">
