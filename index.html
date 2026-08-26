@@ -84,13 +84,6 @@
       }
       .ticket-divider { border-left: 2px dashed rgba(255,255,255,0.4); }
     }
-
-    /* 航班模組專屬水藍波點背景 */
-    .flight-bg {
-       background-color: #f0f8ff;
-       background-image: radial-gradient(#c0dbf7 2.5px, transparent 2.5px);
-       background-size: 24px 24px;
-    }
   </style>
 </head>
 <body>
@@ -303,7 +296,7 @@
 
       <!-- Main Content Area -->
       <!-- 取代原本標題的 mb-4 md:mb-6，改用 mt-4 md:mt-6 推開下方內容 -->
-      <div :class="{'flight-bg min-h-[70vh] pt-6 pb-16 px-4 md:px-8': currentView === '航班', 'max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pb-12 mt-4 md:mt-6': currentView !== '航班'}" class="animate-fade-in relative z-20">
+      <div class="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pb-12 mt-4 md:mt-6 animate-fade-in relative z-20">
         
         <!-- ==================== 【行程模組】 ==================== -->
         <div v-if="currentView === '行程'" class="space-y-4">
@@ -472,23 +465,24 @@
         </div>
 
         <!-- ==================== 【超Ｑ航班與名單模組】 ==================== -->
-        <div v-if="currentView === '航班'" class="max-w-3xl mx-auto space-y-4">
+        <div v-if="currentView === '航班'" class="space-y-4">
           
-          <div class="flex justify-between items-center mb-6">
+          <div class="flex justify-between items-center mb-2 md:mb-4 px-2 md:px-0">
             <div>
-              <h2 class="text-xl md:text-2xl font-black text-blue-800">✈️ 航班資訊總覽</h2>
-              <p class="text-[10px] md:text-xs text-blue-500 font-bold mt-1">統一管理您的班機細節與同行旅客清單</p>
+              <h2 class="text-xl md:text-2xl font-black text-gray-800">✈️ 航班資訊總覽</h2>
+              <p class="text-[10px] md:text-xs text-gray-500 font-bold mt-1">統一管理您的班機細節與同行旅客清單</p>
             </div>
             <button v-if="isEditor" @click="addFlight" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-5 py-2 rounded-full text-xs md:text-sm font-bold shadow-md transition-all flex items-center gap-1">
               <span class="text-lg leading-none">+</span> <span class="hidden md:inline">新增航班</span>
             </button>
           </div>
 
-          <div v-if="!tripData.flights || tripData.flights.length === 0" class="text-center py-16 bg-white/60 rounded-3xl border border-blue-100 backdrop-blur-sm">
-            <p class="text-blue-400 font-bold text-lg">尚未新增任何航班資訊</p>
+          <div v-if="!tripData.flights || tripData.flights.length === 0" class="text-center py-12 bg-white rounded-xl border border-gray-200 mx-2 md:mx-0">
+            <p class="text-gray-400 font-bold">尚未新增任何航班資訊</p>
           </div>
 
-          <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative mb-8 transition-transform hover:-translate-y-1">
+          <div class="grid grid-cols-1 gap-6 px-2 md:px-0">
+             <div v-for="(flight, fIdx) in tripData.flights" :key="flight.id" class="bg-white rounded-[32px] shadow-sm border-4 border-white outline outline-4 outline-[#e0f2fe]/60 overflow-hidden relative transition-transform hover:-translate-y-1">
              
              <div class="absolute top-4 right-4 flex gap-1.5 z-20">
                 <button v-if="isEditor && flight.isLocked" @click="flight.isLocked = false" class="bg-black/20 hover:bg-black/40 text-white w-7 h-7 rounded flex items-center justify-center text-sm transition-colors" title="編輯">✏️</button>
@@ -633,6 +627,7 @@
                  
                  <button v-if="isEditor && !flight.isLocked" @click="addPassenger(fIdx)" class="w-full mt-2 text-xs font-bold text-[#60a5fa] bg-white border-2 border-dashed border-blue-100 rounded-xl py-2.5 hover:bg-blue-50 hover:border-blue-300 transition-colors">＋ 加入旅客資訊</button>
              </div>
+          </div>
           </div>
         </div>
 
