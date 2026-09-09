@@ -364,17 +364,17 @@
                     <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
                     
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
-                      <!-- 統一大小的時間格子：使用相同的 padding 和 text-size，即使是單一時間也不會被縮小 -->
-                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base min-w-[75px] md:min-w-[105px] text-center flex-shrink-0 shadow-sm whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
-                      <span v-else class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base min-w-[75px] md:min-w-[105px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap shadow-sm">{{ item.startTime || '--:--' }} <span class="mx-1 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
+                      <!-- 統一大小的時間格子：使用固定的寬度，讓短時間與區間時間完全一樣寬 -->
+                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base w-[115px] md:w-[150px] text-center flex-shrink-0 shadow-sm whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
+                      <span v-else class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base w-[115px] md:w-[150px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap shadow-sm">{{ item.startTime || '--:--' }} <span class="mx-1 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
                       
                       <span class="font-bold text-gray-900 text-base md:text-lg">{{ item.activity || '未命名行程' }}</span>
                     </div>
 
                     <!-- 【唯讀模式全解禁】連結、地圖、備忘錄、多圖相簿 -->
                     <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2">
-                       <!-- 隱形佔位器，精準對齊上方時間格子與間距 -->
-                       <div class="min-w-[75px] md:min-w-[105px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
+                       <!-- 隱形佔位器，精準鎖死寬度對齊上方時間格子與間距 -->
+                       <div class="w-[115px] md:w-[150px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
                        <div class="flex-1 flex flex-col gap-2 min-w-0">
                            <div class="flex flex-wrap gap-1.5">
                                <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm text-blue-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
@@ -389,8 +389,8 @@
                     
                     <!-- 【交通動線】精準向左對齊時間格子 -->
                     <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="flex w-full mt-2 md:mt-3 mb-1">
-                       <!-- 新增：隱形佔位器，將交通方塊往右推至與行程名稱對齊 -->
-                       <div class="min-w-[75px] md:min-w-[105px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
+                       <!-- 隱形佔位器，精準鎖死寬度對齊上方時間格子 -->
+                       <div class="w-[115px] md:w-[150px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
                        <div class="text-[10px] md:text-xs text-gray-500 font-bold flex items-center">
                           <span class="bg-gray-50 border border-gray-200 shadow-sm px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-gray-600">
                              <span class="text-[14px] leading-none">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
@@ -460,8 +460,8 @@
                   
                   <!-- 編輯模式的連結、地圖、備忘錄區塊 -->
                   <div class="mt-1 flex w-full">
-                    <!-- 使用與上方時間格子等寬的隱形佔位器來對齊 -->
-                    <div class="flex-shrink-0 w-[130px] md:w-[180px] mr-1 md:mr-2 invisible hidden md:block"></div>
+                    <!-- 使用與上方時間格子等寬的隱形佔位器來對齊 (取消手機版隱藏，全面對齊) -->
+                    <div class="flex-shrink-0 w-[130px] md:w-[180px] mr-1 md:mr-2 invisible"></div>
                     <div class="flex-1 flex flex-col gap-1.5 min-w-0">
                         <template v-if="item.link !== undefined && item.link !== false">
                           <div v-if="!item.editLink && item.link" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm w-max">
@@ -531,8 +531,8 @@
 
                 <!-- 編輯模式的交通區塊 (直接對齊時間格子) -->
                 <div v-if="itemIndex < tripData.itinerary[activeDayTab].items.length - 1" class="my-1.5 md:my-2 flex w-full relative z-10">
-                  <!-- 新增：編輯模式的隱形佔位器 -->
-                  <div class="flex-shrink-0 w-[130px] md:w-[180px] mr-1 md:mr-2 invisible hidden md:block"></div>
+                  <!-- 編輯模式的隱形佔位器 (取消手機版隱藏，全面對齊) -->
+                  <div class="flex-shrink-0 w-[130px] md:w-[180px] mr-1 md:mr-2 invisible"></div>
                   <div class="bg-blue-50 border border-blue-200 rounded-full px-2 py-1 md:px-3 md:py-1.5 flex items-center shadow-sm focus-within:border-blue-400">
                     <span class="text-blue-600 font-bold hidden md:inline text-[10px] md:text-xs mr-1">🚌 移動</span><span class="text-blue-600 font-bold md:hidden text-[10px] mr-1">🚌</span>
                     <select v-model="tripData.itinerary[activeDayTab].transit[itemIndex].method" class="bg-transparent font-bold text-blue-700 outline-none cursor-pointer text-[10px] md:text-xs text-center pr-1">
