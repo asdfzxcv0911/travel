@@ -378,9 +378,19 @@
                   <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
                     <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
-                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm min-w-[55px] md:min-w-[70px] text-center flex-shrink-0">{{ item.startTime || '--:--' }}</span>
-                      <span v-else class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs min-w-[55px] md:min-w-[70px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap">{{ item.startTime || '--:--' }} <span class="mx-0.5 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
+                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm min-w-[60px] md:min-w-[75px] text-center flex-shrink-0 shadow-sm">{{ item.startTime || '--:--' }}</span>
+                      <span v-else class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-xs md:text-sm min-w-[60px] md:min-w-[75px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap shadow-sm">{{ item.startTime || '--:--' }} <span class="mx-1 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
                       <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                    </div>
+                    
+                    <!-- 交通提示 (僅在預覽/總行程顯示) -->
+                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="mt-3 mb-1 text-[10px] md:text-xs text-gray-500 font-bold flex items-center">
+                       <span class="bg-gray-50 border border-gray-100 shadow-sm px-2.5 py-1 rounded-md flex items-center gap-1.5 text-gray-600 relative -left-1.5">
+                          <span class="text-[14px] leading-none">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                          <span>{{ day.transit[itemIndex].method === '自訂' ? (day.transit[itemIndex].customMethod || '移動') : day.transit[itemIndex].method }}</span>
+                          <span class="text-gray-300 font-normal">|</span>
+                          <span class="text-blue-500">{{ day.transit[itemIndex].duration || 0 }} 分</span>
+                       </span>
                     </div>
                   </div>
                 </div>
@@ -1536,6 +1546,14 @@
             }
         };
 
+        const getTransitIcon = (method) => {
+            const map = {
+                '走路': '🚶', '自駕': '🚗', '地鐵/捷運': '🚇', '公車/客運': '🚌',
+                '計程車': '🚕', '高鐵/新幹線': '🚄', '台鐵/火車': '🚂', '飛機': '✈️', '渡輪': '🚢'
+            };
+            return map[method] || '📍';
+        };
+
         // 外幣加總
         const calculateExpenseItemTotalForeign = (item) => {
           if (!item.details) return 0;
@@ -2114,7 +2132,7 @@
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           saveStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, switchTab,
           alertDialog, confirmDialog, customAlert, customConfirm,
-          stayOptions, formatStayTime, toggleMenu, 
+          stayOptions, formatStayTime, toggleMenu, getTransitIcon,
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
           addFlight, removeFlight, addPassenger, removePassenger, searchFlightStatus,
           addTransport, removeTransport, addAccommodation, removeAccommodation,
