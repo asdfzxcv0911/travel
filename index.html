@@ -378,11 +378,9 @@
                   <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
                     <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
                     <div class="flex flex-wrap items-center gap-2 md:gap-3">
-                      <span class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm w-[55px] md:w-[70px] text-center">{{ item.startTime || '--:--' }}</span>
+                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm min-w-[55px] md:min-w-[70px] text-center flex-shrink-0">{{ item.startTime || '--:--' }}</span>
+                      <span v-else class="font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs min-w-[55px] md:min-w-[70px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap">{{ item.startTime || '--:--' }} <span class="mx-0.5 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
                       <span class="font-bold text-gray-900 text-sm md:text-lg">{{ item.activity || '未命名行程' }}</span>
-                      <div v-if="item.stay" class="flex items-center bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px] md:text-xs">
-                        <span class="text-gray-500 font-bold mr-1">停留</span><span class="font-black text-gray-800">{{ formatStayTime(item.stay) }}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -414,7 +412,11 @@
                 <div class="absolute -left-[14.5px] md:-left-[22px] top-3.5 md:top-4 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm hidden md:block"></div>
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-1.5 md:p-2 hover:shadow-md transition-shadow relative z-20">
                   <div class="flex items-center gap-1 md:gap-2 w-full">
-                    <input type="time" v-model="item.startTime" :disabled="itemIndex !== 0" @change="recalculateDay(activeDayTab)" class="border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[65px] md:w-[120px] focus-theme outline-none text-center bg-white text-gray-800">
+                    <div class="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+                      <input type="time" v-model="item.startTime" @change="userChangedStartTime(activeDayTab, itemIndex)" class="border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[60px] md:w-[85px] focus-theme outline-none text-center bg-white text-gray-800">
+                      <span class="text-gray-400 font-bold text-[10px] md:text-xs">-</span>
+                      <input type="time" v-model="item.endTime" @change="userChangedEndTime(activeDayTab, itemIndex)" class="border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[60px] md:w-[85px] focus-theme outline-none text-center bg-white text-gray-800">
+                    </div>
                     <input type="text" v-model="item.activity" placeholder="行程名稱" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     <div class="relative flex-shrink-0">
                       <button @click="toggleMenu(activeDayTab, itemIndex)" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
@@ -1837,6 +1839,18 @@
                         day.items = []; day.transit = [];
                      }
                   }
+                  if (day.items) {
+                     day.items.forEach((item) => {
+                         if (!item.endTime && item.startTime) {
+                             let [h, m] = item.startTime.split(':').map(Number);
+                             let stay = Number(item.stay || 0);
+                             let eTime = h * 60 + m + stay;
+                             let eH = Math.floor(eTime / 60) % 24;
+                             let eM = eTime % 60;
+                             item.endTime = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
+                         }
+                     });
+                  }
                });
             }
 
@@ -1942,6 +1956,7 @@
         };
 
         const formatDateRange = (start, end) => start && end ? `${start.replace(/-/g, '/')} ~ ${end.replace(/-/g, '/')}` : '';
+        
         const recalculateDay = (dayIdx) => {
           const day = tripData.value.itinerary[dayIdx]; if (day.items.length === 0) return;
           let [hours, mins] = (day.items[0].startTime || '09:00').split(':').map(Number);
@@ -1949,9 +1964,44 @@
           for(let i = 0; i < day.items.length; i++) {
             let h = Math.floor(currentTime / 60) % 24; let m = currentTime % 60;
             day.items[i].startTime = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-            currentTime += Number(day.items[i].stay || 0); 
+            
+            let stayDuration = Number(day.items[i].stay || 0);
+            let eTime = currentTime + stayDuration;
+            let eH = Math.floor(eTime / 60) % 24; let eM = eTime % 60;
+            day.items[i].endTime = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
+            
+            currentTime += stayDuration; 
             if (i < day.items.length - 1 && day.transit[i]) currentTime += Number(day.transit[i].duration || 0);
           }
+        };
+
+        const userChangedStartTime = (dayIdx, itemIdx) => {
+            const day = tripData.value.itinerary[dayIdx];
+            if (itemIdx === 0) {
+                recalculateDay(dayIdx);
+            } else {
+                const item = day.items[itemIdx];
+                const prevItem = day.items[itemIdx - 1];
+                let [pEH, pEM] = (prevItem.endTime || '00:00').split(':').map(Number);
+                let [sH, sM] = (item.startTime || '00:00').split(':').map(Number);
+                let pETime = pEH * 60 + pEM;
+                let sTime = sH * 60 + sM;
+                let newTransit = sTime >= pETime ? sTime - pETime : (sTime + 24*60) - pETime;
+                if (day.transit[itemIdx - 1]) day.transit[itemIdx - 1].duration = newTransit;
+                recalculateDay(dayIdx);
+            }
+        };
+
+        const userChangedEndTime = (dayIdx, itemIdx) => {
+            const day = tripData.value.itinerary[dayIdx];
+            const item = day.items[itemIdx];
+            let [sH, sM] = (item.startTime || '00:00').split(':').map(Number);
+            let [eH, eM] = (item.endTime || '00:00').split(':').map(Number);
+            let sTime = sH * 60 + sM;
+            let eTime = eH * 60 + eM;
+            let newStay = eTime >= sTime ? eTime - sTime : (eTime + 24*60) - sTime;
+            item.stay = newStay;
+            recalculateDay(dayIdx);
         };
 
         const toggleMenu = (dayIdx, itemIdx) => {
@@ -2009,7 +2059,7 @@
         const addItem = (dayIdx) => { 
           const day = tripData.value.itinerary[dayIdx];
           const isFirstItem = day.items.length === 0;
-          day.items.push({ id: generateId(), startTime: isFirstItem ? '09:00' : '', activity: '', stay: '', showMenu: false }); 
+          day.items.push({ id: generateId(), startTime: isFirstItem ? '09:00' : '', endTime: isFirstItem ? '09:00' : '', activity: '', stay: 0, showMenu: false }); 
           if (!isFirstItem) {
              day.transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); 
           }
@@ -2071,7 +2121,7 @@
           addLuggageCategory, removeLuggageCategory, addLuggageItem, removeLuggageItem, initDefaultLuggage,
           expenseCategories, currencyList, availableRates, updateExchangeRate,
           getCategoryIcon, getCategoryColor, getTypeLabel, getTypeColor, getMultiplier, calculateExpenseItemTotalForeign, calculateExpenseItemTotalTWD, totalExpense, expenseTotalsByCategory, pieChartStyle, addExpense, removeExpense, addExpenseDetail, removeExpenseDetail, formatCurrency,
-          addItem, deleteItem, recalculateDay, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField,
+          addItem, deleteItem, recalculateDay, userChangedStartTime, userChangedEndTime, dragStart, dragEnter, dragLeave, dragEnd, dragDrop, openField,
           handleImageUpload, moveToDay
         }
       }
