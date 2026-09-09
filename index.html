@@ -1678,7 +1678,9 @@
                              item.images = [item.image];
                              delete item.image;
                          }
-                         if (!item.images) item.images = [];
+                         if (!item.images || (Array.isArray(item.images) && item.images.length === 0)) {
+                             item.images = false;
+                         }
                          if (item.tempImageUrl === undefined) item.tempImageUrl = '';
 
                          if (!item.endTime && item.startTime) {
@@ -1845,7 +1847,7 @@
         const addItem = (dayIdx) => { 
           const day = tripData.value.itinerary[dayIdx];
           const isFirstItem = day.items.length === 0;
-          day.items.push({ id: generateId(), startTime: isFirstItem ? '09:00' : '', endTime: isFirstItem ? '09:00' : '', activity: '', stay: 0, showMenu: false, images: [], tempImageUrl: '' }); 
+          day.items.push({ id: generateId(), startTime: isFirstItem ? '09:00' : '', endTime: isFirstItem ? '09:00' : '', activity: '', stay: 0, showMenu: false, images: false, tempImageUrl: '' }); 
           if (!isFirstItem) { day.transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' }); }
           recalculateDay(dayIdx); 
         };
