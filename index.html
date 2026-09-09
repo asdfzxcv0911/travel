@@ -313,6 +313,12 @@
         </div>
       </div>
 
+      <!-- 圖片全螢幕放大鏡 Modal (新增) -->
+      <div v-if="activeImage" class="fixed inset-0 bg-black/90 z-[600] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeImage = null">
+        <button @click="activeImage = null" class="absolute top-4 right-4 md:top-8 md:right-8 text-white hover:text-gray-300 text-4xl font-bold z-[610] transition-colors">&times;</button>
+        <img :src="activeImage" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+      </div>
+
       <div class="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 pt-4 md:pt-6 pb-12 animate-fade-in relative z-20 w-full">
         
         <!-- ==================== 【行程模組】 ==================== -->
@@ -376,7 +382,7 @@
                                <span v-if="item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
                            </div>
                            <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2 hide-scrollbar pb-1">
-                               <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" class="rounded-lg h-24 md:h-32 object-cover border border-gray-200 shadow-sm shrink-0 w-auto">
+                               <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-lg h-24 md:h-32 object-cover border border-gray-200 shadow-sm shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
                            </div>
                        </div>
                     </div>
@@ -498,7 +504,7 @@
                            <!-- 橫向滑動照片預覽 -->
                            <div v-if="item.images.length > 0" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2">
                              <div v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" class="relative group shrink-0">
-                                <img :src="imgSrc" class="rounded-lg h-20 md:h-28 object-cover border border-gray-200 shadow-sm w-auto">
+                                <img :src="imgSrc" @click="activeImage = imgSrc" class="rounded-lg h-20 md:h-28 object-cover border border-gray-200 shadow-sm w-auto cursor-pointer hover:opacity-90 transition-opacity">
                                 <button @click="removeImage(activeDayTab, itemIndex, imgIdx)" class="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">✕</button>
                              </div>
                            </div>
@@ -1313,6 +1319,7 @@
         const currentView = ref('行程');
         const activeDayTab = ref('overview');
         const activeMemo = ref(null); 
+        const activeImage = ref(null);
 
         const alertDialog = ref({ show: false, message: '' });
         const confirmDialog = ref({ show: false, message: '', action: null });
@@ -1905,7 +1912,7 @@
         const moveToDay = (fromDayIdx, itemIdx, event) => {
           const toDayIdx = parseInt(event.target.value); if(isNaN(toDayIdx)) return;
           const movedItem = tripData.value.itinerary[fromDayIdx].items.splice(itemIdx, 1)[0]; movedItem.showMenu = false; 
-          if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.pop();
+          if (tripData.value.itinerary[fromDayIdx].transit.length > 0) tripData.value.itinerary[fromDayIdx].transit.splice(Math.max(0, itemIdx - 1), 1);
           recalculateDay(fromDayIdx);
           tripData.value.itinerary[toDayIdx].items.push(movedItem);
           if (tripData.value.itinerary[toDayIdx].items.length > 1) tripData.value.itinerary[toDayIdx].transit.push({ method: '地鐵/捷運', duration: 30, customMethod: '' });
@@ -1916,7 +1923,7 @@
         return {
           appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, guestLogin, logout, deleteTripFromCloud, copyShareLink,
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
-          saveStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, switchTab,
+          saveStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, activeImage, switchTab,
           alertDialog, confirmDialog, customAlert, customConfirm,
           stayOptions, formatStayTime, toggleMenu, getTransitIcon,
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
