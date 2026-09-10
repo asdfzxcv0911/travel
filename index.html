@@ -231,6 +231,35 @@
             <label class="block mb-1.5 font-medium text-sm">共同編輯者信箱 (選填，多人請用逗號分隔)</label>
             <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com, friend2@gmail.com" class="custom-input py-2 text-sm">
           </div>
+          
+          <!-- 全新：模組啟用開關 -->
+          <div class="pt-2 border-t border-gray-100">
+            <label class="block mb-2 font-medium text-sm text-gray-700">啟用模組 (依旅程需求自由開關)</label>
+            <div class="flex flex-wrap gap-2.5">
+               <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors shadow-sm">
+                  <input type="checkbox" v-model="setupData.modules.flights" class="accent-[var(--theme-color)] w-4 h-4 rounded cursor-pointer">
+                  <span class="text-sm font-bold text-gray-600">✈️ 航班</span>
+               </label>
+               <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors shadow-sm">
+                  <input type="checkbox" v-model="setupData.modules.transports" class="accent-[var(--theme-color)] w-4 h-4 rounded cursor-pointer">
+                  <span class="text-sm font-bold text-gray-600">🚅 交通</span>
+               </label>
+               <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors shadow-sm">
+                  <input type="checkbox" v-model="setupData.modules.accommodations" class="accent-[var(--theme-color)] w-4 h-4 rounded cursor-pointer">
+                  <span class="text-sm font-bold text-gray-600">🏨 住宿</span>
+               </label>
+               <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors shadow-sm">
+                  <input type="checkbox" v-model="setupData.modules.luggage" class="accent-[var(--theme-color)] w-4 h-4 rounded cursor-pointer">
+                  <span class="text-sm font-bold text-gray-600">🎒 行李</span>
+               </label>
+               <label class="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 transition-colors shadow-sm">
+                  <input type="checkbox" v-model="setupData.modules.expenses" class="accent-[var(--theme-color)] w-4 h-4 rounded cursor-pointer">
+                  <span class="text-sm font-bold text-gray-600">💸 花費</span>
+               </label>
+            </div>
+          </div>
+          <!-- 模組開關結束 -->
+
         </div>
         <div class="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
           <button @click="closeSetup" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-200 rounded-md text-sm transition-colors">取消</button>
@@ -356,48 +385,56 @@
                    </div>
                 </div>
 
-                <div class="bg-white p-4 md:p-5 rounded-xl border border-gray-200 shadow-sm pl-6 md:pl-8 relative">
-                  <div v-if="day.items.length > 0" class="absolute left-2.5 md:left-3 top-5 bottom-5 w-0.5 bg-gray-100"></div>
+                <div class="bg-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm pl-6 md:pl-8 relative">
+                  <div v-if="day.items.length > 0" class="absolute left-2.5 md:left-3 top-6 bottom-6 w-0.5 bg-slate-200"></div>
                   <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
                   
-                  <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-4">
-                    <div class="absolute -left-[23px] md:-left-[27px] top-1.5 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-2 border-white shadow-sm"></div>
+                  <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-6 md:mb-8 last:mb-0">
+                    <div class="absolute -left-[23px] md:-left-[27px] top-1.5 md:top-2 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-[2px] border-white shadow-sm ring-1 ring-black/5"></div>
                     
-                    <div class="flex flex-wrap items-center gap-2 md:gap-3">
-                      <!-- 統一大小的時間格子：使用固定的寬度，讓短時間與區間時間完全一樣寬 -->
-                      <span v-if="!item.endTime || item.startTime === item.endTime" class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base w-[115px] md:w-[150px] text-center flex-shrink-0 shadow-sm whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
-                      <span v-else class="font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-sm md:text-base w-[115px] md:w-[150px] text-center flex-shrink-0 flex items-center justify-center whitespace-nowrap shadow-sm">{{ item.startTime || '--:--' }} <span class="mx-1 text-gray-400 font-normal">~</span> {{ item.endTime }}</span>
+                    <div class="flex items-start gap-3 md:gap-4 w-full">
+                      <!-- 統一大小的時間格子 (精緻卡片化，強制不換行) -->
+                      <div class="w-[110px] md:w-[150px] shrink-0">
+                        <div class="bg-slate-50 border border-slate-200 px-2 py-1.5 md:px-3 md:py-2 rounded-xl text-center shadow-sm">
+                          <span v-if="!item.endTime || item.startTime === item.endTime" class="font-black text-slate-700 text-sm md:text-base tracking-wide whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
+                          <span v-else class="font-black text-slate-700 text-sm md:text-base tracking-wide whitespace-nowrap flex items-center justify-center">{{ item.startTime || '--:--' }} <span class="mx-0.5 text-slate-400 font-normal scale-75">~</span> {{ item.endTime }}</span>
+                        </div>
+                      </div>
                       
-                      <span class="font-bold text-gray-900 text-base md:text-lg">{{ item.activity || '未命名行程' }}</span>
+                      <!-- 行程名稱 (放大、加粗、允許自動換行不斷字) -->
+                      <div class="flex-1 min-w-0 pt-0.5 md:pt-1">
+                        <h4 class="font-black text-slate-900 text-lg md:text-2xl leading-snug break-words">{{ item.activity || '未命名行程' }}</h4>
+                      </div>
                     </div>
 
-                    <!-- 【唯讀模式全解禁】連結、地圖、備忘錄、多圖相簿 -->
-                    <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2">
+                    <!-- 【唯讀模式附件】連結、地圖、備忘錄、多圖相簿 -->
+                    <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2 md:mt-3">
                        <!-- 隱形佔位器，精準鎖死寬度對齊上方時間格子與間距 -->
-                       <div class="w-[115px] md:w-[150px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
-                       <div class="flex-1 flex flex-col gap-2 min-w-0">
-                           <div class="flex flex-wrap gap-1.5">
-                               <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm text-blue-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
-                               <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1 bg-green-50 border border-green-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm text-green-600 font-bold hover:underline truncate max-w-[150px] md:max-w-[200px]">📍 開啟地圖</a>
-                               <span v-if="item.memo" class="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-[11px] md:text-xs shadow-sm text-yellow-600 font-bold cursor-pointer hover:underline truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
+                       <div class="w-[110px] md:w-[150px] mr-3 md:mr-4 shrink-0 invisible"></div>
+                       <div class="flex-1 flex flex-col gap-2.5 min-w-0">
+                           <div class="flex flex-wrap gap-2">
+                               <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-blue-700 font-bold hover:bg-blue-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">🔗 相關連結</a>
+                               <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-emerald-700 font-bold hover:bg-emerald-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">📍 開啟地圖</a>
+                               <span v-if="item.memo" class="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-amber-700 font-bold cursor-pointer hover:bg-amber-100 transition-colors truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
                            </div>
-                           <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2 hide-scrollbar pb-1">
-                               <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-lg h-24 md:h-32 object-cover border border-gray-200 shadow-sm shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
+                           <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2.5 hide-scrollbar pb-1">
+                               <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-sm shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
                            </div>
                        </div>
                     </div>
                     
-                    <!-- 【交通動線】精準向左對齊時間格子 -->
-                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="flex w-full mt-2 md:mt-3 mb-1">
-                       <!-- 隱形佔位器，精準鎖死寬度對齊上方時間格子 -->
-                       <div class="w-[115px] md:w-[150px] mr-2 md:mr-3 flex-shrink-0 invisible"></div>
-                       <div class="text-[10px] md:text-xs text-gray-500 font-bold flex items-center">
-                          <span class="bg-gray-50 border border-gray-200 shadow-sm px-2.5 py-1.5 rounded-md flex items-center gap-1.5 text-gray-600">
-                             <span class="text-[14px] leading-none">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
-                             <span>{{ day.transit[itemIndex].method === '自訂' ? (day.transit[itemIndex].customMethod || '移動') : day.transit[itemIndex].method }}</span>
-                             <span class="text-gray-300 font-normal">|</span>
-                             <span class="text-blue-600">{{ day.transit[itemIndex].duration || 0 }} 分</span>
-                          </span>
+                    <!-- 【交通動線】膠囊化與虛線質感設計 -->
+                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="flex w-full mt-4 md:mt-5 mb-2 relative">
+                       <!-- 隱形佔位器 -->
+                       <div class="w-[110px] md:w-[150px] mr-3 md:mr-4 shrink-0 invisible"></div>
+                       <div class="flex-1 flex items-center min-w-0">
+                          <div class="bg-white border border-dashed border-slate-300 shadow-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full flex items-center gap-1.5 md:gap-2 text-slate-500 hover:border-slate-400 transition-colors">
+                             <span class="text-slate-300 text-[10px] md:text-xs font-black">⬇</span>
+                             <span class="text-[14px] md:text-base leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                             <span class="font-bold text-[11px] md:text-sm text-slate-700 whitespace-nowrap">{{ day.transit[itemIndex].method === '自訂' ? (day.transit[itemIndex].customMethod || '移動') : day.transit[itemIndex].method }}</span>
+                             <span class="text-slate-300 font-normal">|</span>
+                             <span class="text-blue-600 font-black text-[11px] md:text-sm whitespace-nowrap">{{ day.transit[itemIndex].duration || 0 }} <span class="text-[9px] md:text-xs font-bold text-blue-500">分</span></span>
+                          </div>
                        </div>
                     </div>
                   </div>
@@ -1330,12 +1367,13 @@
         const customAlert = (msg) => { alertDialog.value = { show: true, message: msg }; };
         const customConfirm = (msg, action) => { confirmDialog.value = { show: true, message: msg, action }; };
 
-        const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '' });
+        const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } });
         
         const tripData = ref({
           ownerId: '', tripName: '未命名行程', destination: '', startDate: '', endDate: '', themeColor: '#e91e63',
           coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
           expenseSettings: { isPublic: false, pax: { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
+          modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true },
           flights: [], transports: [], accommodations: [], luggage: []
         });
 
@@ -1347,10 +1385,21 @@
         });
 
         const visibleTabs = computed(() => {
-          if (isEditor.value) return tabs;
-          const guestTabs = ['行程', '航班', '交通', '住宿', '行李'];
-          if (tripData.value.expenseSettings && tripData.value.expenseSettings.isPublic) guestTabs.push('花費');
-          return guestTabs;
+          let currentTabs = ['行程'];
+          const m = tripData.value.modules || { flights: true, transports: true, accommodations: true, luggage: true, expenses: true };
+          
+          if (m.flights) currentTabs.push('航班');
+          if (m.transports) currentTabs.push('交通');
+          if (m.accommodations) currentTabs.push('住宿');
+          if (m.luggage) currentTabs.push('行李');
+          
+          // 花費模組的雙層鎖：第一層看設定有沒有開，第二層看是不是編輯者或有沒有公開
+          if (m.expenses) {
+             if (isEditor.value) { currentTabs.push('花費'); }
+             else if (tripData.value.expenseSettings && tripData.value.expenseSettings.isPublic) { currentTabs.push('花費'); }
+          }
+          
+          return currentTabs;
         });
 
         watch(visibleTabs, (newTabs) => { if (!newTabs.includes(currentView.value)) currentView.value = '行程'; });
@@ -1620,9 +1669,10 @@
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
             expenseSettings: { isPublic: false, pax: { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
+            modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true },
             flights: [], transports: [], accommodations: [], luggage: []
           };
-          setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '' };
+          setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } };
           isEditor.value = true; appState.value = 'TRIP'; isSetup.value = true;
           nextTick(() => {
             try {
@@ -1657,6 +1707,7 @@
             if (!data.coEditors || !Array.isArray(data.coEditors)) data.coEditors = [];
             
             if (!data.expenses) data.expenses = [];
+            if (!data.modules) data.modules = { flights: true, transports: true, accommodations: true, luggage: true, expenses: true };
             if (!data.expenseSettings) { data.expenseSettings = { isPublic: false, pax: { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' }; } 
             else { if (!data.expenseSettings.pax) data.expenseSettings.pax = { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }; if (data.expenseSettings.pax.elder === undefined) data.expenseSettings.pax.elder = 0; }
 
@@ -1735,7 +1786,10 @@
         const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
 
         const openSetup = () => {
-          setupData.value = { name: tripData.value.tripName, destination: tripData.value.destination, startDate: tripData.value.startDate, endDate: tripData.value.endDate, themeColor: tripData.value.themeColor, coEditorsStr: (tripData.value.coEditors || []).join(', ') };
+          setupData.value = { 
+             name: tripData.value.tripName, destination: tripData.value.destination, startDate: tripData.value.startDate, endDate: tripData.value.endDate, themeColor: tripData.value.themeColor, coEditorsStr: (tripData.value.coEditors || []).join(', '),
+             modules: tripData.value.modules ? JSON.parse(JSON.stringify(tripData.value.modules)) : { flights: true, transports: true, accommodations: true, luggage: true, expenses: true }
+          };
           isSetup.value = true;
           nextTick(() => {
             try {
@@ -1756,6 +1810,7 @@
         const generateTrip = () => {
           if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) return customAlert('請填寫完整資訊並選擇日期！');
           tripData.value.tripName = setupData.value.name; tripData.value.destination = setupData.value.destination; tripData.value.startDate = setupData.value.startDate; tripData.value.endDate = setupData.value.endDate; tripData.value.themeColor = setupData.value.themeColor;
+          tripData.value.modules = JSON.parse(JSON.stringify(setupData.value.modules));
           if (setupData.value.coEditorsStr) { tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim().toLowerCase()).filter(e => e); } else { tripData.value.coEditors = []; }
 
           const start = new Date(setupData.value.startDate); const end = new Date(setupData.value.endDate);
