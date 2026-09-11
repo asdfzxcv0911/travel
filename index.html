@@ -404,12 +404,12 @@
                    </div>
                 </div>
 
-                <div class="bg-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm pl-6 md:pl-8 relative">
-                  <div v-if="day.items.length > 0" class="absolute left-2.5 md:left-3 top-6 bottom-6 w-0.5 bg-slate-200"></div>
+                <div class="bg-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm pl-16 md:pl-20 relative">
+                  <div v-if="day.items.length > 0" class="absolute left-7 md:left-8 -translate-x-1/2 top-6 bottom-6 w-0.5 bg-slate-200"></div>
                   <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
                   
-                  <div v-for="(item, itemIndex) in day.items" :key="itemIndex" class="relative z-10 mb-6 md:mb-8 last:mb-0">
-                    <div class="absolute -left-[23px] md:-left-[27px] top-5 md:top-6 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-[2px] border-white shadow-sm ring-1 ring-black/5"></div>
+                  <div v-for="(item, itemIndex) in day.items" class="relative z-10 mb-6 md:mb-8 last:mb-0">
+                    <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 top-5 md:top-6 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-[2px] border-white shadow-sm ring-1 ring-black/5"></div>
                     
                     <div class="flex items-center gap-3 md:gap-4 w-full">
                       <!-- 統一大小的時間格子 (精緻卡片化，鎖定寬度與高度) -->
@@ -446,18 +446,12 @@
                        </div>
                     </div>
                     
-                    <!-- 【交通動線】膠囊化與虛線質感設計 -->
-                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="flex w-full mt-4 md:mt-5 mb-2 relative">
-                       <!-- 隱形佔位器 -->
-                       <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible"></div>
-                       <div class="flex-1 flex items-center min-w-0">
-                          <div class="bg-white border border-dashed border-slate-300 shadow-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full flex items-center gap-1.5 md:gap-2 text-slate-500 hover:border-slate-400 transition-colors">
-                             <span class="text-slate-300 text-[10px] md:text-xs font-black">⬇</span>
-                             <span class="text-[14px] md:text-base leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
-                             <span class="font-bold text-[11px] md:text-sm text-slate-700 whitespace-nowrap">{{ day.transit[itemIndex].method === '自訂' ? (day.transit[itemIndex].customMethod || '移動') : day.transit[itemIndex].method }}</span>
-                             <span class="text-slate-300 font-normal">|</span>
-                             <span class="text-blue-600 font-black text-[11px] md:text-sm whitespace-nowrap">{{ day.transit[itemIndex].duration || 0 }} <span class="text-[9px] md:text-xs font-bold text-blue-500">分</span></span>
-                          </div>
+                    <!-- 【交通動線】鑲嵌時間軸設計 -->
+                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-6 md:mt-8 mb-4 md:mb-6 relative flex items-center h-4">
+                       <!-- 絕對置中在時間軸線上的交通圖示與時間 -->
+                       <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 flex flex-col items-center justify-center bg-white z-10 py-1.5 px-1.5 min-w-[36px] whitespace-nowrap">
+                           <span class="text-[16px] md:text-[18px] leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                           <span class="text-[10px] md:text-[11px] font-black text-slate-400 mt-1 leading-none tracking-tighter">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
                        </div>
                     </div>
                   </div>
@@ -1551,6 +1545,16 @@
             return map[method] || '📍';
         };
 
+        const formatDuration = (val) => {
+            if (!val) return '0m';
+            const m = parseInt(val);
+            if (isNaN(m)) return '0m';
+            if (m < 60) return `${m}m`;
+            const h = Math.floor(m / 60);
+            const rm = m % 60;
+            return rm > 0 ? `${h}h${rm}m` : `${h}h`;
+        };
+
         const calculateExpenseItemTotalForeign = (item) => {
           if (!item.details) return 0;
           return item.details.reduce((sum, d) => sum + (Number(d.price) || 0) * getMultiplier(d.type), 0);
@@ -2069,7 +2073,7 @@
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           saveStatus, shareStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, activeImage, shareDialog, copyToClipboard, switchTab,
           alertDialog, confirmDialog, customAlert, customConfirm,
-          stayOptions, formatStayTime, toggleMenu, getTransitIcon,
+          stayOptions, formatStayTime, toggleMenu, getTransitIcon, formatDuration,
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
           addFlight, removeFlight, addPassenger, removePassenger, searchFlightStatus,
           addTransport, removeTransport, addAccommodation, removeAccommodation, getHotelGradient,
