@@ -289,11 +289,22 @@
       <!-- 頂部權限列與標題導覽列 (完全固定在上方 sticky) -->
       <div class="sticky top-0 z-[100] w-full flex flex-col bg-white">
         <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center relative">
+          
+          <!-- 左側：大廳按鈕與版本狀態 -->
           <div class="flex items-center gap-2">
+             <button @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700 mr-1 md:mr-2">
+               ⬅️ <span class="hidden sm:inline">大廳</span>
+             </button>
+             
+             <!-- 補回唯讀模式提示標籤 -->
+             <span v-if="!isEditor" class="bg-blue-900/50 text-blue-300 border border-blue-800 px-2 py-0.5 rounded text-[10px] md:text-xs font-bold shadow-sm">👁️ 唯讀</span>
+             
              <span v-if="isEditor" class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v21</span>
-             
              <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
-             
+          </div>
+          
+          <!-- 右側：功能按鈕群組 -->
+          <div class="flex items-center gap-2 ml-auto">
              <button v-if="isEditor" @click="openSetup" class="bg-gray-800 hover:bg-gray-700 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-700">
                ⚙️ <span class="hidden sm:inline">設定</span>
              </button>
@@ -306,7 +317,8 @@
                </template>
              </button>
              
-             <button @click="exportToText" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-600">
+             <!-- 設定匯出文字按鈕僅在編輯模式顯示 -->
+             <button v-if="isEditor" @click="exportToText" class="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 md:px-3 md:py-1 rounded font-bold shadow-sm flex items-center gap-1 transition-colors border border-gray-600">
                📄 <span class="hidden sm:inline">匯出文字</span><span class="sm:hidden">匯出</span>
              </button>
              
