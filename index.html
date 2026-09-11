@@ -467,7 +467,7 @@
                   <div v-if="day.items.length > 0" class="absolute left-7 md:left-8 -translate-x-1/2 top-6 bottom-6 w-0.5 bg-slate-200"></div>
                   <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
                   
-                  <div v-for="(item, itemIndex) in day.items" class="relative z-10 mb-6 md:mb-8 last:mb-0">
+                  <div v-for="(item, itemIndex) in day.items" class="relative z-10 mb-1 md:mb-1.5 last:mb-0">
                     <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 top-5 md:top-6 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-[2px] border-white shadow-sm ring-1 ring-black/5"></div>
                     
                     <div class="flex items-center gap-3 md:gap-4 w-full">
@@ -490,10 +490,10 @@
                     </div>
 
                     <!-- 【唯讀模式附件】連結、地圖、備忘錄、多圖相簿 -->
-                    <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2 md:mt-3">
+                    <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-1 md:mt-1.5">
                        <!-- 隱形佔位器，同步修正寬度 -->
                        <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible"></div>
-                       <div class="flex-1 flex flex-col gap-2.5 min-w-0">
+                       <div class="flex-1 flex flex-col gap-1.5 min-w-0">
                            <div v-if="item.link || item.map" class="flex flex-wrap gap-2">
                                <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-blue-700 font-bold hover:bg-blue-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">🔗 連結</a>
                                <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-emerald-700 font-bold hover:bg-emerald-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">📍 地圖</a>
@@ -512,11 +512,11 @@
                     </div>
                     
                     <!-- 【交通動線】鑲嵌時間軸設計 -->
-                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-6 md:mt-8 mb-4 md:mb-6 relative flex items-center h-4">
+                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-0 mb-0 relative flex items-center h-2 md:h-3">
                        <!-- 絕對置中在時間軸線上的交通圖示與時間 -->
-                       <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 flex flex-col items-center justify-center bg-white z-10 py-1.5 px-1.5 min-w-[36px] whitespace-nowrap">
-                           <span class="text-[16px] md:text-[18px] leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
-                           <span class="text-[10px] md:text-[11px] font-black text-slate-400 mt-1 leading-none tracking-tighter">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
+                       <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 flex flex-col items-center justify-center bg-white z-10 py-1 px-1 min-w-[32px] whitespace-nowrap">
+                           <span class="text-[14px] md:text-[16px] leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                           <span class="text-[9px] md:text-[10px] font-black text-slate-400 mt-0.5 leading-none tracking-tighter">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
                        </div>
                     </div>
                   </div>
