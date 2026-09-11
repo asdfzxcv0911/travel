@@ -290,15 +290,7 @@
       <div class="sticky top-0 z-[100] w-full flex flex-col bg-white">
         <div class="bg-gray-900 text-white text-xs md:text-sm px-4 py-2 flex justify-between items-center relative">
           <div class="flex items-center gap-2">
-            <button v-if="currentUser" @click="backToDashboard" class="bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded text-gray-300 mr-2 transition-colors">⬅ 大廳</button>
-            <span class="hidden md:inline">🔐 權限狀態：</span>
-            <span v-if="isEditor && isOwner" class="font-bold text-green-400 hidden md:inline">擁有者 (編輯中)</span>
-            <span v-else-if="isEditor && !isOwner" class="font-bold text-green-400 hidden md:inline">共同編輯者 (編輯中)</span>
-            <span v-else class="font-bold text-yellow-400 hidden md:inline">訪客 (唯讀預覽)</span>
-          </div>
-          
-          <div class="flex items-center gap-2">
-             <span class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v21</span>
+             <span v-if="isEditor" class="text-[10px] md:text-xs font-bold text-gray-400 hidden sm:inline mr-1">版本: v21</span>
              
              <span v-if="isEditor" class="text-[10px] md:text-xs font-bold hidden sm:inline mr-1" :class="saveStatus.includes('正在') ? 'animate-pulse text-yellow-400' : 'text-green-400'">{{ saveStatus }}</span>
              
@@ -436,11 +428,17 @@
                        <!-- 隱形佔位器，同步修正寬度 -->
                        <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible"></div>
                        <div class="flex-1 flex flex-col gap-2.5 min-w-0">
-                           <div class="flex flex-wrap gap-2">
+                           <div v-if="item.link || item.map" class="flex flex-wrap gap-2">
                                <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-blue-700 font-bold hover:bg-blue-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">🔗 連結</a>
                                <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-emerald-700 font-bold hover:bg-emerald-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">📍 地圖</a>
-                               <span v-if="item.memo" class="flex items-center gap-1.5 bg-amber-50/80 border border-amber-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-amber-700 font-bold cursor-pointer hover:bg-amber-100 transition-colors truncate max-w-[150px] md:max-w-[200px]" @click="activeMemo = item.memo">📝 備忘錄</span>
                            </div>
+                           
+                           <!-- 備忘錄智慧折疊顯示 -->
+                           <div v-if="item.memo" @click="activeMemo = item.memo" class="cursor-pointer group flex items-start gap-1.5 bg-gray-50/50 border-l-2 border-gray-300 rounded-r-lg px-2.5 py-1.5 hover:bg-gray-100 transition-colors w-full" title="點擊查看完整備忘錄">
+                               <span class="text-[11px] md:text-xs opacity-60 mt-px shrink-0">📝</span>
+                               <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors whitespace-pre-line break-words flex-1 min-w-0">{{ item.memo }}</p>
+                           </div>
+
                            <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2.5 hide-scrollbar pb-1">
                                <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-sm shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
                            </div>
