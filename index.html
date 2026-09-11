@@ -1075,7 +1075,8 @@
                  </div>
 
                  <div class="bg-white/10 border border-white/20 rounded-xl p-3 md:p-4 text-center relative z-10 mt-auto">
-                    <p class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間 (可點擊選擇)</p>
+                    <p v-if="isEditor" class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間 (可點擊選擇)</p>
+                    <p v-else class="text-[10px] text-indigo-200 font-bold uppercase tracking-widest mb-1">入住期間</p>
                     <div v-if="isEditor">
                        <input type="text" v-model="hotel.dateRange" placeholder="點擊選擇區間" class="range-date-picker w-full text-center text-sm md:text-base font-black text-white bg-transparent border-b border-dashed border-white/50 py-1 cursor-pointer outline-none placeholder-white/50 focus:border-white">
                     </div>
