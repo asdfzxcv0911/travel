@@ -95,6 +95,8 @@
     .checkbox-custom { accent-color: var(--theme-color); width: 1.25rem; height: 1.25rem; cursor: pointer; }
     .strikethrough { text-decoration: line-through; color: #9ca3af; }
     .flatpickr-calendar { z-index: 100000 !important; }
+    
+    .font-kai { font-family: 'DFKai-SB', 'BiauKai', '標楷體', serif !important; }
 
     @media (min-width: 768px) {
       .ticket-cutout {
@@ -485,7 +487,7 @@
                       
                       <!-- 行程名稱 (巨大化、根據是否為重要行程顯示紅字) -->
                       <div class="flex-1 min-w-0">
-                        <h4 class="font-black leading-snug break-words" :class="item.isImportant ? 'text-red-500 text-2xl md:text-3xl' : 'text-slate-900 text-2xl md:text-3xl'">{{ item.activity || '未命名行程' }}</h4>
+                        <h4 class="font-kai font-black leading-snug break-words" :class="item.isImportant ? 'text-red-500 text-2xl md:text-3xl' : 'text-slate-900 text-2xl md:text-3xl'">{{ item.activity || '未命名行程' }}</h4>
                       </div>
                     </div>
 
@@ -556,7 +558,7 @@
                       <span class="text-gray-400 font-bold text-[10px] md:text-xs">-</span>
                       <input type="time" v-model="item.endTime" @change="userChangedEndTime(activeDayTab, itemIndex)" class="border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[72px] md:w-[95px] focus-theme outline-none text-center bg-white text-gray-800">
                     </div>
-                    <input type="text" v-model="item.activity" placeholder="行程名稱" :class="item.isImportant ? 'text-red-500' : 'text-gray-800'" class="bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
+                    <input type="text" v-model="item.activity" placeholder="行程名稱" :class="item.isImportant ? 'text-red-500' : 'text-gray-800'" class="font-kai bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
                     <div class="relative flex-shrink-0">
                       <button @click="toggleMenu(activeDayTab, itemIndex)" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
                       <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
