@@ -242,6 +242,17 @@
             <label class="block mb-1.5 font-medium text-sm"><span class="theme-text mr-1">*</span>旅遊日期 (點擊選取起訖區間)</label>
             <input type="text" id="tripDateRangePicker" placeholder="點擊選擇 旅遊起迄日" class="custom-input py-2 bg-white cursor-pointer font-bold text-center" readonly>
           </div>
+          
+          <!-- 新增：封面圖片上傳 -->
+          <div>
+            <label class="block mb-1.5 font-medium text-sm">行程封面圖片 (選填)</label>
+            <div class="flex items-center gap-3">
+              <div v-if="setupData.coverImage" class="w-16 h-12 rounded bg-cover bg-center border border-gray-200 shadow-sm shrink-0" :style="{ backgroundImage: 'url(' + setupData.coverImage + ')' }"></div>
+              <input type="file" accept="image/*" @change="handleCoverUpload" class="text-sm text-gray-600 w-full cursor-pointer bg-gray-50 border border-gray-200 rounded p-1.5 focus-theme outline-none">
+              <button v-if="setupData.coverImage" @click="setupData.coverImage = ''" class="text-red-500 hover:text-red-700 text-xs font-bold shrink-0">移除</button>
+            </div>
+          </div>
+
           <div>
             <label class="block mb-1.5 font-medium text-sm">共同編輯者信箱 (選填，多人請用逗號分隔)</label>
             <input type="text" v-model="setupData.coEditorsStr" placeholder="例如：friend1@gmail.com, friend2@gmail.com" class="custom-input py-2 text-sm">
@@ -330,8 +341,15 @@
           </div>
         </div>
 
-        <div class="bg-white shadow-sm border-b border-gray-200 relative">
-          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative">
+        <div class="bg-white shadow-sm border-b border-gray-200 relative overflow-hidden">
+          
+          <!-- 新增：動態封面背景與白霧漸層遮罩 (pointer-events-none 確保不擋住天氣按鈕點擊) -->
+          <div v-if="tripData.coverImage" class="absolute inset-0 z-0 pointer-events-none">
+            <div class="absolute inset-0 bg-cover bg-center opacity-80" :style="{ backgroundImage: 'url(' + tripData.coverImage + ')' }"></div>
+            <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-white/80 to-white"></div>
+          </div>
+
+          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 relative z-10">
             <div class="flex justify-between items-start">
               <div>
                 <div class="flex items-center gap-3 mb-1 md:mb-2">
@@ -346,7 +364,7 @@
               </div>
             </div>
           </div>
-          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="flex space-x-4 md:space-x-6 overflow-x-auto hide-scrollbar">
               <button v-for="tab in visibleTabs" :key="tab" @click="switchTab(tab)"
                 :class="['pb-2 md:pb-3 px-1 text-sm md:text-base font-bold transition-colors border-b-4 whitespace-nowrap', 
@@ -1457,12 +1475,13 @@
         const customAlert = (msg) => { alertDialog.value = { show: true, message: msg }; };
         const customConfirm = (msg, action) => { confirmDialog.value = { show: true, message: msg, action }; };
 
-        const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } });
+        const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', coverImage: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } });
         
         const tripData = ref({
           ownerId: '', tripName: '未命名行程', destination: '', startDate: '', endDate: '', themeColor: '#e91e63',
           coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
           expenseSettings: { isPublic: false, pax: { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
+          coverImage: '',
           modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true },
           flights: [], transports: [], accommodations: [], luggage: []
         });
@@ -1816,10 +1835,11 @@
             ownerId: currentUser.value.uid, tripName: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', 
             coEditors: [], companions: ['我', '盈瑜'], itinerary: [], expenses: [],
             expenseSettings: { isPublic: false, pax: { adult: 0, elder: 0, child: 0, toddler: 0, infant: 0 }, currency: 'TWD' },
+            coverImage: '',
             modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true },
             flights: [], transports: [], accommodations: [], luggage: []
           };
-          setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } };
+          setupData.value = { name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', coverImage: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } };
           isEditor.value = true; appState.value = 'TRIP'; isSetup.value = true;
           nextTick(() => {
             try {
@@ -1977,6 +1997,7 @@
         const openSetup = () => {
           setupData.value = { 
              name: tripData.value.tripName, destination: tripData.value.destination, startDate: tripData.value.startDate, endDate: tripData.value.endDate, themeColor: tripData.value.themeColor, coEditorsStr: (tripData.value.coEditors || []).join(', '),
+             coverImage: tripData.value.coverImage || '',
              modules: tripData.value.modules ? JSON.parse(JSON.stringify(tripData.value.modules)) : { flights: true, transports: true, accommodations: true, luggage: true, expenses: true }
           };
           isSetup.value = true;
@@ -1999,6 +2020,7 @@
         const generateTrip = () => {
           if (!setupData.value.name || !setupData.value.startDate || !setupData.value.endDate) return customAlert('請填寫完整資訊並選擇日期！');
           tripData.value.tripName = setupData.value.name; tripData.value.destination = setupData.value.destination; tripData.value.startDate = setupData.value.startDate; tripData.value.endDate = setupData.value.endDate; tripData.value.themeColor = setupData.value.themeColor;
+          tripData.value.coverImage = setupData.value.coverImage || '';
           tripData.value.modules = JSON.parse(JSON.stringify(setupData.value.modules));
           if (setupData.value.coEditorsStr) { tripData.value.coEditors = setupData.value.coEditorsStr.split(',').map(e => e.trim().toLowerCase()).filter(e => e); } else { tripData.value.coEditors = []; }
 
@@ -2173,6 +2195,23 @@
            day.transit.splice(itemIdx, 0, { method: '地鐵/捷運', duration: 30, customMethod: '' });
            recalculateDay(dayIdx);
         };
+        
+        // 處理封面圖片上傳
+        const handleCoverUpload = (e) => {
+           const file = e.target.files[0]; if(!file) return;
+           const reader = new FileReader();
+           reader.onload = (event) => {
+               const img = new Image();
+               img.onload = () => {
+                   const canvas = document.createElement('canvas'); const MAX_WIDTH = 1200;
+                   let scaleSize = 1; if (img.width > MAX_WIDTH) scaleSize = MAX_WIDTH / img.width;
+                   canvas.width = img.width * scaleSize; canvas.height = img.height * scaleSize;
+                   const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                   setupData.value.coverImage = canvas.toDataURL('image/jpeg', 0.7);
+               }; img.src = event.target.result;
+           }; reader.readAsDataURL(file);
+           e.target.value = ''; 
+        };
 
         // 處理本機圖片上傳並轉為 DataURL 塞入相簿
         const handleImageUpload = (e, item) => {
@@ -2217,7 +2256,7 @@
           expenseCategories, currencyList, availableRates, updateExchangeRate,
           getCategoryIcon, getCategoryColor, getTypeLabel, getTypeColor, getMultiplier, calculateExpenseItemTotalForeign, calculateExpenseItemTotalTWD, totalExpense, expenseTotalsByCategory, pieChartStyle, addExpense, removeExpense, addExpenseDetail, removeExpenseDetail, formatCurrency,
           addItem, deleteItem, recalculateDay, userChangedStartTime, userChangedEndTime, openField,
-          handleImageUpload, addImageUrl, removeImage, moveToDay, moveItemUp, moveItemDown, insertItemAfter
+          handleImageUpload, handleCoverUpload, addImageUrl, removeImage, moveToDay, moveItemUp, moveItemDown, insertItemAfter
         }
       }
     }).mount('#app')
