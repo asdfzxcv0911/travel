@@ -154,6 +154,97 @@
       </div>
     </div>
 
+    <!-- 常用名單管理視窗 (新增) -->
+    <div v-if="showPassengerManager" class="fixed inset-0 bg-gray-900/60 z-[600] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="showPassengerManager = false">
+      <div class="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="bg-indigo-600 px-5 py-4 flex justify-between items-center shrink-0">
+          <h3 class="font-bold text-white text-lg flex items-center gap-2">👤 私密常用旅客名單</h3>
+          <button @click="showPassengerManager = false" class="text-white hover:text-indigo-200 text-xl font-bold">✕</button>
+        </div>
+        <div class="p-5 overflow-y-auto hide-scrollbar bg-gray-50 flex-1">
+          <p class="text-xs text-gray-500 font-bold mb-4 bg-indigo-50 text-indigo-700 p-2 rounded-lg border border-indigo-100">🔒 這裡的資料僅存於您的個人帳號，共編者無法看見。<br>匯入行程時，系統只會讀取「頭像」與「英文姓名」。</p>
+          
+          <!-- 填寫表單 -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h4 class="text-sm font-black text-gray-700 mb-3 border-b border-gray-100 pb-2">{{ isEditingPassenger ? '編輯旅客資料' : '新增旅客資料' }}</h4>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-1">頭像</label>
+                 <select v-model="passengerForm.avatar" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold outline-none focus:border-indigo-400">
+                    <option>👨</option><option>👩</option><option>👦</option><option>👧</option><option>👴</option><option>👵</option><option>👶</option><option>🧑</option>
+                 </select>
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-1">中文姓名 (選填)</label>
+                 <input type="text" v-model="passengerForm.nameZh" placeholder="王大明" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold outline-none focus:border-indigo-400">
+               </div>
+            </div>
+            <div class="mb-3">
+               <label class="block text-[10px] font-bold text-gray-500 mb-1">英文姓名 (護照拼音) <span class="text-red-500">*</span></label>
+               <input type="text" v-model="passengerForm.nameEn" placeholder="WANG, DA-MING" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold uppercase outline-none focus:border-indigo-400">
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-1">護照號碼 (選填)</label>
+                 <input type="text" v-model="passengerForm.passport" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold uppercase outline-none focus:border-indigo-400">
+               </div>
+               <div>
+                 <label class="block text-[10px] font-bold text-gray-500 mb-1">身分證字號 (選填)</label>
+                 <input type="text" v-model="passengerForm.idNo" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-sm font-bold uppercase outline-none focus:border-indigo-400">
+               </div>
+            </div>
+            <div class="flex justify-end gap-2">
+               <button v-if="isEditingPassenger" @click="openPassengerManager" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg text-xs font-bold transition-colors">取消</button>
+               <button @click="savePassengerForm" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm transition-colors">{{ isEditingPassenger ? '儲存變更' : '＋ 新增至名單' }}</button>
+            </div>
+          </div>
+
+          <!-- 名單列表 -->
+          <div class="space-y-2">
+             <h4 class="text-sm font-black text-gray-700 mb-2">已有旅客 ({{ frequentPassengers.length }})</h4>
+             <div v-if="frequentPassengers.length === 0" class="text-center py-6 text-xs font-bold text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">尚未建立任何名單</div>
+             <div v-for="p in frequentPassengers" :key="p.id" class="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200 shadow-sm group">
+                <div class="flex items-center gap-3">
+                   <div class="text-2xl">{{ p.avatar }}</div>
+                   <div class="flex flex-col">
+                      <span class="text-sm font-black text-gray-800 leading-tight uppercase">{{ p.nameEn }}</span>
+                      <span class="text-[10px] font-bold text-gray-500">{{ p.nameZh || '未填寫中文名' }}</span>
+                   </div>
+                </div>
+                <div class="flex gap-1.5">
+                   <button @click="editPassenger(p)" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-center transition-colors">✏️</button>
+                   <button @click="deletePassenger(p.id)" class="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-colors">🗑</button>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 匯入選擇視窗 (新增) -->
+    <div v-if="showImportModal" class="fixed inset-0 bg-gray-900/60 z-[600] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="showImportModal = false">
+      <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+        <div class="bg-blue-500 px-5 py-3 flex justify-between items-center shrink-0">
+          <h3 class="font-bold text-white text-base">⚡ 選擇要匯入的旅客</h3>
+          <button @click="showImportModal = false" class="text-white hover:text-blue-200 text-xl font-bold">✕</button>
+        </div>
+        <div class="p-4 overflow-y-auto hide-scrollbar space-y-2 flex-1 bg-gray-50">
+           <div v-for="p in frequentPassengers" :key="p.id" @click="toggleImportSelection(p.id)" class="flex items-center p-3 rounded-xl border cursor-pointer transition-colors" :class="selectedImportIds.includes(p.id) ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white border-gray-200 hover:border-blue-200'">
+              <input type="checkbox" :checked="selectedImportIds.includes(p.id)" class="mr-3 w-4 h-4 accent-blue-500 pointer-events-none">
+              <div class="text-xl mr-2">{{ p.avatar }}</div>
+              <div class="flex flex-col">
+                 <span class="text-sm font-black uppercase text-gray-800">{{ p.nameEn }}</span>
+                 <span v-if="p.nameZh" class="text-[10px] font-bold text-gray-500">{{ p.nameZh }}</span>
+              </div>
+           </div>
+        </div>
+        <div class="px-5 py-3 border-t border-gray-100 bg-white flex justify-end gap-2 shrink-0">
+           <button @click="showImportModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-bold transition-colors">取消</button>
+           <button @click="confirmImportPassengers" :disabled="selectedImportIds.length === 0" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg text-sm font-bold shadow-sm transition-colors">確認匯入 ({{ selectedImportIds.length }})</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 登入畫面 -->
     <div v-if="appState === 'LOGIN'" class="fixed inset-0 bg-[#f3f4f6] z-[200] flex justify-center items-center p-4">
       <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
@@ -175,6 +266,7 @@
         <div class="bg-gray-900 text-white px-6 py-4 flex justify-between items-center shadow-md relative z-10">
           <h1 class="text-xl font-bold flex items-center gap-2"><span>🏕️</span> 我的行程庫</h1>
           <div class="flex items-center gap-4">
+            <button v-if="currentUser && !currentUser.uid.startsWith('guest_')" @click="openPassengerManager" class="text-xs bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-500 transition-colors items-center gap-1 shadow-sm font-bold flex">👤 常用名單</button>
             <span class="text-sm text-gray-300 hidden md:inline">嗨, {{ currentUser?.displayName }}</span>
             <button @click="logout" class="text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg border border-gray-700 transition-colors">登出</button>
           </div>
@@ -833,7 +925,10 @@
                          <button v-if="isEditor && !flight.isLocked" @click="removePassenger(fIdx, pIdx)" class="text-gray-300 hover:text-red-500 font-bold w-5 shrink-0 text-right md:opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                          <div v-else-if="isEditor && flight.isLocked" class="w-5 shrink-0 text-right"></div>
                      </div>
-                     <button v-if="isEditor && !flight.isLocked" @click="addPassenger(fIdx)" class="w-full mt-2 text-xs font-bold text-[#60a5fa] bg-white border-2 border-dashed border-blue-100 rounded-xl py-2.5 hover:bg-blue-50 hover:border-blue-300 transition-colors">＋ 加入旅客資訊</button>
+                     <div v-if="isEditor && !flight.isLocked" class="flex gap-2 mt-3">
+                         <button @click="addPassenger(fIdx)" class="flex-1 text-xs font-bold text-[#60a5fa] bg-white border-2 border-dashed border-blue-100 rounded-xl py-2 hover:bg-blue-50 hover:border-blue-300 transition-colors">＋ 加入旅客</button>
+                         <button @click="openImportModal(fIdx)" class="flex-1 text-xs font-bold text-white bg-blue-500 border-2 border-blue-500 rounded-xl py-2 hover:bg-blue-600 transition-colors flex items-center justify-center gap-1">⚡ 從名單匯入</button>
+                     </div>
                  </div>
              </div>
           </div>
@@ -1472,6 +1567,15 @@
         const shareDialog = ref({ show: false, url: '' });
         const shareStatus = ref('idle');
 
+        // --- 常用旅客名單狀態 ---
+        const showPassengerManager = ref(false);
+        const frequentPassengers = ref([]);
+        const passengerForm = ref({ id: '', avatar: '🧑', nameZh: '', nameEn: '', passport: '', idNo: '' });
+        const isEditingPassenger = ref(false);
+        const showImportModal = ref(false);
+        const importTargetFlightIndex = ref(null);
+        const selectedImportIds = ref([]);
+
         const alertDialog = ref({ show: false, message: '' });
         const confirmDialog = ref({ show: false, message: '', action: null });
         const customAlert = (msg) => { alertDialog.value = { show: true, message: msg }; };
@@ -1600,17 +1704,55 @@
             return '🌥️';
         };
 
+        // 新增：常用旅遊地座標直達車 (防呆字典)
+        const presetLocations = [
+            { keywords: ['墾丁', 'kenting'], lat: 21.94, lng: 120.79 },
+            { keywords: ['恆春', 'hengchun'], lat: 22.00, lng: 120.74 },
+            { keywords: ['屏東', 'pingtung'], lat: 22.67, lng: 120.48 },
+            { keywords: ['台北', 'taipei'], lat: 25.03, lng: 121.56 },
+            { keywords: ['台中', 'taichung'], lat: 24.14, lng: 120.68 },
+            { keywords: ['台南', 'tainan'], lat: 22.99, lng: 120.22 },
+            { keywords: ['高雄', 'kaohsiung'], lat: 22.62, lng: 120.31 },
+            { keywords: ['花蓮', 'hualien'], lat: 23.97, lng: 121.60 },
+            { keywords: ['台東', 'taitung'], lat: 22.75, lng: 121.14 },
+            { keywords: ['宜蘭', 'yilan'], lat: 24.76, lng: 121.75 },
+            { keywords: ['東京', 'tokyo'], lat: 35.68, lng: 139.76 },
+            { keywords: ['大阪', 'osaka'], lat: 34.69, lng: 135.50 },
+            { keywords: ['京都', 'kyoto'], lat: 35.01, lng: 135.76 },
+            { keywords: ['沖繩', 'okinawa'], lat: 26.21, lng: 127.68 },
+            { keywords: ['北海道', '札幌', 'sapporo'], lat: 43.06, lng: 141.35 },
+            { keywords: ['首爾', 'seoul'], lat: 37.56, lng: 126.97 },
+            { keywords: ['釜山', 'busan'], lat: 35.17, lng: 129.07 },
+            { keywords: ['香港', 'hong kong'], lat: 22.31, lng: 114.16 },
+            { keywords: ['澳門', 'macau'], lat: 22.19, lng: 113.54 },
+            { keywords: ['曼谷', 'bangkok'], lat: 13.75, lng: 100.50 }
+        ];
+
         const fetchWeatherData = async (dest) => {
             if (!dest) return;
             weatherLoading.value = true;
             currentWeather.value = null;
             forecast.value = [];
             try {
-                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(dest)}&count=1&language=zh`);
-                const geoData = await geoRes.json();
-                if (!geoData.results || geoData.results.length === 0) { weatherLoading.value = false; return; }
-                const { latitude, longitude } = geoData.results[0];
+                let latitude = null;
+                let longitude = null;
+                const destLower = dest.toLowerCase();
+                
+                // 1. 先查專屬小字典
+                const preset = presetLocations.find(p => p.keywords.some(kw => destLower.includes(kw)));
+                if (preset) {
+                    latitude = preset.lat;
+                    longitude = preset.lng;
+                } else {
+                    // 2. 查不到再靠原來的免費 API 找
+                    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(dest)}&count=1&language=zh`);
+                    const geoData = await geoRes.json();
+                    if (!geoData.results || geoData.results.length === 0) { weatherLoading.value = false; return; }
+                    latitude = geoData.results[0].latitude;
+                    longitude = geoData.results[0].longitude;
+                }
 
+                // 3. 取得經緯度後，正式抓取氣象資料
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weathercode,temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`);
                 const weatherData = await weatherRes.json();
 
@@ -1793,6 +1935,8 @@
             const isGuest = localStorage.getItem('smarttravel_is_guest') === 'true';
             if (isGuest) { currentUser.value = { uid: 'guest_permanent_test_user_001', email: 'guest@smarttravel.com', displayName: '測試訪客' }; } 
             else { currentUser.value = user; }
+
+            if (currentUser.value && !isGuest) { await loadFrequentPassengers(); }
 
             if (tripIdFromUrl) { await loadTripFromCloud(tripIdFromUrl); } 
             else { 
@@ -2244,6 +2388,58 @@
           saveStatus.value = `✅ 已將行程挪至 Day ${toDayIdx + 1}`; setTimeout(() => { if(saveStatus.value.includes('已將行程挪至')) saveStatus.value = ''; }, 3000);
         };
 
+        // --- 常用旅客名單邏輯 ---
+        const loadFrequentPassengers = async () => {
+          if (!currentUser.value || currentUser.value.uid.startsWith('guest_')) return;
+          try {
+            const docSnap = await getDoc(doc(db, "userProfiles", currentUser.value.uid));
+            if (docSnap.exists() && docSnap.data().passengers) frequentPassengers.value = docSnap.data().passengers;
+          } catch(e) { console.error(e); }
+        };
+        const saveFrequentPassengersToCloud = async () => {
+          if (!currentUser.value || currentUser.value.uid.startsWith('guest_')) return customAlert("訪客模式無法儲存喔！請登入正式帳號。");
+          try { await setDoc(doc(db, "userProfiles", currentUser.value.uid), { passengers: frequentPassengers.value }, { merge: true }); } 
+          catch(e) { customAlert("儲存失敗"); }
+        };
+        const openPassengerManager = () => { showPassengerManager.value = true; passengerForm.value = { id: '', avatar: '🧑', nameZh: '', nameEn: '', passport: '', idNo: '' }; isEditingPassenger.value = false; };
+        const editPassenger = (p) => { passengerForm.value = { ...p }; isEditingPassenger.value = true; };
+        const savePassengerForm = async () => {
+          if(!passengerForm.value.nameEn) return customAlert("請至少填寫「英文姓名」喔！");
+          if(isEditingPassenger.value) {
+             const idx = frequentPassengers.value.findIndex(p => p.id === passengerForm.value.id);
+             if(idx !== -1) frequentPassengers.value[idx] = { ...passengerForm.value };
+          } else {
+             frequentPassengers.value.push({ ...passengerForm.value, id: generateId() });
+          }
+          await saveFrequentPassengersToCloud();
+          passengerForm.value = { id: '', avatar: '🧑', nameZh: '', nameEn: '', passport: '', idNo: '' };
+          isEditingPassenger.value = false;
+        };
+        const deletePassenger = (id) => {
+          customConfirm("確定要刪除這位常用旅客嗎？", async () => {
+             frequentPassengers.value = frequentPassengers.value.filter(p => p.id !== id);
+             await saveFrequentPassengersToCloud();
+          });
+        };
+        const openImportModal = (fIdx) => { 
+          if(frequentPassengers.value.length === 0) return customAlert("您的常用名單目前是空的喔！\n請先至「大廳」右上角建立名單。");
+          importTargetFlightIndex.value = fIdx; selectedImportIds.value = []; showImportModal.value = true; 
+        };
+        const confirmImportPassengers = () => {
+          if(importTargetFlightIndex.value === null) return;
+          const flight = tripData.value.flights[importTargetFlightIndex.value];
+          selectedImportIds.value.forEach(id => {
+             const p = frequentPassengers.value.find(x => x.id === id);
+             if(p) flight.passengers.push({ id: generateId(), avatar: p.avatar, name: p.nameEn, seat: '', baggage: '', memo: '' });
+          });
+          showImportModal.value = false; importTargetFlightIndex.value = null; selectedImportIds.value = [];
+        };
+        const toggleImportSelection = (id) => {
+           const idx = selectedImportIds.value.indexOf(id);
+           if (idx > -1) selectedImportIds.value.splice(idx, 1);
+           else selectedImportIds.value.push(id);
+        };
+
         return {
           appState, currentUser, myTrips, createNewTrip, openTrip, backToDashboard, loginWithGoogle, guestLogin, logout, deleteTripFromCloud, copyShareLink,
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
@@ -2258,7 +2454,9 @@
           expenseCategories, currencyList, availableRates, updateExchangeRate,
           getCategoryIcon, getCategoryColor, getTypeLabel, getTypeColor, getMultiplier, calculateExpenseItemTotalForeign, calculateExpenseItemTotalTWD, totalExpense, expenseTotalsByCategory, pieChartStyle, addExpense, removeExpense, addExpenseDetail, removeExpenseDetail, formatCurrency,
           addItem, deleteItem, recalculateDay, userChangedStartTime, userChangedEndTime, openField,
-          handleImageUpload, handleCoverUpload, addImageUrl, removeImage, moveToDay, moveItemUp, moveItemDown, insertItemAfter
+          handleImageUpload, handleCoverUpload, addImageUrl, removeImage, moveToDay, moveItemUp, moveItemDown, insertItemAfter,
+          showPassengerManager, frequentPassengers, passengerForm, isEditingPassenger, showImportModal, importTargetFlightIndex, selectedImportIds,
+          openPassengerManager, editPassenger, savePassengerForm, deletePassenger, openImportModal, confirmImportPassengers, toggleImportSelection
         }
       }
     }).mount('#app')
