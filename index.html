@@ -548,69 +548,74 @@
                   <div class="h-px bg-gray-300 flex-1"></div>
                 </div>
 
-                <div class="flex flex-wrap gap-2 mb-3 px-1 md:px-0">
-                   <div v-for="hotel in getHotelsForDay(dayIndex + 1)" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
-                      🏨 住宿: {{ hotel.name || '未填寫飯店' }}
+                <div v-if="getHotelsForDay(dayIndex + 1).length > 0 || getTransportsForDay(dayIndex + 1).length > 0" class="flex flex-wrap gap-2.5 mb-4 px-3 py-2.5 mx-1 md:mx-0 bg-gray-50/80 rounded-xl border border-gray-100 shadow-sm relative">
+                   <div class="absolute -left-1 top-3 bottom-3 w-1 bg-gradient-to-b from-indigo-300 to-teal-300 rounded-full"></div>
+                   <div v-for="hotel in getHotelsForDay(dayIndex + 1)" class="bg-white border border-indigo-100 text-indigo-800 text-[11px] md:text-xs font-black px-2.5 py-1.5 rounded-lg flex items-center shadow-[0_2px_8px_-2px_rgba(79,70,229,0.12)] gap-1.5 transition-transform hover:-translate-y-0.5 cursor-default">
+                      <span class="text-indigo-500 text-sm">🏨</span> <span class="opacity-60 font-bold">住宿:</span> {{ hotel.name || '未填寫飯店' }}
                    </div>
-                   <div v-for="trans in getTransportsForDay(dayIndex + 1)" class="bg-teal-50 border border-teal-200 text-teal-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
-                      {{ trans.type ? trans.type.charAt(0) : '🎫' }} {{ trans.type ? trans.type.substring(2) : '票券' }}: {{ trans.name || '未命名' }}
+                   <div v-for="trans in getTransportsForDay(dayIndex + 1)" class="bg-white border border-teal-100 text-teal-800 text-[11px] md:text-xs font-black px-2.5 py-1.5 rounded-lg flex items-center shadow-[0_2px_8px_-2px_rgba(20,184,166,0.12)] gap-1.5 transition-transform hover:-translate-y-0.5 cursor-default">
+                      <span class="text-teal-500 text-sm">{{ trans.type ? trans.type.charAt(0) : '🎫' }}</span> <span class="opacity-60 font-bold">{{ trans.type ? trans.type.substring(2) : '票券' }}:</span> {{ trans.name || '未命名' }}
                    </div>
                 </div>
 
-                <div class="bg-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm pl-16 md:pl-20 relative">
-                  <div v-if="day.items.length > 0" class="absolute left-7 md:left-8 -translate-x-1/2 top-6 bottom-6 w-0.5 bg-slate-200"></div>
-                  <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4">尚未安排行程</div>
+                <div class="relative pl-12 md:pl-16 mt-2">
+                  <!-- 獨立於卡片之外的全新發光時間軸底線 -->
+                  <div v-if="day.items.length > 0" class="absolute left-4 md:left-6 -translate-x-1/2 top-4 bottom-4 w-[2px] bg-gray-200/80 rounded-full"></div>
+                  <div v-if="day.items.length === 0" class="text-gray-400 text-xs md:text-sm font-bold ml-2 md:ml-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">尚未安排行程</div>
                   
-                  <div v-for="(item, itemIndex) in day.items" class="relative z-10 mb-1 md:mb-1.5 last:mb-0">
-                    <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 top-5 md:top-6 w-2.5 h-2.5 md:w-3 md:h-3 theme-bg rounded-full border-[2px] border-white shadow-sm ring-1 ring-black/5"></div>
+                  <div v-for="(item, itemIndex) in day.items" class="relative z-10 mb-5 md:mb-6 last:mb-2 group">
+                    <!-- 懸浮的時間軸節點 (加入 hover 放大動畫) -->
+                    <div class="absolute -left-[32px] md:-left-[40px] -translate-x-1/2 top-6 md:top-8 w-3 h-3 md:w-3.5 md:h-3.5 theme-bg rounded-full border-[2.5px] border-[#f3f4f6] shadow-sm z-20 group-hover:scale-125 transition-transform duration-300"></div>
                     
-                    <div class="flex items-center gap-3 md:gap-4 w-full">
-                      <!-- 統一大小的時間格子 (精緻卡片化，鎖定寬度與高度) -->
-                      <div class="w-[60px] md:w-[75px] shrink-0">
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl text-center shadow-sm flex flex-col items-center justify-center h-[52px] md:h-[64px]">
-                          <span v-if="!item.endTime || item.startTime === item.endTime" class="font-black text-slate-700 text-[13px] md:text-[17px] tracking-wide whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
-                          <template v-else>
-                            <span class="font-black text-slate-700 text-[12px] md:text-[15px] tracking-wide whitespace-nowrap leading-none">{{ item.startTime || '--:--' }}</span>
-                            <span class="text-slate-300 text-[8px] my-0.5 font-bold leading-none">|</span>
-                            <span class="font-black text-slate-700 text-[12px] md:text-[15px] tracking-wide whitespace-nowrap leading-none">{{ item.endTime }}</span>
-                          </template>
+                    <!-- 獨立的純白圓角懸浮卡片 -->
+                    <div class="bg-white p-3.5 md:p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/80 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative z-10">
+                      <div class="flex items-center gap-3 md:gap-4 w-full">
+                        <!-- 統一大小的時間格子 (極簡無邊框，純文字強烈對比) -->
+                        <div class="w-[60px] md:w-[75px] shrink-0">
+                          <div class="flex flex-col items-center justify-center h-[52px] md:h-[64px]">
+                            <span v-if="!item.endTime || item.startTime === item.endTime" class="font-black text-slate-900 text-[16px] md:text-[20px] tracking-wider whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
+                            <template v-else>
+                              <span class="font-black text-slate-900 text-[16px] md:text-[20px] tracking-wider whitespace-nowrap leading-none">{{ item.startTime || '--:--' }}</span>
+                              <span class="font-bold text-slate-400 text-[10px] md:text-[12px] tracking-wider whitespace-nowrap leading-none mt-1.5">{{ item.endTime }}</span>
+                            </template>
+                          </div>
+                        </div>
+                        
+                        <!-- 行程名稱 (巨大化、根據是否為重要行程顯示紅字) -->
+                        <div class="flex-1 min-w-0">
+                          <h4 class="font-kai font-black leading-snug break-words" :class="item.isImportant ? 'text-red-500 text-2xl md:text-3xl' : 'text-slate-900 text-2xl md:text-3xl'">{{ item.activity || '未命名行程' }}</h4>
                         </div>
                       </div>
-                      
-                      <!-- 行程名稱 (巨大化、根據是否為重要行程顯示紅字) -->
-                      <div class="flex-1 min-w-0">
-                        <h4 class="font-kai font-black leading-snug break-words" :class="item.isImportant ? 'text-red-500 text-2xl md:text-3xl' : 'text-slate-900 text-2xl md:text-3xl'">{{ item.activity || '未命名行程' }}</h4>
+
+                      <!-- 【唯讀模式附件】連結、地圖、備忘錄、多圖相簿 -->
+                      <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2 md:mt-3">
+                         <!-- 隱形佔位器，在手機板隱藏讓備忘錄展開，電腦版對齊時間格 -->
+                         <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible hidden sm:block"></div>
+                         <div class="flex-1 flex flex-col gap-2 min-w-0">
+                             <div v-if="item.link || item.map" class="flex flex-wrap gap-2">
+                                 <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-blue-700 font-bold hover:bg-blue-100 transition-colors truncate w-max max-w-[150px] md:max-w-[200px]">🔗 連結</a>
+                                 <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-emerald-700 font-bold hover:bg-emerald-100 transition-colors truncate w-max max-w-[150px] md:max-w-[200px]">📍 地圖</a>
+                             </div>
+                             
+                             <!-- 備忘錄智慧折疊顯示 -->
+                             <div v-if="item.memo" @click="activeMemo = item.memo" class="cursor-pointer group flex items-start gap-1.5 bg-gray-50/80 border-l-2 border-gray-300 rounded-r-lg px-2.5 py-2 hover:bg-gray-100 transition-colors w-full" title="點擊查看完整備忘錄">
+                                 <span class="text-[11px] md:text-xs opacity-60 mt-px shrink-0">📝</span>
+                                 <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors whitespace-pre-line break-words flex-1 min-w-0">{{ item.memo }}</p>
+                             </div>
+
+                             <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2.5 hide-scrollbar pb-1 mt-1">
+                                 <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
+                             </div>
+                         </div>
                       </div>
                     </div>
-
-                    <!-- 【唯讀模式附件】連結、地圖、備忘錄、多圖相簿 -->
-                    <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-1 md:mt-1.5">
-                       <!-- 隱形佔位器，同步修正寬度 -->
-                       <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible"></div>
-                       <div class="flex-1 flex flex-col gap-1.5 min-w-0">
-                           <div v-if="item.link || item.map" class="flex flex-wrap gap-2">
-                               <a v-if="item.link" :href="item.link" target="_blank" class="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-blue-700 font-bold hover:bg-blue-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">🔗 連結</a>
-                               <a v-if="item.map" :href="item.map" target="_blank" class="flex items-center gap-1.5 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2.5 py-1.5 text-[11px] md:text-xs shadow-sm text-emerald-700 font-bold hover:bg-emerald-100 transition-colors truncate max-w-[150px] md:max-w-[200px]">📍 地圖</a>
-                           </div>
-                           
-                           <!-- 備忘錄智慧折疊顯示 -->
-                           <div v-if="item.memo" @click="activeMemo = item.memo" class="cursor-pointer group flex items-start gap-1.5 bg-gray-50/50 border-l-2 border-gray-300 rounded-r-lg px-2.5 py-1.5 hover:bg-gray-100 transition-colors w-full" title="點擊查看完整備忘錄">
-                               <span class="text-[11px] md:text-xs opacity-60 mt-px shrink-0">📝</span>
-                               <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors whitespace-pre-line break-words flex-1 min-w-0">{{ item.memo }}</p>
-                           </div>
-
-                           <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2.5 hide-scrollbar pb-1">
-                               <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-sm shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
-                           </div>
-                       </div>
-                    </div>
                     
-                    <!-- 【交通動線】鑲嵌時間軸設計 -->
-                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-0 mb-0 relative flex items-center h-2 md:h-3">
-                       <!-- 絕對置中在時間軸線上的交通圖示與時間 -->
-                       <div class="absolute -left-[36px] md:-left-[48px] -translate-x-1/2 flex flex-col items-center justify-center bg-white z-10 py-1 px-1 min-w-[32px] whitespace-nowrap">
-                           <span class="text-[14px] md:text-[16px] leading-none grayscale opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
-                           <span class="text-[9px] md:text-[10px] font-black text-slate-400 mt-0.5 leading-none tracking-tighter">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
+                    <!-- 【交通動線】鑲嵌在卡片外的時間軸設計 -->
+                    <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-0 mb-0 relative flex items-center h-[30px] md:h-[40px]">
+                       <!-- 橫向微型膠囊設計 (Apple Maps 風格) -->
+                       <div class="absolute -left-[32px] md:-left-[40px] -translate-x-1/2 flex items-center gap-1 bg-white border border-gray-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] z-10 py-1 px-2 md:px-2.5 rounded-full whitespace-nowrap">
+                           <span class="text-[10px] md:text-[12px] leading-none opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                           <span class="text-[9px] md:text-[10px] font-black text-slate-500 leading-none tracking-tight">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
                        </div>
                     </div>
                   </div>
@@ -625,12 +630,13 @@
               <div><h3 class="text-lg md:text-xl font-bold text-gray-900">Day {{ activeDayTab + 1 }}</h3><p class="text-xs md:text-sm theme-text font-bold">{{ tripData.itinerary[activeDayTab].dateStr }}</p></div>
             </div>
             
-            <div class="flex flex-wrap gap-2 mb-4">
-               <div v-for="hotel in getHotelsForDay(activeDayTab + 1)" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
-                  🏨 住宿: {{ hotel.name || '未填寫飯店' }}
+            <div v-if="getHotelsForDay(activeDayTab + 1).length > 0 || getTransportsForDay(activeDayTab + 1).length > 0" class="flex flex-wrap gap-2.5 mb-5 px-3 py-2.5 bg-gray-50/80 rounded-xl border border-gray-100 shadow-sm relative">
+               <div class="absolute -left-1 top-3 bottom-3 w-1 bg-gradient-to-b from-indigo-300 to-teal-300 rounded-full"></div>
+               <div v-for="hotel in getHotelsForDay(activeDayTab + 1)" class="bg-white border border-indigo-100 text-indigo-800 text-[11px] md:text-xs font-black px-2.5 py-1.5 rounded-lg flex items-center shadow-[0_2px_8px_-2px_rgba(79,70,229,0.12)] gap-1.5">
+                  <span class="text-indigo-500 text-sm">🏨</span> <span class="opacity-60 font-bold">住宿:</span> {{ hotel.name || '未填寫飯店' }}
                </div>
-               <div v-for="trans in getTransportsForDay(activeDayTab + 1)" class="bg-teal-50 border border-teal-200 text-teal-700 text-[11px] md:text-xs font-black px-2.5 py-1 rounded-md flex items-center shadow-sm">
-                  {{ trans.type ? trans.type.charAt(0) : '🎫' }} {{ trans.type ? trans.type.substring(2) : '票券' }}: {{ trans.name || '未命名' }}
+               <div v-for="trans in getTransportsForDay(activeDayTab + 1)" class="bg-white border border-teal-100 text-teal-800 text-[11px] md:text-xs font-black px-2.5 py-1.5 rounded-lg flex items-center shadow-[0_2px_8px_-2px_rgba(20,184,166,0.12)] gap-1.5">
+                  <span class="text-teal-500 text-sm">{{ trans.type ? trans.type.charAt(0) : '🎫' }}</span> <span class="opacity-60 font-bold">{{ trans.type ? trans.type.substring(2) : '票券' }}:</span> {{ trans.name || '未命名' }}
                </div>
             </div>
 
