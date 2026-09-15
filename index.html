@@ -477,19 +477,25 @@
             <h3 class="font-bold text-white text-lg">📝 備忘錄</h3>
             <button @click="activeMemo = null" class="text-white hover:text-gray-200 text-xl font-bold">✕</button>
           </div>
-          <div class="p-6">
-            <p class="text-gray-700 whitespace-pre-line leading-relaxed text-sm md:text-base">{{ activeMemo }}</p>
-          </div>
-          <div class="px-5 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
-            <button @click="activeMemo = null" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold transition-colors">關閉</button>
+          <div class="p-5 text-gray-700 text-sm whitespace-pre-line leading-relaxed max-h-[60vh] overflow-y-auto">
+            {{ activeMemo }}
           </div>
         </div>
       </div>
 
-      <!-- 圖片全螢幕放大鏡 Modal (新增) -->
-      <div v-if="activeImage" class="fixed inset-0 bg-black/90 z-[600] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeImage = null">
+      <!-- 圖片全螢幕放大鏡 Modal (新增左右滑動與指示器) -->
+      <div v-if="activeImage" class="fixed inset-0 bg-black/90 z-[600] flex justify-center items-center p-4 animate-fade-in backdrop-blur-sm" @click.self="activeImage = null" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
         <button @click="activeImage = null" class="absolute top-4 right-4 md:top-8 md:right-8 text-white hover:text-gray-300 text-4xl font-bold z-[610] transition-colors">&times;</button>
-        <img :src="activeImage" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl">
+        
+        <button v-if="activeImage.list && activeImage.list.length > 1 && activeImage.index > 0" @click.stop="prevImage" class="absolute left-2 md:left-8 text-white/30 hover:text-white text-5xl font-bold z-[610] transition-colors p-4 select-none">‹</button>
+        
+        <img :src="activeImage.list ? activeImage.list[activeImage.index] : activeImage" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl select-none">
+        
+        <button v-if="activeImage.list && activeImage.list.length > 1 && activeImage.index < activeImage.list.length - 1" @click.stop="nextImage" class="absolute right-2 md:right-8 text-white/30 hover:text-white text-5xl font-bold z-[610] transition-colors p-4 select-none">›</button>
+
+        <div v-if="activeImage.list && activeImage.list.length > 1" class="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md text-white text-sm font-bold px-4 py-1.5 rounded-full z-[610]">
+          {{ activeImage.index + 1 }} / {{ activeImage.list.length }}
+        </div>
       </div>
 
       <!-- 天氣預報 Modal -->
@@ -604,7 +610,7 @@
                              </div>
 
                              <div v-if="item.images && item.images.length > 0" class="flex overflow-x-auto gap-2.5 hide-scrollbar pb-1 mt-1">
-                                 <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = imgSrc" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
+                                 <img v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" :src="imgSrc" @click="activeImage = { list: item.images, index: imgIdx }" class="rounded-xl h-24 md:h-32 object-cover border border-slate-200 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] shrink-0 w-auto cursor-pointer hover:opacity-90 transition-opacity">
                              </div>
                          </div>
                       </div>
@@ -739,7 +745,7 @@
                            <!-- 橫向滑動照片預覽 -->
                            <div v-if="item.images.length > 0" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2">
                              <div v-for="(imgSrc, imgIdx) in item.images" :key="imgIdx" class="relative group shrink-0">
-                                <img :src="imgSrc" @click="activeImage = imgSrc" class="rounded-lg h-20 md:h-28 object-cover border border-gray-200 shadow-sm w-auto cursor-pointer hover:opacity-90 transition-opacity">
+                                <img :src="imgSrc" @click="activeImage = { list: item.images, index: imgIdx }" class="rounded-lg h-20 md:h-28 object-cover border border-gray-200 shadow-sm w-auto cursor-pointer hover:opacity-90 transition-opacity">
                                 <button @click="removeImage(activeDayTab, itemIndex, imgIdx)" class="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">✕</button>
                              </div>
                            </div>
@@ -1565,6 +1571,24 @@
         const activeMemo = ref(null); 
         const activeImage = ref(null);
         
+        // 處理圖片左右滑動邏輯
+        const touchStartX = ref(0);
+        const touchEndX = ref(0);
+        const handleTouchStart = (e) => { touchStartX.value = e.changedTouches[0].screenX; };
+        const handleTouchEnd = (e) => {
+            touchEndX.value = e.changedTouches[0].screenX;
+            if (!activeImage.value || !activeImage.value.list) return;
+            const threshold = 50; // 判定滑動的最小距離
+            if (touchStartX.value - touchEndX.value > threshold && activeImage.value.index < activeImage.value.list.length - 1) {
+                activeImage.value.index++; // 往左滑看下一張
+            }
+            if (touchEndX.value - touchStartX.value > threshold && activeImage.value.index > 0) {
+                activeImage.value.index--; // 往右滑看上一張
+            }
+        };
+        const prevImage = () => { if (activeImage.value && activeImage.value.index > 0) activeImage.value.index--; };
+        const nextImage = () => { if (activeImage.value && activeImage.value.index < activeImage.value.list.length - 1) activeImage.value.index++; };
+
         const currentWeather = ref(null);
         const forecast = ref([]);
         const weatherLoading = ref(false);
@@ -2474,6 +2498,7 @@
           isOwner, hasEditPermission, isEditor, isSetup, setupData, generateTrip, openSetup, closeSetup,
           saveStatus, shareStatus, tabs, visibleTabs, currentView, activeDayTab, tripData, formatDateRange, activeMemo, activeImage, shareDialog, copyToClipboard, exportToText, switchTab,
           currentWeather, forecast, weatherLoading, showWeatherModal,
+          handleTouchStart, handleTouchEnd, prevImage, nextImage,
           alertDialog, confirmDialog, customAlert, customConfirm,
           stayOptions, formatStayTime, toggleMenu, getTransitIcon, formatDuration,
           calculateRelativeDays, splitDateRange, calculateNights, getHotelsForDay, getTransportsForDay,
