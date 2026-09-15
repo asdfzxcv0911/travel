@@ -568,27 +568,27 @@
                     <div class="absolute -left-[32px] md:-left-[40px] -translate-x-1/2 top-6 md:top-8 w-3 h-3 md:w-3.5 md:h-3.5 theme-bg rounded-full border-[2.5px] border-[#f3f4f6] shadow-sm z-20 group-hover:scale-125 transition-transform duration-300"></div>
                     
                     <!-- 獨立的純白圓角懸浮卡片 -->
-                    <div class="bg-white p-3.5 md:p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/80 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative z-10">
+                    <div class="bg-white py-2.5 px-3.5 md:py-3.5 md:px-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100/80 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] transition-shadow duration-300 relative z-10">
                       <div class="flex items-center gap-3 md:gap-4 w-full">
-                        <!-- 統一大小的時間格子 (極簡無邊框，純文字強烈對比) -->
+                        <!-- 統一大小的時間格子 (恢復原本字體與顏色) -->
                         <div class="w-[60px] md:w-[75px] shrink-0">
-                          <div class="flex flex-col items-center justify-center h-[52px] md:h-[64px]">
-                            <span v-if="!item.endTime || item.startTime === item.endTime" class="font-black text-slate-900 text-[16px] md:text-[20px] tracking-wider whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
+                          <div class="flex flex-col items-center justify-center h-auto min-h-[36px] md:min-h-[44px]">
+                            <span v-if="!item.endTime || item.startTime === item.endTime" class="font-black text-gray-900 text-lg md:text-xl whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
                             <template v-else>
-                              <span class="font-black text-slate-900 text-[16px] md:text-[20px] tracking-wider whitespace-nowrap leading-none">{{ item.startTime || '--:--' }}</span>
-                              <span class="font-bold text-slate-400 text-[10px] md:text-[12px] tracking-wider whitespace-nowrap leading-none mt-1.5">{{ item.endTime }}</span>
+                              <span class="font-black text-gray-900 text-lg md:text-xl whitespace-nowrap">{{ item.startTime || '--:--' }}</span>
+                              <span class="font-bold text-gray-400 text-[10px] md:text-xs whitespace-nowrap mt-1">{{ item.endTime }}</span>
                             </template>
                           </div>
                         </div>
                         
-                        <!-- 行程名稱 (巨大化、根據是否為重要行程顯示紅字) -->
+                        <!-- 行程名稱 (恢復原本字體大小、顏色，移除多餘字距) -->
                         <div class="flex-1 min-w-0">
-                          <h4 class="font-kai font-black leading-snug break-words" :class="item.isImportant ? 'text-red-500 text-2xl md:text-3xl' : 'text-slate-900 text-2xl md:text-3xl'">{{ item.activity || '未命名行程' }}</h4>
+                          <h4 class="font-bold break-words" :class="item.isImportant ? 'text-red-500 text-lg md:text-xl' : 'text-gray-800 text-lg md:text-xl'">{{ item.activity || '未命名行程' }}</h4>
                         </div>
                       </div>
 
                       <!-- 【唯讀模式附件】連結、地圖、備忘錄、多圖相簿 -->
-                      <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-2 md:mt-3">
+                      <div v-if="item.link || item.map || item.memo || (item.images && item.images.length > 0)" class="flex w-full mt-1.5 md:mt-2">
                          <!-- 隱形佔位器，在手機板隱藏讓備忘錄展開，電腦版對齊時間格 -->
                          <div class="w-[60px] md:w-[75px] mr-3 md:mr-4 shrink-0 invisible hidden sm:block"></div>
                          <div class="flex-1 flex flex-col gap-2 min-w-0">
@@ -614,8 +614,8 @@
                     <div v-if="itemIndex < day.items.length - 1 && day.transit && day.transit[itemIndex]" class="w-full mt-0 mb-0 relative flex items-center h-[30px] md:h-[40px]">
                        <!-- 橫向微型膠囊設計 (Apple Maps 風格) -->
                        <div class="absolute -left-[32px] md:-left-[40px] -translate-x-1/2 flex items-center gap-1 bg-white border border-gray-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] z-10 py-1 px-2 md:px-2.5 rounded-full whitespace-nowrap">
-                           <span class="text-[10px] md:text-[12px] leading-none opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
-                           <span class="text-[9px] md:text-[10px] font-black text-slate-500 leading-none tracking-tight">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
+                           <span class="text-[10px] md:text-xs opacity-80">{{ getTransitIcon(day.transit[itemIndex].method) }}</span>
+                           <span class="text-[10px] md:text-xs font-bold text-gray-500">{{ formatDuration(day.transit[itemIndex].duration) }}</span>
                        </div>
                     </div>
                   </div>
@@ -656,7 +656,7 @@
                       <span class="text-gray-400 font-bold text-[10px] md:text-xs">-</span>
                       <input type="time" v-model="item.endTime" @change="userChangedEndTime(activeDayTab, itemIndex)" class="border border-gray-200 rounded compact-input text-[11px] md:text-sm font-bold w-[72px] md:w-[95px] focus-theme outline-none text-center bg-white text-gray-800">
                     </div>
-                    <input type="text" v-model="item.activity" placeholder="行程名稱" :class="item.isImportant ? 'text-red-500' : 'text-gray-800'" class="font-kai bg-white border border-gray-200 rounded compact-input font-bold text-xs md:text-base flex-1 min-w-0 focus-theme outline-none">
+                    <input type="text" v-model="item.activity" placeholder="行程名稱" :class="item.isImportant ? 'text-red-500' : 'text-gray-800'" class="bg-white border border-gray-200 rounded compact-input font-bold text-sm md:text-base flex-1 min-w-0 focus-theme outline-none tracking-wide">
                     <div class="relative flex-shrink-0">
                       <button @click="toggleMenu(activeDayTab, itemIndex)" class="text-gray-500 hover:text-gray-800 p-1 md:px-2 bg-white border border-gray-300 rounded md:text-base text-xs shadow-sm focus-theme transition-colors">⚙️</button>
                       <div v-if="item.showMenu" class="fixed inset-0 z-30" @click="item.showMenu = false"></div>
@@ -967,13 +967,13 @@
                   </div>
 
                   <div class="px-6 py-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-2">
-                      <div class="flex items-center gap-2 w-full md:w-auto pr-16 md:pr-0">
+                      <div class="flex items-center justify-center md:justify-start gap-2 w-full md:w-auto pr-16 md:pr-0">
                           <span class="text-2xl">🚙</span>
                           <select v-if="isEditor && !trans.isLocked" v-model="trans.type" class="bg-white/20 border-0 rounded px-2 py-0.5 outline-none cursor-pointer focus:text-green-800 transition-colors text-white font-bold text-sm">
                             <option class="text-gray-800">🚗 租車</option><option class="text-gray-800">🚅 高鐵/火車</option><option class="text-gray-800">🚢 渡輪</option><option class="text-gray-800">🚌 客運</option><option class="text-gray-800">🎫 交通票券</option>
                           </select>
-                          <input v-if="isEditor && !trans.isLocked" v-model="trans.name" placeholder="標題 (例: 自駕租車明細)" class="bg-transparent font-black text-xl w-full outline-none placeholder-white/70 ml-2">
-                          <h3 v-else class="text-xl font-black truncate">{{ trans.name || '自駕租車明細' }}</h3>
+                          <input v-if="isEditor && !trans.isLocked" v-model="trans.name" placeholder="標題 (例: 自駕租車明細)" class="bg-transparent font-black text-xl w-full outline-none placeholder-white/70 ml-2 text-center md:text-left">
+                          <h3 v-else class="text-xl font-black truncate text-center md:text-left">{{ trans.name || '自駕租車明細' }}</h3>
                       </div>
                   </div>
 
@@ -1122,14 +1122,14 @@
                   </div>
 
                   <div class="md:w-1/4 bg-gradient-to-br from-teal-400 to-emerald-500 text-white p-5 flex flex-col justify-center rounded-t-xl md:rounded-tr-none md:rounded-l-xl relative">
-                     <div class="flex flex-col gap-2 relative z-10">
+                     <div class="flex flex-col items-center text-center gap-2 relative z-10">
                         <select v-if="isEditor && !trans.isLocked" v-model="trans.type" class="bg-white/20 border border-white/40 rounded px-2 py-1 text-sm font-bold text-white outline-none w-max cursor-pointer focus:bg-white focus:text-teal-700 transition-colors">
                           <option class="text-gray-800">🚗 租車</option><option class="text-gray-800">🚅 高鐵/火車</option><option class="text-gray-800">🚢 渡輪</option><option class="text-gray-800">🚌 客運</option><option class="text-gray-800">🎫 交通票券</option>
                         </select>
                         <span v-else class="bg-white/20 border border-white/30 px-2 py-1 rounded text-sm font-bold w-max">{{ trans.type }}</span>
                         
-                        <input v-if="isEditor && !trans.isLocked" type="text" v-model="trans.name" placeholder="班次或公司" class="w-full bg-transparent border-b border-white/50 text-xl font-black outline-none placeholder-white/60 focus:border-white">
-                        <span v-else class="font-black text-2xl truncate">{{ trans.name || '未填寫名稱' }}</span>
+                        <input v-if="isEditor && !trans.isLocked" type="text" v-model="trans.name" placeholder="班次或公司" class="w-full bg-transparent border-b border-white/50 text-xl font-black outline-none placeholder-white/60 focus:border-white text-center">
+                        <span v-else class="font-black text-2xl truncate w-full text-center">{{ trans.name || '未填寫名稱' }}</span>
                      </div>
                   </div>
 
@@ -1229,16 +1229,16 @@
               <div :class="['md:w-1/3 p-5 md:p-6 flex flex-col relative text-white bg-gradient-to-br', getHotelGradient(idx)]">
                  <button v-if="isEditor" @click="removeAccommodation(idx)" class="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-20 text-xl">✕</button>
                  
-                 <div class="mb-4 relative z-10">
-                    <label v-if="isEditor" class="block text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-widest">Hotel Name</label>
-                    <input v-if="isEditor" type="text" v-model="hotel.name" placeholder="輸入飯店名稱" class="w-full text-xl font-black bg-transparent border-b border-white/50 rounded-none px-0 py-1 focus:border-white outline-none placeholder-indigo-200 mb-2">
+                 <div class="mb-4 relative z-10 text-center">
+                    <label v-if="isEditor" class="block text-[10px] text-indigo-200 font-bold mb-1 uppercase tracking-widest text-center">Hotel Name</label>
+                    <input v-if="isEditor" type="text" v-model="hotel.name" placeholder="輸入飯店名稱" class="w-full text-xl font-black bg-transparent border-b border-white/50 rounded-none px-0 py-1 focus:border-white outline-none placeholder-indigo-200 mb-2 text-center">
                     <div v-if="isEditor" class="flex items-center bg-black/20 rounded px-2 py-1">
                       <span class="text-xs text-white/70 mr-1">🔗</span>
                       <input type="text" v-model="hotel.nameLink" placeholder="官網或訂房平台超連結" class="w-full text-[10px] md:text-xs outline-none bg-transparent text-white placeholder-white/50">
                     </div>
                     <div v-else>
-                       <a v-if="hotel.nameLink" :href="hotel.nameLink" target="_blank" class="text-2xl font-black hover:underline flex items-center gap-1">{{ hotel.name || '未填寫飯店名稱' }} <span class="text-sm">🔗</span></a>
-                       <h3 v-else class="text-2xl font-black">{{ hotel.name || '未填寫飯店名稱' }}</h3>
+                       <a v-if="hotel.nameLink" :href="hotel.nameLink" target="_blank" class="text-2xl font-black hover:underline flex items-center justify-center gap-1">{{ hotel.name || '未填寫飯店名稱' }} <span class="text-sm">🔗</span></a>
+                       <h3 v-else class="text-2xl font-black text-center">{{ hotel.name || '未填寫飯店名稱' }}</h3>
                     </div>
                  </div>
 
@@ -1586,6 +1586,29 @@
         const confirmDialog = ref({ show: false, message: '', action: null });
         const customAlert = (msg) => { alertDialog.value = { show: true, message: msg }; };
         const customConfirm = (msg, action) => { confirmDialog.value = { show: true, message: msg, action }; };
+
+        // 自動監聽所有彈窗狀態：只要有任一彈窗開啟，立即鎖定背景頁面滾動
+        const isAnyModalOpen = computed(() => {
+          return alertDialog.value.show ||
+                 confirmDialog.value.show ||
+                 shareDialog.value.show ||
+                 showPassengerManager.value ||
+                 showImportModal.value ||
+                 (isSetup.value && isEditor.value) ||
+                 Boolean(activeMemo.value) ||
+                 Boolean(activeImage.value) ||
+                 showWeatherModal.value;
+        });
+
+        watch(isAnyModalOpen, (isOpen) => {
+          if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+          } else {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+          }
+        });
 
         const setupData = ref({ name: '', destination: '', startDate: '', endDate: '', themeColor: '#e91e63', coEditorsStr: '', coverImage: '', modules: { flights: true, transports: true, accommodations: true, luggage: true, expenses: true } });
         
