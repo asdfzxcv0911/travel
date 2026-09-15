@@ -288,10 +288,10 @@
       <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div v-for="trip in myTrips" :key="trip.id" @click="openTrip(trip.id)" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition-shadow group relative">
-            <div class="h-24 w-full" :style="{ backgroundColor: trip.themeColor || '#e91e63' }">
-              <div class="w-full h-full bg-black/10 flex items-center justify-center"><span class="text-4xl shadow-sm opacity-90">✈️</span></div>
+            <div class="h-24 w-full relative bg-cover bg-center" :style="trip.coverImage ? { backgroundImage: 'url(' + trip.coverImage + ')' } : { backgroundColor: trip.themeColor || '#e91e63' }">
+              <div v-if="trip.coverImage" class="absolute inset-0 bg-black/40 transition-opacity group-hover:bg-black/50"></div>
             </div>
-            <button v-if="trip.ownerId === currentUser?.uid" @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
+            <button v-if="trip.ownerId === currentUser?.uid" @click.stop="deleteTripFromCloud(trip.id)" class="absolute top-3 right-3 z-20 bg-black/30 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm">🗑</button>
             <div class="p-5">
               <div class="flex items-center gap-2 mb-2">
                 <span class="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">📍 {{ trip.destination }}</span>
